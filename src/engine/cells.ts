@@ -179,7 +179,8 @@ export class CellEngine {
     ctx.globalAlpha = 1;
   }
 
-  private heroWord: { x: number; y: number }[] = [];
+  private heroWord: { x: number; y: number; vx: number; vy: number }[] = [];
+  private heroMask: { data: Uint8Array; W: number; H: number; ox: number; oy: number } | null = null;
   private heroP = 0;
   private heroPTarget = 0;
 
@@ -208,7 +209,7 @@ export class CellEngine {
     g.fillText('CybCell', W / 2, H / 2);
     const data = g.getImageData(0, 0, W, H).data;
     const r = rng(0xc0de);
-    const pts: { x: number; y: number }[] = [];
+    const pts: { x: number; y: number; vx: number; vy: number }[] = [];
     const step = Math.max(1.3, Math.sqrt((W * H * 0.3) / 3600));
     for (let y = 0; y < H; y += step)
       for (let x = 0; x < W; x += step) {
@@ -217,13 +218,18 @@ export class CellEngine {
         const xi = jx | 0;
         const yi = jy | 0;
         if (xi < 0 || yi < 0 || xi >= W || yi >= H || data[(yi * W + xi) * 4 + 3] < 128) continue;
-        pts.push({ x: jx + this.w / 2 - W / 2, y: jy + this.h / 2 - H / 2 });
+        const va = r() * TAU;
+        const sp = 4 + r() * 10;
+        pts.push({ x: jx + this.w / 2 - W / 2, y: jy + this.h / 2 - H / 2, vx: Math.cos(va) * sp, vy: Math.sin(va) * sp });
       }
     for (let i = pts.length - 1; i > 0; i--) {
       const j = Math.floor(r() * (i + 1));
       [pts[i], pts[j]] = [pts[j], pts[i]];
     }
     this.heroWord = pts;
+    const alpha = new Uint8Array(W * H);
+    for (let i = 0; i < W * H; i++) alpha[i] = data[i * 4 + 3];
+    this.heroMask = { data: alpha, W, H, ox: this.w / 2 - W / 2, oy: this.h / 2 - H / 2 };
   }
 
   private spiralR() {
@@ -258,6 +264,31 @@ export class CellEngine {
     const cy = this.h / 2;
     const sp = this.spin();
     const tw = this.reduced ? 0 : this.time;
+    // Grains drift inside the letters like cells in a membrane.
+    const M = this.heroMask;
+    if (M && this.heroP < 0.98 && !this.reduced) {
+      const dt = 1 / 60;
+      for (const p of this.heroWord) {
+        p.vx += (Math.random() - 0.5) * 6;
+        p.vy += (Math.random() - 0.5) * 6;
+        const sp = Math.hypot(p.vx, p.vy);
+        if (sp > 16) {
+          p.vx *= 16 / sp;
+          p.vy *= 16 / sp;
+        }
+        const nx = p.x + p.vx * dt;
+        const ny = p.y + p.vy * dt;
+        const xi = (nx - M.ox) | 0;
+        const yi = (ny - M.oy) | 0;
+        if (xi >= 0 && yi >= 0 && xi < M.W && yi < M.H && M.data[yi * M.W + xi] > 128) {
+          p.x = nx;
+          p.y = ny;
+        } else {
+          p.vx = -p.vx;
+          p.vy = -p.vy;
+        }
+      }
+    }
     ctx.fillStyle = '#fff';
     for (let k = 0; k < this.dust.length; k++) {
       const d = this.dust[k];
@@ -1015,7 +1046,8 @@ export class CellEngine {
         ctx.strokeStyle = rgba(PEARL, ((k + 0.5) / BUCKETS) * 0.32);
         ctx.stroke(paths[k]);
       }
-      ctx.strokeStyle = rgba(ALARM, 0.45 * this.alarm);
+      ctx.lineWidth = 0.7;
+      ctx.strokeStyle = rgba(ALARM, 0.22 * this.alarm);
       ctx.stroke(hot);
     }
 
@@ -1028,7 +1060,7 @@ export class CellEngine {
       ctx.globalAlpha = clamp(c.a * (0.1 + c.flash * 0.3) * (c.r > 30 ? 0.5 : 1));
       ctx.drawImage(this.sprites[c.tint ? 's' : 'p'], c.x - g / 2, c.y - g / 2, g, g);
       if (c.heat > 0.02) {
-        ctx.globalAlpha = clamp(c.a * c.heat * 0.8);
+        ctx.globalAlpha = clamp(c.a * c.heat * 0.3);
         ctx.drawImage(this.sprites.a, c.x - g / 2, c.y - g / 2, g, g);
       }
     }
@@ -1041,7 +1073,7 @@ export class CellEngine {
       if (c.a < 0.01 || c.r < 0.2) continue;
       const col = mix(c.tint ? AMBER : PEARL, ALARM, c.heat);
       if (c.r >= 5.5) this.drawMembrane(c, col);
-      if (c.r > 24) continue; // particle cells carry their own nucleus
+      if (c.r >= 5.5) continue; // particle cells carry their own nucleus
       const core = c.r >= 5.5 ? Math.max(1.2, c.r * 0.16) : Math.max(0.9, c.r * 0.5);
       ctx.fillStyle = rgba(mix(col, [255, 255, 255], 0.5 + c.flash * 0.5), c.a);
       ctx.beginPath();
@@ -1108,7 +1140,8 @@ export class CellEngine {
     const breathe = 1 + 0.02 * Math.sin(t * 1.1 + c.seed * 7) + c.flash * 0.05;
     const R = c.r * breathe;
     // Fewer points for smaller cells keeps density even and draws cheap.
-    const step = c.r > 90 ? 1 : c.r > 50 ? 2 : 3;
+    const step = Math.max(1, Math.floor(this.sphere.length / Math.max(60, c.r * 16)));
+    const dot = c.r < 14 ? 0.8 : 1;
     ctx.fillStyle = rgba(col, 1);
     for (let i = 0; i < this.sphere.length; i += step) {
       const p = this.sphere[i];
@@ -1118,7 +1151,7 @@ export class CellEngine {
       const z2 = p.y * sx + z1 * cx;
       const depth = (z2 + 1) / 2;
       ctx.globalAlpha = clamp(c.a * (p.n ? 0.35 + 0.6 * depth : 0.12 + 0.75 * depth * depth));
-      const sz = p.s * (0.7 + 0.5 * depth);
+      const sz = p.s * dot * (0.7 + 0.5 * depth);
       ctx.fillRect(c.x + x1 * R - sz / 2, c.y + y2 * R - sz / 2, sz, sz);
     }
     ctx.globalAlpha = 1;
@@ -1132,74 +1165,71 @@ export class CellEngine {
   }
 
   private drawMembrane(c: Cell, col: RGB) {
-    if (c.r > 24) return this.drawParticleCell(c, col);
-    return this.drawDustCell(c, col);
+    return this.drawParticleCell(c, col);
   }
 
-  /** A small cell as a ring of fine dots around a tiny nucleus cluster. */
-  private drawDustCell(c: Cell, col: RGB) {
-    const ctx = this.ctx;
-    const t = this.reduced ? 0 : this.time;
-    const n = Math.max(10, Math.round(c.r * 2.4));
-    const spin = t * 0.3 + c.seed * 10;
-    const tilt = 0.55 + 0.35 * Math.sin(c.seed2 * 9);
-    ctx.fillStyle = rgba(col, 1);
-    for (let k = 0; k < n; k++) {
-      const a = (k / n) * TAU + spin;
-      const z = Math.sin(a);
-      const wob = 1 + 0.06 * Math.sin(a * 3 + t + c.seed * 7) + c.flash * 0.15;
-      const x = c.x + Math.cos(a) * c.r * wob;
-      const y = c.y + z * c.r * tilt * wob + Math.cos(a) * c.r * 0.1;
-      ctx.globalAlpha = clamp(c.a * (0.25 + 0.5 * (z + 1) / 2));
-      ctx.fillRect(x - 0.6, y - 0.6, 1.2, 1.2);
-    }
-    for (let k = 0; k < 5; k++) {
-      const a = k * 2.4 + t * 0.5 + c.seed * 3;
-      const d = c.r * 0.22 * ((k * 37) % 10) / 10;
-      ctx.globalAlpha = clamp(c.a * 0.8);
-      ctx.fillRect(c.x + Math.cos(a) * d - 0.6, c.y + Math.sin(a) * d - 0.6, 1.2, 1.2);
-    }
-    ctx.globalAlpha = 1;
-  }
+  private virus: { x: number; y: number; z: number; s: number; spike: number }[] = [];
 
+  /** The intruder as a particle virion: a dusty capsid with spike proteins. */
   private drawIntruder() {
     const I = this.intruder;
     if (I.alpha < 0.01) return;
+    if (!this.virus.length) {
+      const r = rng(0xbad);
+      const dir = () => {
+        const u = r() * 2 - 1;
+        const a = r() * TAU;
+        const k = Math.sqrt(1 - u * u);
+        return [Math.cos(a) * k, u, Math.sin(a) * k];
+      };
+      for (let i = 0; i < 520; i++) {
+        const [x, y, z] = dir();
+        const d = 0.92 + r() * 0.08;
+        this.virus.push({ x: x * d, y: y * d, z: z * d, s: 0.8 + r() * 0.7, spike: 0 });
+      }
+      for (let i = 0; i < 180; i++) {
+        const [x, y, z] = dir();
+        const d = Math.cbrt(r()) * 0.8;
+        this.virus.push({ x: x * d, y: y * d, z: z * d, s: 0.7 + r() * 0.5, spike: 0 });
+      }
+      for (let k = 0; k < 34; k++) {
+        const [x, y, z] = dir();
+        for (let j = 1; j <= 5; j++) {
+          const d = 1 + j * 0.07;
+          this.virus.push({ x: x * d, y: y * d, z: z * d, s: j === 5 ? 1.9 : 1, spike: j });
+        }
+      }
+    }
     const ctx = this.ctx;
     const t = this.reduced ? 0 : this.time;
-    const R = this.unit * 0.035 * (0.3 + 0.7 * I.scale);
-    const g = R * 7;
+    const R = this.unit * 0.045 * (0.25 + 0.75 * I.scale);
+    const ay = t * 0.4;
+    const ax = 0.4 + Math.sin(t * 0.3) * 0.2;
+    const cyy = Math.cos(ay);
+    const syy = Math.sin(ay);
+    const cxx = Math.cos(ax);
+    const sxx = Math.sin(ax);
+    const g = R * 5;
     ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = I.alpha * 0.45;
+    ctx.globalAlpha = I.alpha * 0.25;
     ctx.drawImage(this.sprites.a, I.x - g / 2, I.y - g / 2, g, g);
-    ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
-    ctx.save();
-    ctx.translate(I.x, I.y);
-    ctx.rotate(t * 0.8);
-    // A spiked, slightly glitching capsid.
-    ctx.beginPath();
-    const spikes = 11;
-    for (let k = 0; k <= spikes * 2; k++) {
-      const ang = (k / (spikes * 2)) * TAU;
-      const rr = k % 2 ? R * 0.72 : R * (1.25 + 0.12 * Math.sin(t * 9 + k));
-      const x = Math.cos(ang) * rr;
-      const y = Math.sin(ang) * rr;
-      if (k === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+    ctx.fillStyle = rgba(ALARM, 1);
+    for (const p of this.virus) {
+      const x1 = p.x * cyy - p.z * syy;
+      const z1 = p.x * syy + p.z * cyy;
+      const y2 = p.y * cxx - z1 * sxx;
+      const z2 = p.y * sxx + z1 * cxx;
+      const depth = (z2 + 1.4) / 2.8;
+      // Spikes fade as the virus is broken down.
+      const keep = p.spike ? clamp(I.scale * 1.4 - p.spike * 0.12) : 1;
+      ctx.globalAlpha = clamp(I.alpha * keep * (0.15 + 0.85 * depth * depth));
+      const sz = p.s * (0.7 + 0.5 * depth);
+      ctx.fillRect(I.x + x1 * R - sz / 2, I.y + y2 * R - sz / 2, sz, sz);
     }
-    ctx.closePath();
-    ctx.fillStyle = rgba(ALARM, 0.16 * I.alpha);
-    ctx.fill();
-    ctx.strokeStyle = rgba(ALARM, 0.95 * I.alpha);
-    ctx.lineWidth = 1.4;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(0, 0, R * 0.35, 0, TAU);
-    ctx.fillStyle = rgba(ALARM, 0.8 * I.alpha);
-    ctx.fill();
-    ctx.restore();
+    ctx.globalAlpha = 1;
   }
+
 }
 
 /* ------------------------------------------------------------------ helpers */
