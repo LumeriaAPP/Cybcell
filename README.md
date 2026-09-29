@@ -1,6 +1,6 @@
 # CybCell
 
-**Hüceyrələr danışır. Sistemlər yaşayır.**
+**Biznesiniz üçün rəqəmsal ekosistem.**
 
 CybCell-in rəsmi saytı. Sayt şirkətin adını hekayə kimi danışır: **CYB** (kibernetika, idarəetmə və əlaqə elmi) + **CELL** (hüceyrə, həyatın ən kiçik vahidi).
 
@@ -11,7 +11,7 @@ Səhifənin arxasında canlı bir hüceyrə koloniyası yaşayır. Aşağı sür
 | Giriş | "CybCell" ulduz tozundan yazılır, sürüşdürəndə spiral qalaktikaya çevrilir | Rəqəmsal ekosistem |
 | 01 Hüceyrə | Hər şey bir hüceyrəyə yığılır | Hər həll bir hüceyrədir |
 | 02 Böyümə | 1 → 64 hüceyrə bölünməsi | Biznes böyüdükcə sistem də böyüyür |
-| 03 İnteqrasiya | Hüceyrələr şəbəkədə siqnal ötürür | Sayt, tətbiq, e-menyu, CRM bir-biri ilə danışır |
+| 03 İnteqrasiya | Hüceyrələr şəbəkədə siqnal ötürür | Sayt, tətbiq, e-menyu, CRM bir-birinə bağlıdır |
 | 04 3D və AR | Hüceyrələr qat-qat bina tikir, bina fırlanır | 3D satış sistemi, virtual tur, AR menyu |
 | 05 Marketinq | Hüceyrələrdən yüksələn satış qrafiki, artım xətti boyunca siqnallar | SMM, reklam, brendinq, analitika |
 | 06 Dəstək | Virus daxil olur, hüceyrələr onu mühasirəyə alıb zərərsizləşdirir | 24/7 monitorinq və texniki dəstək |

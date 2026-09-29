@@ -2,7 +2,7 @@
   "name": "cybcell",
   "private": true,
   "version": "1.0.0",
-  "description": "CybCell rəsmi saytı: hüceyrələr danışır, sistemlər yaşayır.",
+  "description": "CybCell rəsmi saytı: biznesiniz üçün rəqəmsal ekosistem.",
   "type": "module",
   "scripts": {
     "dev": "vite",
