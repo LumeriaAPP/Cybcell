@@ -974,6 +974,7 @@ export class CellEngine {
       if (c.a < 0.01 || c.r < 0.2) continue;
       const col = mix(c.tint ? AMBER : PEARL, ALARM, c.heat);
       if (c.r >= 5.5) this.drawMembrane(c, col);
+      if (c.r > 24) continue; // particle cells carry their own nucleus
       const core = c.r >= 5.5 ? Math.max(1.2, c.r * 0.16) : Math.max(0.9, c.r * 0.5);
       ctx.fillStyle = rgba(mix(col, [255, 255, 255], 0.5 + c.flash * 0.5), c.a);
       ctx.beginPath();
@@ -1001,7 +1002,70 @@ export class CellEngine {
     this.stats.links = links;
   }
 
+  private sphere: { x: number; y: number; z: number; s: number; n: boolean }[] = [];
+
+  /** A large cell drawn as a slowly turning sphere of particles, like the hero spiral. */
+  private drawParticleCell(c: Cell, col: RGB) {
+    if (!this.sphere.length) {
+      const r = rng(0xce11);
+      const onSphere = (rad: number) => {
+        const u = r() * 2 - 1;
+        const a = r() * TAU;
+        const k = Math.sqrt(1 - u * u);
+        return [Math.cos(a) * k * rad, u * rad, Math.sin(a) * k * rad];
+      };
+      // Membrane: a thin shell, slightly thick so the rim reads as a ring.
+      for (let i = 0; i < 900; i++) {
+        const [x, y, z] = onSphere(1 - r() * 0.05);
+        this.sphere.push({ x, y, z, s: r() < 0.05 ? 1.8 : 0.9 + r() * 0.5, n: false });
+      }
+      // Cytoplasm: sparse drifting specks.
+      for (let i = 0; i < 160; i++) {
+        const [x, y, z] = onSphere(0.35 + Math.cbrt(r()) * 0.55);
+        this.sphere.push({ x, y, z, s: 0.8 + r() * 0.6, n: false });
+      }
+      // Nucleus: a dense bright cluster.
+      for (let i = 0; i < 420; i++) {
+        const [x, y, z] = onSphere(Math.cbrt(r()) * 0.3);
+        this.sphere.push({ x: x + 0.04, y: y - 0.03, z, s: r() < 0.08 ? 1.7 : 0.8 + r() * 0.6, n: true });
+      }
+    }
+    const ctx = this.ctx;
+    const t = this.reduced ? 0 : this.time;
+    const ay = t * 0.22 + c.seed * 10;
+    const ax = 0.35 + Math.sin(t * 0.13 + c.seed2 * 5) * 0.15;
+    const cy = Math.cos(ay);
+    const sy = Math.sin(ay);
+    const cx = Math.cos(ax);
+    const sx = Math.sin(ax);
+    const breathe = 1 + 0.02 * Math.sin(t * 1.1 + c.seed * 7) + c.flash * 0.05;
+    const R = c.r * breathe;
+    // Fewer points for smaller cells keeps density even and draws cheap.
+    const step = c.r > 90 ? 1 : c.r > 50 ? 2 : 3;
+    ctx.fillStyle = rgba(col, 1);
+    for (let i = 0; i < this.sphere.length; i += step) {
+      const p = this.sphere[i];
+      const x1 = p.x * cy - p.z * sy;
+      const z1 = p.x * sy + p.z * cy;
+      const y2 = p.y * cx - z1 * sx;
+      const z2 = p.y * sx + z1 * cx;
+      const depth = (z2 + 1) / 2;
+      ctx.globalAlpha = clamp(c.a * (p.n ? 0.35 + 0.6 * depth : 0.12 + 0.75 * depth * depth));
+      const sz = p.s * (0.7 + 0.5 * depth);
+      ctx.fillRect(c.x + x1 * R - sz / 2, c.y + y2 * R - sz / 2, sz, sz);
+    }
+    ctx.globalAlpha = 1;
+    // A soft light at the nucleus.
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = clamp(c.a * 0.35);
+    const g = R * 0.9;
+    ctx.drawImage(this.sprites[c.tint ? 's' : 'p'], c.x - g / 2, c.y - g / 2, g, g);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
   private drawMembrane(c: Cell, col: RGB) {
+    if (c.r > 24) return this.drawParticleCell(c, col);
     const ctx = this.ctx;
     const big = c.r > 36;
     const M = big ? 72 : c.r > 14 ? 28 : 14;
