@@ -20,6 +20,7 @@ const en: Record<string, string> = {
 
   'hero.eyebrow': 'Cybernetic cell systems',
   'hero.l1': 'Cells talk.',
+  'hero.l1b': 'Cells talk.',
   'hero.l2': 'Systems live.',
   'hero.lede':
     'CybCell builds digital systems the way nature builds organisms. Every module makes its own decisions, talks to its neighbours and protects the whole.',

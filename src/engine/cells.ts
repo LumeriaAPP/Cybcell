@@ -158,6 +158,53 @@ export class CellEngine {
   }
 
   /** Current weight (0..1) of a given scene in the blend. */
+  private dust: { u: number; arm: number; j: number; rj: number; s: number; a: number }[] = [];
+
+  private spiralR() {
+    return Math.min(this.w * (this.mobile ? 0.46 : 0.3), this.h * 0.46);
+  }
+
+  private spin() {
+    return this.reduced ? 0 : this.time * 0.035;
+  }
+
+  /** Fine stardust along the spiral arms, drawn only in the hero. */
+  private drawDust(weight: number) {
+    if (weight < 0.01) return;
+    if (!this.dust.length) {
+      const r = rng(0x5eed);
+      for (let k = 0; k < 1500; k++) {
+        const bulge = k < 260;
+        const u = bulge ? Math.abs(r() - r()) * 0.18 : Math.pow(r(), 0.8);
+        this.dust.push({
+          u,
+          arm: k % 2,
+          j: bulge ? r() * TAU : (r() + r() + r() - 1.5) * 0.32,
+          rj: (r() + r() - 1) * 0.1,
+          s: r() < 0.06 ? 1.8 : 0.6 + r() * 0.8,
+          a: 0.25 + r() * 0.75,
+        });
+      }
+    }
+    const ctx = this.ctx;
+    const R = this.spiralR();
+    const cx = this.w / 2;
+    const cy = this.h / 2;
+    const sp = this.spin();
+    const tw = this.reduced ? 0 : this.time;
+    ctx.fillStyle = '#fff';
+    for (let k = 0; k < this.dust.length; k++) {
+      const d = this.dust[k];
+      const th = d.arm * Math.PI + d.u * Math.PI * 3.1 + sp + d.j;
+      const rr = R * (0.02 + 0.98 * d.u) * (1 + d.rj);
+      const x = cx + Math.cos(th) * rr;
+      const y = cy + Math.sin(th) * rr * 0.92;
+      ctx.globalAlpha = weight * d.a * (0.75 + 0.25 * Math.sin(tw * 1.3 + k));
+      ctx.fillRect(x - d.s / 2, y - d.s / 2, d.s, d.s);
+    }
+    ctx.globalAlpha = 1;
+  }
+
   weight(id: SceneId) {
     const { a, b, t } = this.blend();
     const k = SCENES.indexOf(id);
@@ -466,12 +513,24 @@ export class CellEngine {
     const divCount = (q: number) => Math.min(2 ** Math.min(Math.floor(q * 7), 6), this.cells.length);
 
     return [
-      // hero — a calm colony spread across the screen
+      // hero — the colony as a slowly turning two-armed spiral, like a galaxy
       {
-        fn: (c, _i, _q, out) => scatter(c, out, 0.9, 1, 0),
-        link: () => this.heroSpacing * 1.55,
-        linkAlpha: 0.5,
-        rate: () => 12,
+        fn: (c, i, _q, out) => {
+          const n = this.cells.length;
+          const u = Math.pow((i + 0.5) / n, 0.85);
+          const arm = i % 2;
+          const R = this.spiralR();
+          const th = arm * Math.PI + u * Math.PI * 3.1 + this.spin() + (c.seed - 0.5) * 0.35;
+          const rr = R * (0.06 + 0.94 * u) * (1 + (c.seed2 - 0.5) * 0.16);
+          out.x = this.w / 2 + Math.cos(th) * rr;
+          out.y = this.h / 2 + Math.sin(th) * rr * 0.92;
+          out.r = c.baseR * (c.tint ? 0.75 : 0.55);
+          out.a = 0.55 + 0.45 * c.seed2;
+          out.heat = 0;
+        },
+        link: () => 0,
+        linkAlpha: 0,
+        rate: () => 0,
       },
       // name — colony dims and leans toward the centre
       {
@@ -830,6 +889,7 @@ export class CellEngine {
     const cells = this.cells;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, this.w, this.h);
+    this.drawDust(this.weight('hero'));
 
     // Links, bucketed by alpha so each bucket is a single stroke.
     const BUCKETS = 8;
