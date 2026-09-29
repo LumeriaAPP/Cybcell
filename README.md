@@ -25,7 +25,7 @@ Kursoru hərəkət etdirəndə hüceyrələr sizə siqnal göndərir, ekrana tox
 
 - Öz yazdığımız Canvas 2D mühərriki: bölünmə, siqnal zəncirləri, immun reaksiyası, mətnə çevrilmə. Heç bir kitabxanadan asılı deyil.
 - İki dil: Azərbaycan (əsas) və ingilis dili. Seçim yadda saxlanılır.
-- Xidmətlər elmi məqalədəki şəkillər kimi təqdim olunur: siyahıda sürüşdürdükcə və ya kursoru gətirdikcə yanda həmin xidmətin hüceyrəsi göstərilir (T-limfosit antigen tutur, neyron impuls ötürür, kök hüceyrə bölünür, eritrositlər axır, reseptor siqnal qəbul edir, yaddaş hüceyrəsi məlumat saxlayır). Hər biri canlı çəkilir (`src/specimen.ts`).
+- Həllər bölməsində hər xidmətin yanında ulduz tozu üslubunda canlı şəkil var: bloklardan yığılan sayt, bildiriş alan telefon, cavab verən süni intellekt şəbəkəsi, mərtəbəsi açılan 3D bina, satış hunisi, ödəniş qəbul edən kiosk və təhdidləri dayandıran qalxan (`src/specimen.ts`).
 - "Canlı dialoq" bölməsi: hüceyrələrin bir-biri ilə danışdığı canlı terminal.
 - "Adın mənası" lüğət maddəsi kimi, standartlar və həyat dövrü sakit, tipoqrafik bölmələr kimi qurulub.
 - Tam responsiv (telefon, planşet, masaüstü), `prefers-reduced-motion` dəstəyi, klaviatura ilə idarəetmə, SEO və sosial şəbəkə paylaşımı üçün önizləmə şəkli.
@@ -60,11 +60,11 @@ Build nisbi yollarla yığıldığı üçün `dist/` qovluğunu istənilən stat
 | Azərbaycanca mətnlər | `index.html` |
 | İngiliscə mətnlər | `src/i18n.ts` (açarlar `data-i18n` atributları ilə eynidir) |
 | Canlı dialoqun mesajları | `src/dialogue.ts` |
-| Nümunə layihələr (Nova Residence, Zəfəran Bistro, Clock & Coffee) | `index.html`, `#work` bölməsi |
+| Nümunə layihələr (3D satış sistemi, AR menyu, canlı menyulu sayt) | `index.html`, `#work` bölməsi |
 | E-poçt ünvanı | `index.html`, `data-email` elementi (hazırda `hello@cybcell.az`) |
 | Rənglər, şriftlər (Geist, Geist Mono; qara-ağ palitra) | `src/styles.css`, ən yuxarıdakı `:root` bloku |
 | Hüceyrə mühərriki və səhnələr | `src/engine/cells.ts` |
-| Mikroskopdakı hüceyrə animasiyaları | `src/specimen.ts` |
+| Həllər bölməsindəki animasiyalı şəkillər | `src/specimen.ts` |
 | Sosial önizləmə şəkli | `public/og.png` (1200×630) |
 
 > Göstəricilər (24/7, <2 s, 99.9%) və e-poçt ünvanı nümunə kimi yazılıb. Onları şirkətin real məlumatları ilə yeniləyin.
@@ -75,7 +75,7 @@ Build nisbi yollarla yığıldığı üçün `dist/` qovluğunu istənilən stat
 index.html            səhifənin bütün bölmələri (AZ mətn)
 src/main.ts           scroll → səhnə, naviqasiya, HUD, forma
 src/engine/cells.ts   hüceyrə mühərriki (Canvas 2D)
-src/specimen.ts       xidmətlər bölməsindəki mikroskop
+src/specimen.ts       həllər bölməsindəki animasiyalı şəkillər
 src/i18n.ts           dil dəyişdirici və ingiliscə mətnlər
 src/dialogue.ts       canlı dialoq terminalı
 src/styles.css        dizayn sistemi və layout

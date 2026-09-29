@@ -1,6 +1,6 @@
 import { lang, onLang, type Lang } from './i18n';
 
-type Kind = 'SYNC' | 'ACK' | 'ORDER' | 'LEAD' | 'TASK' | 'ADS' | 'OPT' | 'ALERT' | 'FIX' | 'OK';
+type Kind = 'SYNC' | 'ACK' | 'ORDER' | 'AI' | 'LEAD' | 'TASK' | 'ADS' | 'OPT' | 'ALERT' | 'FIX' | 'OK';
 
 type Name = Record<Lang, string> | string;
 
@@ -18,6 +18,7 @@ const N = {
   kitchen: { az: 'mətbəx', en: 'kitchen' },
   tour: { az: '3D tur', en: '3D tour' },
   crm: 'CRM',
+  ai: { az: 'AI köməkçi', en: 'AI assistant' },
   sales: { az: 'satış', en: 'sales' },
   ads: { az: 'reklam', en: 'ads' },
   stats: { az: 'analitika', en: 'analytics' },
@@ -32,10 +33,11 @@ const SCRIPT: Line[] = [
   { kind: 'SYNC', from: N.menu, to: N.site, text: { az: 'Latte qiyməti 5.20 ₼ oldu.', en: 'Latte is now 5.20 ₼.' } },
   { kind: 'ACK', from: N.site, to: N.menu, text: { az: 'Qəbul etdim. Menyu səhifəsi yeniləndi.', en: 'Got it. Menu page updated.' } },
   { kind: 'ORDER', from: N.app, to: N.kitchen, text: { az: 'Yeni sifariş #2048: 2 latte, 1 cheesecake.', en: 'New order #2048: 2 lattes, 1 cheesecake.' } },
+  { kind: 'AI', from: N.ai, to: N.crm, text: { az: 'Müştərinin sualını cavabladım, cümə 19:00 üçün 4 nəfərlik masa bron etdim.', en: 'Answered a customer’s question and booked a table for 4, Friday 19:00.' } },
   { kind: 'LEAD', from: N.tour, to: N.crm, text: { az: 'Müştəri 12-ci mərtəbədəki 3 otaqlı mənzilə 4 dəqiqə baxdı.', en: 'A buyer spent 4 minutes in the 3-room flat on floor 12.' } },
   { kind: 'TASK', from: N.crm, to: N.sales, text: { az: 'Zəng planlandı: sabah 11:00.', en: 'Call scheduled: tomorrow, 11:00.' } },
   { kind: 'ADS', from: N.ads, to: N.stats, text: { az: '"Payız endirimi" kampaniyası: 1 240 klik, 86 sifariş.', en: '"Autumn sale" campaign: 1,240 clicks, 86 orders.' } },
-  { kind: 'OPT', from: N.stats, to: N.ads, text: { az: 'Axşam saatları daha yaxşı satır. Büdcəni ora keçirirəm.', en: 'Evenings convert better. Moving budget there.' } },
+  { kind: 'AI', from: N.stats, to: N.ads, text: { az: 'Model axşam saatlarının daha yaxşı satdığını tapdı. Büdcəni ora keçirirəm.', en: 'The model found evenings convert better. Moving budget there.' } },
   { kind: 'ALERT', from: N.kiosk, to: N.support, text: { az: 'Çek kağızı bitmək üzrədir.', en: 'Receipt paper is running low.' } },
   { kind: 'FIX', from: N.support, to: N.kiosk, text: { az: 'Texnik yoldadır, 20 dəqiqəyə çatır.', en: 'Technician on the way, 20 minutes.' } },
   { kind: 'OK', from: N.monitor, to: N.all, text: { az: 'Bütün sistemlər normal işləyir.', en: 'All systems running normally.' } },
@@ -45,6 +47,7 @@ const TAG_CLASS: Record<Kind, string> = {
   SYNC: '',
   ACK: '',
   ORDER: '',
+  AI: '',
   LEAD: '',
   TASK: '',
   ADS: '',
