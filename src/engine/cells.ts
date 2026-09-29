@@ -115,7 +115,6 @@ export class CellEngine {
   private phyllo: { x: number; y: number }[] = [];
   private phylloCentroid: { x: number; y: number }[] = [];
   private wordPts: { x: number; y: number }[] = [];
-  private wordStep = 8;
   private heroSpacing = 60;
   private netSpacing = 40;
   private rx = 200;
@@ -159,6 +158,26 @@ export class CellEngine {
 
   /** Current weight (0..1) of a given scene in the blend. */
   private dust: { u: number; arm: number; j: number; rj: number; s: number; a: number }[] = [];
+
+  private wordDust: { x: number; y: number; sx: number; sy: number; s: number; a: number; delay: number }[] = [];
+
+  /** The organism word as fine particles that gather from the dark. */
+  private drawWordDust(weight: number) {
+    if (weight < 0.01 || !this.wordDust.length) return;
+    const ctx = this.ctx;
+    const tw = this.reduced ? 0 : this.time;
+    ctx.fillStyle = '#fff';
+    for (let k = 0; k < this.wordDust.length; k++) {
+      const d = this.wordDust[k];
+      const g = clamp((weight - d.delay) / (1 - d.delay));
+      const e = 1 - Math.pow(1 - g, 3);
+      const x = d.sx + (d.x - d.sx) * e;
+      const y = d.sy + (d.y - d.sy) * e;
+      ctx.globalAlpha = g * d.a * (0.8 + 0.2 * Math.sin(tw * 1.7 + k));
+      ctx.fillRect(x - d.s / 2, y - d.s / 2, d.s, d.s);
+    }
+    ctx.globalAlpha = 1;
+  }
 
   private spiralR() {
     return Math.min(this.w * (this.mobile ? 0.46 : 0.3), this.h * 0.46);
@@ -393,10 +412,32 @@ export class CellEngine {
         best = pts;
       }
     }
-    this.wordStep = hi;
+
     const ox = this.w / 2 - W / 2;
     const oy = (this.mobile ? this.h * 0.34 : this.h * 0.44) - H / 2;
     this.wordPts = best.map((p) => ({ x: p.x + ox, y: p.y + oy })).sort((a, b) => a.x - b.x);
+
+    // Dense stardust that fills the letters, like the hero spiral.
+    const rd = rng(0xd057);
+    const fine = Math.max(2.1, Math.sqrt((W * H) / 26000));
+    this.wordDust = [];
+    for (let y = 0; y < H; y += fine)
+      for (let x = 0; x < W; x += fine) {
+        const jx = x + (rd() - 0.5) * fine;
+        const jy = y + (rd() - 0.5) * fine;
+        if (!inside(jx, jy) || rd() < 0.35) continue;
+        const a = rd() * TAU;
+        const d = Math.max(this.w, this.h) * (0.3 + rd() * 0.5);
+        this.wordDust.push({
+          x: jx + ox,
+          y: jy + oy,
+          sx: this.w / 2 + Math.cos(a) * d,
+          sy: this.h / 2 + Math.sin(a) * d,
+          s: rd() < 0.05 ? 1.7 : 0.7 + rd() * 0.6,
+          a: 0.35 + rd() * 0.65,
+          delay: rd() * 0.35,
+        });
+      }
   }
 
   private assignWord() {
@@ -617,7 +658,7 @@ export class CellEngine {
             out.x = c.hx * this.w + d.x;
             out.y = c.hy * this.h + d.y;
             out.r = c.baseR * 0.6;
-            out.a = 0.12;
+            out.a = 0;
             out.heat = 0;
             return;
           }
@@ -626,12 +667,12 @@ export class CellEngine {
           this.drift(c, 1.5, d);
           out.x = p.x + d.x;
           out.y = p.y + d.y;
-          out.r = this.wordStep * (0.3 + 0.07 * breathe);
+          out.r = 1.4 + 0.5 * breathe;
           out.a = 1;
           out.heat = 0;
         },
-        link: () => this.wordStep * 1.6,
-        linkAlpha: 1,
+        link: () => 0,
+        linkAlpha: 0,
         rate: () => 26,
       },
       // ambient — a faint colony behind the rest of the page
@@ -890,6 +931,7 @@ export class CellEngine {
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, this.w, this.h);
     this.drawDust(this.weight('hero'));
+    this.drawWordDust(this.weight('organism'));
 
     // Links, bucketed by alpha so each bucket is a single stroke.
     const BUCKETS = 8;
@@ -933,7 +975,7 @@ export class CellEngine {
 
     // Links from nearby cells to the pointer — the colony notices you.
     const P = this.pointer;
-    if (P.active && linkAlpha > 0.05) {
+    if (P.active && linkAlpha > 0.05 && this.weight('organism') < 0.3) {
       const R = 170;
       ctx.lineWidth = 1;
       for (const c of cells) {
