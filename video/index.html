@@ -46,18 +46,23 @@
     <canvas id="film" width="1920" height="1080"></canvas>
     <script type="module">
       /*
-       * CybCell: 30-second launch film.
+       * CybCell: 30-second launch film, trailer cut.
        * Everything on screen is built from one population of particles
        * ("cells") that morph from formation to formation. Every frame is a
        * pure function of time, so window.seek(t) renders frame-exact.
+       * Scene times and impact points live in timeline.json, shared with
+       * tools/sound.py so picture and sound hit together.
        */
       const W = 1920;
       const H = 1080;
       const N = 7000;
-      const DUR = 30;
       const CX = 960;
       const CY = 470;
       const TAU = Math.PI * 2;
+      const BAR = Math.round((H - W / 2.39) / 2); // 2.39:1 letterbox
+      const BASE = 0.82; // formations are drawn at this scale to sit inside the letterbox
+      let T;
+      let DUR = 30;
 
       const cv = document.getElementById('film');
       const ctx = cv.getContext('2d');
@@ -71,6 +76,11 @@
       const eio = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
       const eioD = (t) => (t < 0.5 ? 12 * t * t : 3 * Math.pow(-2 * t + 2, 2));
       const eoExpo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+      const EASE = {
+        io: [eio, eioD],
+        expo: [eoExpo, (g) => (g >= 1 ? 0 : 10 * Math.LN2 * Math.pow(2, -10 * g))],
+        in: [(g) => g * g * g, (g) => 3 * g * g],
+      };
       const hash = (n) => {
         const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
         return x - Math.floor(x);
@@ -88,12 +98,14 @@
         R4[i] = hash(i * 4 + 4);
       }
 
+      // x, y, alpha, size, colour (0 white, 1 threat red) and heat (0 white .. 1 ember).
       const buf = () => ({
         x: new Float32Array(N),
         y: new Float32Array(N),
         a: new Float32Array(N),
         s: new Float32Array(N),
         c: new Uint8Array(N),
+        h: new Float32Array(N),
       });
 
       /* ------------------------------------------------------ shape builder */
@@ -169,29 +181,89 @@
         o.a[i] = sh.b[i] * am;
         o.s[i] = sh.s[i];
         o.c[i] = 0;
+        o.h[i] = 0;
       };
 
       /* ------------------------------------------------------- formations */
 
-      // 0. Stars: a quiet field before anything exists.
-      function STARS(t, o) {
-        const rot = t * 0.012;
-        const cr = Math.cos(rot);
-        const sr = Math.sin(rot);
+      // 0. Darkness, then a single point of light that gathers energy.
+      function POINT(t, o) {
+        const p = smooth(T.point, T.hit - 0.12, t);
+        const inhale = 1 - 0.6 * smooth(T.silence[0][0], T.hit, t);
+        const flick = 0.85 + 0.15 * Math.sin(t * 37) * Math.sin(t * 23);
         for (let i = 0; i < N; i++) {
-          const x = (R1[i] - 0.5) * W * 1.35;
-          const y = (R2[i] - 0.5) * H * 1.5;
-          o.x[i] = CX + x * cr - y * sr;
-          o.y[i] = 540 + x * sr + y * cr;
-          const tw = 0.6 + 0.4 * Math.sin(t * (1 + R3[i] * 2) + i);
-          o.a[i] = (0.06 + 0.5 * Math.pow(R3[i], 4)) * tw;
-          o.s[i] = 0.7 + R4[i] * 1.1;
+          const a = R1[i] * TAU;
+          const r = Math.pow(R2[i], 2.2) * (1.5 + 9 * p * p) * inhale;
+          o.x[i] = CX + Math.cos(a) * r;
+          o.y[i] = CY + Math.sin(a) * r;
+          o.a[i] = i % 7 === 0 ? p * 0.85 * flick : 0;
+          o.s[i] = i % 49 === 0 ? 1.8 : 1.3;
           o.c[i] = 0;
+          o.h[i] = 0.55 * p;
         }
       }
 
-      // 1. Cells: k stardust spheres. Particle i belongs to cell i mod k, so a
+      // 1. The first cell, burning like a young star: a boiling surface,
+      // loops of matter at the limb and dust streaming away.
+      const EMBER_R = 235;
+      function EMBER(t, o) {
+        const rc = EMBER_R;
+        const ay = t * 0.18;
+        const cy = Math.cos(ay);
+        const sy = Math.sin(ay);
+        const cax = Math.cos(0.3);
+        const sax = Math.sin(0.3);
+        for (let i = 0; i < N; i++) {
+          const r1 = R1[i];
+          o.c[i] = 0;
+          o.h[i] = 1;
+          if (r1 < 0.8) {
+            const u = R2[i] * 2 - 1;
+            const ph = R3[i] * TAU;
+            const q = Math.sqrt(1 - u * u);
+            const shell = r1 < 0.66;
+            const rad = shell ? 1 + 0.035 * Math.sin(ph * 6 + u * 9 + t * 1.9) * Math.sin(u * 11 - t * 1.4 + ph * 4) : Math.cbrt(R4[i]) * 0.92;
+            const x = Math.cos(ph) * q * rad;
+            const y = u * rad;
+            const z = Math.sin(ph) * q * rad;
+            const x1 = x * cy - z * sy;
+            const z1 = x * sy + z * cy;
+            const y2 = y * cax - z1 * sax;
+            const z2 = y * sax + z1 * cax;
+            const d = (z2 + 1) / 2;
+            o.x[i] = CX + x1 * rc;
+            o.y[i] = CY + y2 * rc;
+            o.a[i] = shell ? (0.1 + 0.9 * d * d) * (0.8 + 0.2 * Math.sin(t * 5 + i * 1.7)) : 0.18 + 0.3 * d;
+            o.s[i] = 1.35 * (0.7 + 0.6 * d);
+          } else if (r1 < 0.92) {
+            // Prominences: arcs of matter lifting off the limb.
+            const loop = Math.floor(R2[i] * 3);
+            const base = [5.55, 2.85, 1.05][loop] + t * 0.04;
+            const span = [0.13, 0.08, 0.06][loop];
+            const s = R3[i];
+            const ang = base + (s - 0.5) * span * 2;
+            const hgt = [0.11, 0.07, 0.045][loop] * (0.75 + 0.25 * Math.sin(t * 0.8 + loop * 2)) * Math.sin(Math.PI * s);
+            const rr = rc * (1 + hgt) + (R4[i] - 0.5) * 6;
+            o.x[i] = CX + Math.cos(ang) * rr;
+            o.y[i] = CY + Math.sin(ang) * rr;
+            o.a[i] = 0.3 + 0.5 * Math.sin(Math.PI * s);
+            o.s[i] = 1.1;
+          } else {
+            // Corona dust streaming outward.
+            const life = (t * 0.12 + R4[i]) % 1;
+            const rr = rc * (1.02 + life * 0.95);
+            const ang = R2[i] * TAU + life * 0.3;
+            o.x[i] = CX + Math.cos(ang) * rr;
+            o.y[i] = CY + Math.sin(ang) * rr;
+            o.a[i] = (1 - life) * 0.4;
+            o.s[i] = 1;
+          }
+        }
+      }
+
+      // 2. Cells: k stardust spheres. Particle i belongs to cell i mod k, so a
       // cell's particles split evenly into its two children when k doubles.
+      // They cool from ember to white as they multiply.
       function vogel(k) {
         const pts = [];
         for (let c = 0; c < k; c++) {
@@ -210,6 +282,7 @@
           const rc = 175 * Math.pow(k, -0.47);
           const sp = rc * 2.35;
           const V = VOGEL[k];
+          const heat = 1 - smooth(T.div[0] + 0.2, T.div[3] + 0.9, t);
           for (let i = 0; i < N; i++) {
             const c = i % k;
             const u = R2[i] * 2 - 1;
@@ -245,11 +318,12 @@
             o.a[i] = role === 0 ? 0.12 + 0.85 * d * d : role === 2 ? 0.45 + 0.55 * d : 0.1 + 0.35 * d;
             o.s[i] = (role === 2 ? 1.3 : 1.35) * (0.7 + 0.6 * d) * clamp(0.75 + rc / 400, 0.8, 1.2);
             o.c[i] = 0;
+            o.h[i] = heat;
           }
         };
       }
 
-      // 2. Website: a browser window with a page inside.
+      // 3. Website: a browser window with a page inside.
       let WEB_SH;
       function buildWeb() {
         WEB_SH = shape((s) => {
@@ -280,14 +354,14 @@
         });
       }
       function WEB(t, o) {
-        const lt = t - 6.1;
-        const mv = eio(smooth(0.5, 1.2, lt));
+        const lt = t - T.web;
+        const mv = eio(smooth(0.4, 0.95, lt));
         const cx = lerp(1290, 590, mv);
         const cy = lerp(700, 462, mv);
-        const click = clamp((lt - 1.25) / 0.45);
+        const click = clamp((lt - 1.0) / 0.45);
         for (let i = 0; i < N; i++) {
           const g = WEB_SH.g[i];
-          if (g === 2) fromShape(WEB_SH, i, o, cx, cy, lt > 1.6 ? 1 - smooth(1.6, 1.9, lt) : 1);
+          if (g === 2) fromShape(WEB_SH, i, o, cx, cy, lt > 1.35 ? 1 - smooth(1.35, 1.55, lt) : 1);
           else if (g === 3) {
             const a = R1[i] * TAU;
             const r = 12 + click * 70;
@@ -296,11 +370,12 @@
             o.a[i] = click > 0 && click < 1 ? (1 - click) * 0.9 : 0;
             o.s[i] = 1.5;
             o.c[i] = 0;
+            o.h[i] = 0;
           } else fromShape(WEB_SH, i, o, 0, 0, g === 1 ? 0.8 + 0.2 * Math.sin(t * 5) + (click > 0 && click < 1 ? 0.5 * (1 - click) : 0) : 1);
         }
       }
 
-      // 3. Phone app: live list, a notification drops in.
+      // 4. Phone app: live list, a notification drops in.
       let APP_SH;
       function buildApp() {
         APP_SH = shape((s) => {
@@ -325,7 +400,7 @@
         });
       }
       function APP(t, o) {
-        const lt = t - 7.7;
+        const lt = t - T.app;
         const scroll = lt * 55;
         const drop = eoExpo(clamp((lt - 0.45) / 0.5));
         for (let i = 0; i < N; i++) {
@@ -341,7 +416,7 @@
         }
       }
 
-      // 4. AI: a network with pulses racing from input to output.
+      // 5. AI: a network with pulses racing from input to output.
       const LAYERS = [4, 6, 6, 4];
       const LX = [600, 840, 1080, 1320];
       const nodeY = (l, j) => CY + (j - (LAYERS[l] - 1) / 2) * 104;
@@ -355,6 +430,7 @@
         for (let i = 0; i < N; i++) {
           const r = R1[i];
           o.c[i] = 0;
+          o.h[i] = 0;
           if (r < 0.24) {
             // Nodes: small rotating spheres.
             const nd = nodes[i % nodes.length];
@@ -409,7 +485,7 @@
         }
       }
 
-      // 5. 3D tower, built floor by floor; a floor opens.
+      // 6. 3D tower, built floor by floor; a floor opens.
       const TW = { W: 390, D: 250, F: 14, h: 33 };
       let TOWER;
       function buildTower() {
@@ -451,14 +527,13 @@
           const z = d < 130 ? -45 : d < 220 ? -45 + (d - 130) : d < 350 ? 45 : 45 - (d - 350);
           pts.push([x, F * h + 26, z, F, 0.8, 1.3]);
         }
-        const plan = pts.length;
+        // Floor plan revealed when a floor lifts (group 70).
         for (let k = 0; k < 260; k++) {
           const u = k / 260;
           if (k < 120) pts.push([-TW.W / 2 + u * (260 / 120) * TW.W * 0.46, 7 * h + 1, 0, 70, 1, 1.5]);
           else if (k < 190) pts.push([-60, 7 * h + 1, -TW.D / 2 + ((k - 120) / 70) * TW.D, 70, 1, 1.5]);
           else pts.push([70, 7 * h + 1, -TW.D / 2 + ((k - 190) / 70) * TW.D, 70, 1, 1.5]);
         }
-        void plan;
         for (let gx = -6; gx <= 6; gx++)
           for (let k = -30; k <= 30; k++) {
             pts.push([gx * 55, 0, k * 11, 99, 0.18 * (1 - Math.abs(k) / 31), 1]);
@@ -476,15 +551,15 @@
           TOWER.f[i] = p[3];
           TOWER.b[i] = p[4];
           TOWER.s[i] = p[5];
-          TOWER.delay[i] = p[3] === 99 ? 0 : p[3] === 70 ? 0 : (Math.min(p[3], TW.F) / TW.F) * 1.25;
+          TOWER.delay[i] = p[3] === 99 || p[3] === 70 ? 0 : (Math.min(p[3], TW.F) / TW.F) * 1.1;
         }
       }
       function TOWERF(t, o) {
-        const A = 0.55 + (t - 12.1) * 0.3;
+        const A = 0.55 + (t - T.tower) * 0.32;
         const ca = Math.cos(A);
         const sa = Math.sin(A);
         const base = CY + (TW.F * TW.h) / 2 + 20;
-        const lift = 105 * eio(smooth(13.85, 14.35, t)) * (1 - eio(smooth(15.05, 15.45, t)));
+        const lift = 105 * eio(smooth(T.tower + 1.95, T.tower + 2.35, t));
         const open = lift / 105;
         for (let i = 0; i < N; i++) {
           const f = TOWER.f[i];
@@ -503,10 +578,11 @@
           o.a[i] = a;
           o.s[i] = TOWER.s[i] * (0.8 + 0.4 * d);
           o.c[i] = 0;
+          o.h[i] = 0;
         }
       }
 
-      // 6. Marketing: a rising chart and a growth line with an arrow.
+      // 7. Marketing: a rising chart and a growth line with an arrow.
       let CHART_SH;
       const BARS = [0.2, 0.28, 0.26, 0.4, 0.52, 0.68, 0.9];
       function buildChart() {
@@ -538,9 +614,9 @@
           if (g >= 10 && g < 20) {
             const k = g - 10;
             const hr = (740 - CHART_SH.y[i]) / (BARS[k] * 520);
-            CHART_SH.delay[i] = k * 0.1 + hr * 0.55;
-          } else if (g === 20) CHART_SH.delay[i] = 0.95 + ((CHART_SH.x[i] - 510) / 900) * 0.55;
-          else if (g === 21) CHART_SH.delay[i] = 1.55;
+            CHART_SH.delay[i] = k * 0.07 + hr * 0.42;
+          } else if (g === 20) CHART_SH.delay[i] = 0.72 + ((CHART_SH.x[i] - 510) / 900) * 0.4;
+          else if (g === 21) CHART_SH.delay[i] = 1.15;
           else CHART_SH.delay[i] = 0;
         }
       }
@@ -551,7 +627,7 @@
         }
       }
 
-      // 7. Hardware: a self-service kiosk takes a contactless payment.
+      // 8. Hardware: a self-service kiosk takes a contactless payment.
       let KIOSK_SH;
       function buildKiosk() {
         KIOSK_SH = shape((s) => {
@@ -587,8 +663,8 @@
         });
       }
       function KIOSK(t, o) {
-        const shift = -46;
-        const lt = t - 19.1;
+        const shift = -12;
+        const lt = t - T.kiosk - 0.1;
         const ph = eio(smooth(0.35, 0.75, lt)) * (1 - eio(smooth(1.45, 1.8, lt)));
         const waves = smooth(0.7, 0.8, lt) * (1 - smooth(1.35, 1.5, lt));
         const paper = eio(smooth(1.1, 1.6, lt));
@@ -608,8 +684,10 @@
         }
       }
 
-      // 8. Support: a shield, a radar sweep, threats that burst at the edge.
+      // 9. Support: a shield, a radar sweep, threats that burst at the edge.
       let SHIELD_SH;
+      const THREAT_ANG = [-0.3, -2.8, 0.55, -1.2, 2.55, -1.95];
+      const threatT = (k) => T.shield + 0.35 + k * 0.2;
       function shieldPoly(sc) {
         const p = [[-180, -240], [180, -240], [180, 20]];
         for (let k = 1; k <= 14; k++) {
@@ -645,13 +723,14 @@
             fromShape(SHIELD_SH, i, o, 0, 0, 0.06 + 0.8 * k);
           } else if (g === 16) {
             const th = tk++ % 6;
-            const ang = [-0.3, -2.8, 0.55, -1.2, 2.55, -1.95][th];
-            const t0 = 21.35 + th * 0.24;
-            const ta = t0 + 0.62;
+            const ang = THREAT_ANG[th];
+            const t0 = threatT(th);
+            const ta = t0 + 0.5;
             o.c[i] = 1;
+            o.h[i] = 0;
             o.s[i] = 1.8;
             if (t < ta) {
-              const d = lerp(600, 290, clamp((t - t0) / 0.62));
+              const d = lerp(600, 290, clamp((t - t0) / 0.5));
               o.x[i] = CX + Math.cos(ang) * d + (R2[i] - 0.5) * 22;
               o.y[i] = 490 + Math.sin(ang) * d + (R3[i] - 0.5) * 22;
               o.a[i] = t < t0 ? 0 : 0.95;
@@ -667,15 +746,32 @@
         }
         // The shield brightens briefly on each impact.
         let hit = 0;
-        for (let k = 0; k < 6; k++) hit = Math.max(hit, 1 - clamp((t - (21.35 + k * 0.24 + 0.62)) / 0.35) - (t < 21.35 + k * 0.24 + 0.62 ? 1 : 0));
+        for (let k = 0; k < 6; k++) {
+          const ta = threatT(k) + 0.5;
+          if (t >= ta) hit = Math.max(hit, 1 - clamp((t - ta) / 0.35));
+        }
         if (hit > 0) for (let i = 0; i < N; i++) if (SHIELD_SH.g[i] === 0) o.a[i] = Math.min(1.4, o.a[i] + hit * 0.45);
       }
 
-      // 9. Galaxy: all solutions as one turning ecosystem.
+      // 10. Breath: the solutions dissolve into drifting dust.
+      function DUST(t, o) {
+        const lt = t - T.dark;
+        for (let i = 0; i < N; i++) {
+          o.x[i] = CX + (R1[i] - 0.5) * W * 1.1 + Math.sin(t * 0.15 + R3[i] * TAU) * 30;
+          o.y[i] = CY + (R2[i] - 0.5) * H * 0.8 + Math.cos(t * 0.12 + R4[i] * TAU) * 20 - lt * 6 * (0.5 + R3[i]);
+          o.a[i] = i % 3 === 0 ? 0.05 + 0.32 * Math.pow(R4[i], 3) : 0.02;
+          o.s[i] = 0.9 + R3[i] * 0.9;
+          o.c[i] = 0;
+          o.h[i] = 0;
+        }
+      }
+
+      // 11. Galaxy: all solutions as one turning ecosystem, spinning up.
       function GALAXY(t, o) {
-        const rot = (t - 23) * 0.32;
+        const rot = (t - T.galaxy) * 0.32 + 2.4 * Math.pow(smooth(T.galaxy + 1.0, T.collapse + 0.45, t), 2);
         for (let i = 0; i < N; i++) {
           o.c[i] = 0;
+          o.h[i] = 0;
           if (R1[i] < 0.16) {
             const r = Math.pow(R2[i], 1.6) * 90;
             const a = R3[i] * TAU + rot * 1.5;
@@ -683,6 +779,7 @@
             o.y[i] = CY + Math.sin(a) * r * 0.55;
             o.a[i] = 0.5 + 0.5 * R4[i];
             o.s[i] = 1.2 + R4[i] * 0.8;
+            o.h[i] = 0.25;
           } else if (R1[i] < 0.9) {
             const u = Math.pow(R2[i], 0.85);
             const arm = i % 2;
@@ -705,7 +802,21 @@
         }
       }
 
-      // 10. The name: CybCell in stardust, with a quiet halo.
+      // 12. Collapse: everything is pulled into a single point again.
+      function COLLAPSE(t, o) {
+        for (let i = 0; i < N; i++) {
+          const a = R1[i] * TAU + t * 3;
+          const r = Math.pow(R2[i], 2) * 6;
+          o.x[i] = CX + Math.cos(a) * r;
+          o.y[i] = CY + Math.sin(a) * r;
+          o.a[i] = i % 5 === 0 ? 0.9 : 0.2;
+          o.s[i] = i % 45 === 0 ? 1.8 : 1.2;
+          o.c[i] = 0;
+          o.h[i] = 0.45;
+        }
+      }
+
+      // 13. The name: CybCell in stardust, with a warm rim light like a lit edge.
       let WORD;
       function buildWord() {
         const off = document.createElement('canvas');
@@ -721,6 +832,11 @@
         g.fillStyle = '#fff';
         g.fillText('CybCell', off.width / 2, off.height / 2);
         const data = g.getImageData(0, 0, off.width, off.height).data;
+        const inside = (x, y) => {
+          x |= 0;
+          y |= 0;
+          return x >= 0 && y >= 0 && x < off.width && y < off.height && data[(y * off.width + x) * 4 + 3] >= 128;
+        };
         const pts = [];
         const step = 3.4;
         let s = 0;
@@ -729,13 +845,14 @@
             s++;
             const jx = x + (hash(s) - 0.5) * step;
             const jy = y + (hash(s + 1) - 0.5) * step;
-            const xi = jx | 0;
-            const yi = jy | 0;
-            if (xi < 0 || yi < 0 || xi >= off.width || yi >= off.height || data[(yi * off.width + xi) * 4 + 3] < 128) continue;
-            pts.push([jx + CX - off.width / 2, jy + 455 - off.height / 2]);
+            if (!inside(jx, jy)) continue;
+            // Edge: some neighbour 6 px away lies outside the letter.
+            let edge = 0;
+            for (let k = 0; k < 8 && !edge; k++) if (!inside(jx + Math.cos((k / 8) * TAU) * 6, jy + Math.sin((k / 8) * TAU) * 6)) edge = 1;
+            pts.push([jx + CX - off.width / 2, jy + 455 - off.height / 2, edge]);
           }
         const M = pts.length;
-        WORD = { x: new Float32Array(N), y: new Float32Array(N), on: new Uint8Array(N), delay: new Float32Array(N) };
+        WORD = { x: new Float32Array(N), y: new Float32Array(N), on: new Uint8Array(N), edge: new Uint8Array(N), delay: new Float32Array(N) };
         const take = Math.min(M, Math.floor(N * 0.86));
         for (let i = 0; i < N; i++) {
           if (i < take) {
@@ -743,7 +860,8 @@
             WORD.x[i] = p[0];
             WORD.y[i] = p[1];
             WORD.on[i] = 1;
-            WORD.delay[i] = ((p[0] - 380) / 1160) * 0.55;
+            WORD.edge[i] = p[2];
+            WORD.delay[i] = ((p[0] - 380) / 1160) * 0.14;
           } else {
             const a = R2[i] * TAU;
             const r = 640 + R3[i] * 420;
@@ -755,41 +873,55 @@
         }
       }
       function WORDF(t, o) {
+        const lt = t - T.logo;
+        const rim = 0.85 * smooth(0.5, 1.6, lt);
+        const sweepX = lerp(260, 1680, clamp((lt - 0.9) / 1.5));
+        const sweepOn = lt > 0.9 && lt < 2.5 ? 1 : 0;
         for (let i = 0; i < N; i++) {
           o.c[i] = 0;
           if (WORD.on[i]) {
-            o.x[i] = WORD.x[i] + Math.sin(t * 1.3 + R1[i] * 40) * 1.4;
+            const x = WORD.x[i];
+            const band = sweepOn * Math.exp(-Math.pow((x - sweepX) / 80, 2));
+            o.x[i] = x + Math.sin(t * 1.3 + R1[i] * 40) * 1.4;
             o.y[i] = WORD.y[i] + Math.cos(t * 1.1 + R2[i] * 40) * 1.4;
-            o.a[i] = (0.7 + 0.3 * R3[i]) * (0.82 + 0.18 * Math.sin(t * 2.4 + i));
-            o.s[i] = R4[i] > 0.94 ? 2.3 : 1.5;
+            const base = WORD.edge[i] ? 0.85 + 0.2 * R3[i] : lerp(0.8, 0.6, smooth(0.5, 1.6, lt)) + 0.2 * R3[i];
+            o.a[i] = Math.min(1.2, base * (0.85 + 0.15 * Math.sin(t * 2.4 + i)) + band * 0.5);
+            o.s[i] = R4[i] > 0.94 ? 2.3 : 1.65;
+            o.h[i] = clamp((WORD.edge[i] ? rim : 0) + band * 0.9);
           } else {
             o.x[i] = WORD.x[i] + Math.sin(t * 0.2 + i) * 8;
             o.y[i] = WORD.y[i] + Math.cos(t * 0.2 + i) * 5;
             o.a[i] = 0.06 + 0.18 * R4[i];
             o.s[i] = 0.9;
+            o.h[i] = 0;
           }
         }
       }
 
       /* --------------------------------------------------------- timeline */
 
-      const SEG = [
-        { t0: 0, f: STARS },
-        { t0: 0.8, f: CELLS(1), blend: 1.7, swirl: 220 },
-        { t0: 3.3, f: CELLS(2), blend: 0.42, swirl: 30 },
-        { t0: 3.9, f: CELLS(4), blend: 0.42, swirl: 30 },
-        { t0: 4.5, f: CELLS(8), blend: 0.42, swirl: 30 },
-        { t0: 5.1, f: CELLS(16), blend: 0.45, swirl: 30 },
-        { t0: 6.0, f: WEB, blend: 0.95, swirl: 160 },
-        { t0: 7.7, f: APP, blend: 0.75, swirl: 70 },
-        { t0: 9.0, f: AI, blend: 0.9, swirl: 140 },
-        { t0: 12.0, f: TOWERF, blend: 0.8, swirl: 120, delay: () => TOWER.delay },
-        { t0: 15.5, f: CHART, blend: 0.8, swirl: 120, delay: () => CHART_SH.delay },
-        { t0: 19.0, f: KIOSK, blend: 0.8, swirl: 130 },
-        { t0: 21.0, f: SHIELD, blend: 0.75, swirl: 110, delay: () => SHIELD_SH.delay },
-        { t0: 23.0, f: GALAXY, blend: 1.2, swirl: 260 },
-        { t0: 26.4, f: WORDF, blend: 1.0, swirl: 180, delay: () => WORD.delay },
-      ];
+      let SEG;
+      function buildTimeline() {
+        SEG = [
+          { t0: 0, f: POINT },
+          { t0: T.hit, f: EMBER, blend: 0.9, ease: 'expo', swirl: 40, cap: 70 },
+          { t0: T.div[0], f: CELLS(2), blend: 0.42, swirl: 30 },
+          { t0: T.div[1], f: CELLS(4), blend: 0.42, swirl: 30 },
+          { t0: T.div[2], f: CELLS(8), blend: 0.42, swirl: 30 },
+          { t0: T.div[3], f: CELLS(16), blend: 0.45, swirl: 30 },
+          { t0: T.web, f: WEB, blend: 0.75, swirl: 120, burst: 150, ease: 'expo', cap: 60 },
+          { t0: T.app, f: APP, blend: 0.6, swirl: 60, burst: 70 },
+          { t0: T.ai, f: AI, blend: 0.7, swirl: 120, burst: 130, ease: 'expo', cap: 60 },
+          { t0: T.tower, f: TOWERF, blend: 0.7, swirl: 100, burst: 110, delay: () => TOWER.delay },
+          { t0: T.chart, f: CHART, blend: 0.7, swirl: 100, burst: 110, delay: () => CHART_SH.delay },
+          { t0: T.kiosk, f: KIOSK, blend: 0.7, swirl: 110, burst: 110, ease: 'expo', cap: 60 },
+          { t0: T.shield, f: SHIELD, blend: 0.65, swirl: 100, burst: 110, delay: () => SHIELD_SH.delay, zoom: 0.86 },
+          { t0: T.dark, f: DUST, blend: 1.0, swirl: 200 },
+          { t0: T.galaxy, f: GALAXY, blend: 1.1, swirl: 280 },
+          { t0: T.collapse, f: COLLAPSE, blend: 0.4, ease: 'in', swirl: 260, cap: 80 },
+          { t0: T.logo, f: WORDF, blend: 0.9, ease: 'expo', burst: 90, cap: 80, delay: () => WORD.delay, maxDelay: 0.2 },
+        ];
+      }
 
       const A = buf();
       const B = buf();
@@ -802,7 +934,7 @@
         const seg = SEG[k];
         const blend = seg.blend || 0;
         const delays = seg.delay ? seg.delay() : null;
-        const maxDelay = delays ? 1.6 : 0;
+        const maxDelay = delays ? seg.maxDelay || 1.6 : 0;
         const inTransition = k > 0 && t < seg.t0 + blend * 1.3 + maxDelay;
         seg.f(t, B);
         if (!inTransition) {
@@ -811,146 +943,316 @@
           OUT.a.set(B.a);
           OUT.s.set(B.s);
           OUT.c.set(B.c);
+          OUT.h.set(B.h);
           STREAK.fill(0);
-          return { k, g: 1 };
+          return k;
         }
         SEG[k - 1].f(t, A);
+        const [ef, ed] = EASE[seg.ease || 'io'];
         const sw = seg.swirl || 0;
-        let gSum = 0;
+        const burst = seg.burst || 0;
+        const cap = seg.cap || 34;
         for (let i = 0; i < N; i++) {
           const st = R4[i] * blend * 0.3 + (delays ? delays[i] : 0);
           const g = clamp((t - seg.t0 - st) / blend);
-          const e = eio(g);
+          const e = ef(g);
           const dx = B.x[i] - A.x[i];
           const dy = B.y[i] - A.y[i];
           const len = Math.hypot(dx, dy) || 1;
           const arc = Math.sin(Math.PI * e) * sw * (R1[i] - 0.5) * 2;
-          OUT.x[i] = A.x[i] + dx * e + (-dy / len) * arc;
-          OUT.y[i] = A.y[i] + dy * e + (dx / len) * arc;
+          let x = A.x[i] + dx * e + (-dy / len) * arc;
+          let y = A.y[i] + dy * e + (dx / len) * arc;
+          if (burst) {
+            // Blast outward from the centre mid-flight, then settle.
+            const bx = x - CX;
+            const by = y - CY;
+            const bl = Math.hypot(bx, by) || 1;
+            const b = Math.sin(Math.PI * e) * burst * (0.4 + R2[i]);
+            x += (bx / bl) * b;
+            y += (by / bl) * b;
+          }
+          OUT.x[i] = x;
+          OUT.y[i] = y;
           const mid = Math.sin(Math.PI * g) * 0.25;
           OUT.a[i] = lerp(A.a[i], B.a[i], e) + mid * Math.max(A.a[i], B.a[i]);
           OUT.s[i] = lerp(A.s[i], B.s[i], e);
           OUT.c[i] = e < 0.5 ? A.c[i] : B.c[i];
+          OUT.h[i] = lerp(A.h[i], B.h[i], e);
           // Motion streak: direction of travel, length from speed.
-          const v = (eioD(g) / blend) * (1 / 60) * 1.6;
+          const v = (ed(g) / blend) * (1 / 60) * 1.6;
           let sxv = dx * v;
           let syv = dy * v;
           const sl = Math.hypot(sxv, syv);
-          if (sl > 34) {
-            sxv *= 34 / sl;
-            syv *= 34 / sl;
+          if (sl > cap) {
+            sxv *= cap / sl;
+            syv *= cap / sl;
           }
           STREAK[i * 2] = sxv;
           STREAK[i * 2 + 1] = syv;
-          gSum += g;
         }
-        return { k, g: gSum / N };
+        return k;
       }
 
       /* ---------------------------------------------------------- captions */
 
-      const CAPS = [
-        { t0: 0.95, t1: 3.05, text: 'Hər şey bir hüceyrədən başlayır.' },
-        { t0: 3.45, t1: 5.85, text: 'Biz biznesinizin rəqəmsal hüceyrələrini qururuq.' },
-        { t0: 6.35, t1: 8.9, label: '01  Sayt və tətbiq', text: 'Saytlar və mobil tətbiqlər.' },
-        { t0: 9.3, t1: 11.9, label: '02  Süni intellekt', text: 'Süni intellekt inteqrasiyası.' },
-        { t0: 12.3, t1: 15.35, label: '03  3D və AR', text: 'Bina tikilməmiş satılır.' },
-        { t0: 15.8, t1: 18.85, label: '04  Marketinq', text: 'Diqqəti satışa çeviririk.' },
-        { t0: 19.3, t1: 20.9, label: '05  Avadanlıq', text: 'Kiosk, POS, ağıllı ekranlar.' },
-        { t0: 21.3, t1: 22.9, label: '06  Dəstək', text: '24/7 dəstək və təhlükəsizlik.' },
-        { t0: 23.4, t1: 24.95, text: 'Hər həll bir hüceyrədir.' },
-        { t0: 25.05, t1: 26.3, text: 'Birlikdə ekosistem.' },
-        { t0: 27.35, t1: 30.5, text: 'Biznesiniz üçün rəqəmsal ekosistem.', y: 690, size: 40, dim: true },
-      ];
+      let CAPS;
+      function buildCaptions() {
+        CAPS = [
+          { t0: T.hit + 0.45, t1: T.div[0] - 0.25, text: 'HƏR ŞEY BİR HÜCEYRƏDƏN BAŞLAYIR.' },
+          { t0: T.div[0] + 0.25, t1: T.web - 0.5, text: 'BİZ BİZNESİNİZİN RƏQƏMSAL HÜCEYRƏLƏRİNİ QURURUQ.' },
+          { t0: T.web + 0.25, t1: T.ai - 0.2, label: '01 / 06   SAYT VƏ TƏTBİQ', text: 'SAYTLAR VƏ MOBİL TƏTBİQLƏR.' },
+          { t0: T.ai + 0.25, t1: T.tower - 0.2, label: '02 / 06   SÜNİ İNTELLEKT', text: 'SÜNİ İNTELLEKT İNTEQRASİYASI.' },
+          { t0: T.tower + 0.25, t1: T.chart - 0.2, label: '03 / 06   3D VƏ AR', text: 'BİNA TİKİLMƏMİŞ SATILIR.' },
+          { t0: T.chart + 0.25, t1: T.kiosk - 0.2, label: '04 / 06   MARKETİNQ', text: 'DİQQƏTİ SATIŞA ÇEVİRİRİK.' },
+          { t0: T.kiosk + 0.25, t1: T.shield - 0.2, label: '05 / 06   AVADANLIQ', text: 'KİOSK, POS, AĞILLI EKRANLAR.' },
+          { t0: T.shield + 0.25, t1: T.dark - 0.2, label: '06 / 06   DƏSTƏK', text: '24/7 DƏSTƏK VƏ TƏHLÜKƏSİZLİK.' },
+          { t0: T.dark + 0.35, t1: T.galaxy + 1.3, text: 'HƏR HƏLL BİR HÜCEYRƏDİR.' },
+          { t0: T.galaxy + 1.5, t1: T.collapse + 0.2, text: 'BİRLİKDƏ EKOSİSTEM.' },
+        ];
+      }
 
-      function drawCaption(c, t) {
-        if (t < c.t0 - 0.05 || t > c.t1 + 0.5) return;
-        const size = c.size || 56;
-        const y = c.y || 918;
-        const out = 1 - eio(clamp((t - c.t1) / 0.4));
-        ctx.save();
-        ctx.textBaseline = 'alphabetic';
-        if (c.label) {
-          const q = eoExpo(clamp((t - c.t0) / 0.7));
-          ctx.font = '400 19px "Geist Mono"';
-          ctx.letterSpacing = '2px';
-          ctx.fillStyle = `rgba(160,166,178,${0.95 * q * out})`;
-          const lw = ctx.measureText(c.label).width;
-          const lx = CX - (lw + 44) / 2;
-          ctx.fillRect(lx, y - size - 36, 30 * q, 1.5);
-          ctx.fillText(c.label, lx + 44, y - size - 29);
+      const CAP_Y = 874;
+      const LABEL_Y = 812;
+      const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZƏÜÖŞÇĞ0123456789/#_';
+
+      function charLayout(str, font, spacing) {
+        ctx.font = font;
+        ctx.letterSpacing = '0px';
+        const chars = [...str];
+        const ws = chars.map((ch) => ctx.measureText(ch).width);
+        const total = ws.reduce((a, b) => a + b, 0) + spacing * (chars.length - 1);
+        return { chars, ws, total };
+      }
+
+      /** Trailer title: characters flicker on in random order; tracking slowly widens while held. */
+      function drawTitle(str, t0, t1, t, y, size, rgb, seed) {
+        if (t < t0 || t > t1 + 0.45) return;
+        const life = clamp((t - t0) / Math.max(0.1, t1 - t0));
+        let sz = size;
+        let spacing = sz * (0.16 + 0.07 * life);
+        let L = charLayout(str, `500 ${sz}px Geist`, spacing);
+        if (L.total > 1480) {
+          sz *= 1480 / L.total;
+          spacing = sz * (0.16 + 0.07 * life);
+          L = charLayout(str, `500 ${sz}px Geist`, spacing);
         }
-        ctx.font = `500 ${size}px Geist`;
-        ctx.letterSpacing = `${-size * 0.028}px`;
-        const words = c.text.split(' ');
-        const space = ctx.measureText(' ').width;
-        const widths = words.map((w) => ctx.measureText(w).width);
-        const total = widths.reduce((a, b) => a + b, 0) + space * (words.length - 1);
-        let x = CX - total / 2;
-        words.forEach((w, j) => {
-          const q = eoExpo(clamp((t - c.t0 - j * 0.07) / 0.75));
-          const a = q * out;
-          if (a > 0.003) {
-            ctx.filter = `blur(${((1 - q) * 9 + (1 - out) * 6).toFixed(2)}px)`;
-            ctx.fillStyle = c.dim ? `rgba(170,176,188,${a})` : `rgba(245,246,248,${a})`;
-            ctx.fillText(w, x, y + (1 - q) * 26 - (1 - out) * 14);
+        let x = CX - L.total / 2;
+        ctx.textBaseline = 'alphabetic';
+        L.chars.forEach((ch, j) => {
+          const tr = t0 + hash(j * 7.3 + seed) * 0.34;
+          const te = t1 + hash(j * 3.1 + seed + 5) * 0.25;
+          if (t >= tr && ch !== ' ') {
+            const dt = t - tr;
+            const fl = dt < 0.1 ? (Math.floor(dt * 60) % 2 ? 0.2 : 1) : 1;
+            const q = clamp(dt / 0.2);
+            const out = 1 - clamp((t - te) / 0.18);
+            const a = fl * (0.3 + 0.7 * q) * out;
+            if (a > 0.004) {
+              ctx.fillStyle = `rgba(${rgb},${a.toFixed(3)})`;
+              ctx.fillText(ch, x, y);
+            }
           }
-          x += widths[j] + space;
+          x += L.ws[j] + spacing;
         });
+      }
+
+      /** Mono label that decodes from random glyphs into the real text. */
+      function drawDecode(str, t0, t1, t, y, size, rgb, seed, cursor = false) {
+        if (t < t0 || t > t1 + 0.3) return;
+        const spacing = size * 0.3;
+        const font = `400 ${size}px "Geist Mono"`;
+        const L = charLayout(str, font, spacing);
+        const out = 1 - clamp((t - t1) / 0.25);
+        let x = CX - L.total / 2;
+        ctx.textBaseline = 'alphabetic';
+        const frame = Math.floor(t * 30);
+        let lastX = x;
+        L.chars.forEach((ch, j) => {
+          const ta = t0 + j * 0.012;
+          const ts = t0 + 0.12 + j * 0.028 + hash(j + seed) * 0.08;
+          if (t >= ta && ch !== ' ') {
+            const g = t < ts ? GLYPHS[Math.floor(hash(j * 17 + frame * 3.7 + seed) * GLYPHS.length)] : ch;
+            ctx.fillStyle = `rgba(${rgb},${((t < ts ? 0.55 : 1) * out).toFixed(3)})`;
+            ctx.fillText(g, x, y);
+          }
+          if (t >= ta) lastX = x + L.ws[j] + spacing;
+          x += L.ws[j] + spacing;
+        });
+        if (cursor && Math.floor(t * 4) % 2 === 0) {
+          ctx.fillStyle = `rgba(${rgb},${out})`;
+          ctx.fillRect(lastX + 2, y - size * 0.78, size * 0.55, size * 0.95);
+        }
+      }
+
+      function drawCaptions(t) {
+        ctx.save();
+        for (const c of CAPS) {
+          if (c.label) {
+            drawDecode(c.label, c.t0 - 0.1, c.t1, t, LABEL_Y, 19, '160,160,160', c.t0 * 13);
+            if (t > c.t0 - 0.1 && t < c.t1 + 0.3) {
+              const q = eoExpo(clamp((t - c.t0 + 0.1) / 0.5)) * (1 - clamp((t - c.t1) / 0.25));
+              ctx.fillStyle = `rgba(229,72,77,${0.9 * q})`;
+              ctx.fillRect(CX - 14 * q, LABEL_Y + 13, 28 * q, 2);
+            }
+          }
+          drawTitle(c.text, c.t0, c.t1, t, CAP_Y, 38, '238,238,238', c.t0 * 7);
+        }
+        // Closing line under the name, revealed in two beats.
+        const tagA = 'BİZNESİNİZ ÜÇÜN';
+        const tagB = 'RƏQƏMSAL EKOSİSTEM.';
+        const sz = 24;
+        const sp = sz * 0.36;
+        const LA = charLayout(tagA, `500 ${sz}px Geist`, sp);
+        const LB = charLayout(tagB, `500 ${sz}px Geist`, sp);
+        const gap = sp * 3;
+        const x0 = CX - (LA.total + gap + LB.total) / 2;
+        const yT = 712;
+        const tagPart = (L, xs, t0, seed) => {
+          let x = xs;
+          L.chars.forEach((ch, j) => {
+            const tr = t0 + hash(j * 5.7 + seed) * 0.28;
+            if (t >= tr && ch !== ' ') {
+              const dt = t - tr;
+              const fl = dt < 0.1 ? (Math.floor(dt * 60) % 2 ? 0.2 : 1) : 1;
+              const a = fl * (0.3 + 0.7 * clamp(dt / 0.25)) * (1 - smooth(DUR - 0.8, DUR - 0.1, t));
+              ctx.fillStyle = `rgba(205,205,205,${a.toFixed(3)})`;
+              ctx.fillText(ch, x, yT);
+            }
+            x += L.ws[j] + sp;
+          });
+        };
+        ctx.font = `500 ${sz}px Geist`;
+        tagPart(LA, x0, T.tag1, 1);
+        tagPart(LB, x0 + LA.total + gap, T.tag2, 2);
+        ctx.restore();
+      }
+
+      /** Boot line: decodes, fills a progress bar, then collapses like a CRT into the point of light. */
+      function drawBoot(t) {
+        const t0 = T.boot;
+        const tOff = T.point;
+        if (t < t0 || t > tOff + 0.02) return;
+        const sy = 1 - smooth(tOff - 0.16, tOff - 0.08, t) * 0.985;
+        const sx = 1 - smooth(tOff - 0.08, tOff, t) * 0.995;
+        ctx.save();
+        ctx.setTransform(sx, 0, 0, sy, CX - CX * sx, CY - CY * sy);
+        drawDecode('CYBCELL  //  SİSTEM İŞƏ DÜŞÜR', t0, tOff + 1, t, CY + 6, 19, '180,180,180', 3, true);
+        const p = eio(smooth(t0 + 0.2, tOff - 0.2, t));
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillRect(CX - 170, CY + 34, 340, 1);
+        ctx.fillStyle = 'rgba(229,72,77,0.95)';
+        ctx.fillRect(CX - 170, CY + 34, 340 * p, 1.5);
+        ctx.font = '400 13px "Geist Mono"';
+        ctx.letterSpacing = '2px';
+        ctx.fillStyle = 'rgba(120,120,120,0.9)';
+        ctx.textAlign = 'right';
+        ctx.fillText(String(Math.round(p * 100)).padStart(3, '0') + '%', CX + 170, CY + 58);
+        ctx.textAlign = 'left';
+        ctx.fillText('INIT', CX - 170, CY + 58);
+        ctx.letterSpacing = '0px';
+        // When squashed, the whole line glows white like a switched-off tube.
+        const glowA = smooth(tOff - 0.16, tOff - 0.1, t);
+        if (glowA > 0) {
+          ctx.fillStyle = `rgba(255,248,240,${glowA})`;
+          ctx.fillRect(CX - 360, CY - 14, 720, 60);
+        }
         ctx.restore();
       }
 
       /* ------------------------------------------------------------ render */
 
-      const glow = document.createElement('canvas');
-      glow.width = glow.height = 64;
-      (() => {
-        const g = glow.getContext('2d');
-        const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-        gr.addColorStop(0, 'rgba(255,255,255,0.9)');
-        gr.addColorStop(0.22, 'rgba(255,255,255,0.28)');
-        gr.addColorStop(1, 'rgba(255,255,255,0)');
+      const mkSprite = (w, h, paint) => {
+        const c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        paint(c.getContext('2d'), w, h);
+        return c;
+      };
+      const radial = (stops) => (g, w, h) => {
+        const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+        for (const [o, c] of stops) gr.addColorStop(o, c);
         g.fillStyle = gr;
-        g.fillRect(0, 0, 64, 64);
-      })();
-      const glowRed = document.createElement('canvas');
-      glowRed.width = glowRed.height = 64;
-      (() => {
-        const g = glowRed.getContext('2d');
-        const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-        gr.addColorStop(0, 'rgba(255,90,95,0.9)');
-        gr.addColorStop(0.25, 'rgba(229,72,77,0.3)');
-        gr.addColorStop(1, 'rgba(229,72,77,0)');
-        g.fillStyle = gr;
-        g.fillRect(0, 0, 64, 64);
-      })();
-      const bg = document.createElement('canvas');
-      bg.width = W;
-      bg.height = H;
-      (() => {
-        const g = bg.getContext('2d');
+        g.fillRect(0, 0, w, h);
+      };
+      const glow = mkSprite(64, 64, radial([[0, 'rgba(255,255,255,0.9)'], [0.22, 'rgba(255,255,255,0.28)'], [1, 'rgba(255,255,255,0)']]));
+      const glowRed = mkSprite(64, 64, radial([[0, 'rgba(255,90,95,0.9)'], [0.25, 'rgba(229,72,77,0.3)'], [1, 'rgba(229,72,77,0)']]));
+      const glowEmber = mkSprite(64, 64, radial([[0, 'rgba(255,190,120,0.9)'], [0.25, 'rgba(255,110,40,0.3)'], [1, 'rgba(255,80,20,0)']]));
+      // Hit ring: a thin warm ring with a red outer fringe.
+      const ringSprite = mkSprite(512, 512, radial([[0, 'rgba(0,0,0,0)'], [0.8, 'rgba(0,0,0,0)'], [0.9, 'rgba(255,214,170,0.55)'], [0.94, 'rgba(255,90,50,0.3)'], [1, 'rgba(255,60,30,0)']]));
+      // Anamorphic streak: long horizontal flare.
+      const streak = mkSprite(1024, 96, (g, w, h) => {
+        const img = g.createImageData(w, h);
+        for (let y = 0; y < h; y++)
+          for (let x = 0; x < w; x++) {
+            const dx = Math.abs(x - w / 2);
+            const dy = y - h / 2;
+            const core = (Math.exp(-dx / 150) + 0.5 * Math.exp(-dx / 30)) * Math.exp(-(dy * dy) / 6);
+            const halo = Math.exp(-dx / 260) * Math.exp(-(dy * dy) / 220) * 0.35;
+            const v = Math.min(1, core + halo);
+            const hw = halo / (core + halo + 1e-6);
+            const k = (y * w + x) * 4;
+            img.data[k] = 255;
+            img.data[k + 1] = 225 - 60 * hw;
+            img.data[k + 2] = 200 - 110 * hw;
+            img.data[k + 3] = v * 255;
+          }
+        g.putImageData(img, 0, 0);
+      });
+
+      const bg = mkSprite(W, H, (g) => {
         const gr = g.createRadialGradient(CX, 500, 0, CX, 500, 1150);
-        gr.addColorStop(0, '#0c111b');
-        gr.addColorStop(0.5, '#070a10');
-        gr.addColorStop(1, '#020304');
+        gr.addColorStop(0, '#0c0c0d');
+        gr.addColorStop(0.5, '#060606');
+        gr.addColorStop(1, '#010101');
         g.fillStyle = gr;
         g.fillRect(0, 0, W, H);
-      })();
-      const vig = document.createElement('canvas');
-      vig.width = W;
-      vig.height = H;
-      (() => {
-        const g = vig.getContext('2d');
-        const gr = g.createRadialGradient(CX, 540, 420, CX, 540, 1250);
+      });
+      const vig = mkSprite(W, H, (g) => {
+        const gr = g.createRadialGradient(CX, 540, 380, CX, 540, 1200);
         gr.addColorStop(0, 'rgba(0,0,0,0)');
-        gr.addColorStop(1, 'rgba(0,0,0,0.62)');
+        gr.addColorStop(1, 'rgba(0,0,0,0.78)');
         g.fillStyle = gr;
         g.fillRect(0, 0, W, H);
-      })();
-      const layer = document.createElement('canvas');
-      layer.width = W;
-      layer.height = H;
-      const lx = layer.getContext('2d');
+      });
+      // Film grain: a few noise tiles around mid-grey, blended with overlay.
+      const GRAIN = [0, 1, 2, 3].map((k) =>
+        mkSprite(960, 540, (g, w, h) => {
+          const img = g.createImageData(w, h);
+          let s = 1000 + k * 7919;
+          for (let p = 0; p < w * h; p++) {
+            s = (s * 16807) % 2147483647;
+            const u = s / 2147483647;
+            s = (s * 16807) % 2147483647;
+            const v = s / 2147483647;
+            const n = 128 + (u + v - 1) * 70;
+            img.data[p * 4] = img.data[p * 4 + 1] = img.data[p * 4 + 2] = n;
+            img.data[p * 4 + 3] = 255;
+          }
+          g.putImageData(img, 0, 0);
+        }),
+      );
+
+      // Colour of a particle from heat h and brightness a: white -> ember.
+      const PAL = [];
+      for (let hq = 0; hq <= 12; hq++) {
+        const row = [];
+        for (let bq = 0; bq < 4; bq++) {
+          const h = hq / 12;
+          const b = (bq + 0.5) / 4;
+          const e = b < 0.5 ? [lerp(170, 255, b * 2), lerp(38, 105, b * 2), lerp(22, 40, b * 2)] : [255, lerp(105, 215, b * 2 - 1), lerp(40, 165, b * 2 - 1)];
+          row.push(`rgb(${Math.round(lerp(255, e[0], h))},${Math.round(lerp(255, e[1], h))},${Math.round(lerp(255, e[2], h))})`);
+        }
+        PAL.push(row);
+      }
+
+      const mk = () => {
+        const c = document.createElement('canvas');
+        c.width = W;
+        c.height = H;
+        return [c, c.getContext('2d')];
+      };
+      const [layer, lx] = mk();
+      const [tint, tx] = mk();
       const small = document.createElement('canvas');
       small.width = W / 4;
       small.height = H / 4;
@@ -960,44 +1262,110 @@
         const seg = SEG[k];
         const t1 = k + 1 < SEG.length ? SEG[k + 1].t0 : DUR;
         const p = clamp((t - seg.t0) / (t1 - seg.t0));
-        let scale = 1 + 0.045 * eio(p);
-        // A small breath at each transition.
-        const tb = t - seg.t0;
-        if (k > 0 && tb < (seg.blend || 0)) scale *= 1 - 0.02 * Math.sin((Math.PI * tb) / seg.blend);
-        return scale;
+        const prevZoom = k > 0 ? SEG[k - 1].zoom || 1 : 1;
+        const zoom = lerp(prevZoom, seg.zoom || 1, eio(clamp((t - seg.t0) / (seg.blend || 1))));
+        let scale = BASE * zoom * (1 + 0.05 * eio(p));
+        let ox = 0;
+        let oy = 0;
+        for (const [th, kk] of T.hits) {
+          const dt = t - th;
+          if (dt >= 0 && dt < 1.5) {
+            scale *= 1 + kk * 0.06 * Math.exp(-dt / 0.28);
+            const amp = kk * 16 * Math.exp(-dt / 0.2);
+            ox += amp * (0.6 * Math.sin(t * 91.7 + th) + 0.4 * Math.sin(t * 53.3 + th * 3));
+            oy += amp * (0.6 * Math.sin(t * 77.1 + th * 2) + 0.4 * Math.sin(t * 41.9 + th * 5));
+          } else if (dt < 0 && dt > -0.7 && kk >= 0.75) scale *= 1 + 0.035 * Math.pow(1 + dt / 0.7, 2);
+        }
+        return { scale, ox, oy };
       }
 
+      function hitFx(t) {
+        let flash = 0;
+        let ca = 0;
+        let flare = 0;
+        let ring = -1;
+        for (const [th, kk] of T.hits) {
+          const dt = t - th;
+          if (dt < 0 || dt > 2.5) continue;
+          const big = kk >= 0.95;
+          flash = Math.max(flash, (big ? 0.95 : kk >= 0.75 ? 0.7 : kk * 0.45) * Math.exp(-dt / (big ? 0.09 : 0.06)));
+          ca = Math.max(ca, kk * 14 * Math.exp(-dt / 0.22));
+          flare = Math.max(flare, kk * Math.exp(-dt / (big ? 0.6 : 0.3)));
+          if (big && dt < 0.9) ring = dt;
+        }
+        // Steady flares: the point of light, the burning cell, the name.
+        const point = t < T.hit ? smooth(T.point, T.hit, t) : 0;
+        const ember = smooth(T.hit, T.hit + 0.3, t) * (1 - smooth(T.div[0], T.div[0] + 1.2, t));
+        const body = smooth(T.hit, T.hit + 0.45, t) * (1 - smooth(T.div[0] - 0.05, T.div[0] + 0.3, t));
+        const logo = smooth(T.logo, T.logo + 0.3, t) * 0.12 * (1 - smooth(T.logo + 1.2, T.logo + 2.4, t));
+        const star = t > T.collapse + 0.2 && t < T.logo ? smooth(T.collapse + 0.2, T.logo - 0.1, t) * 0.6 : 0;
+        flare = Math.max(flare, point * 0.55, ember * 0.3, logo, star);
+        return { flash, ca, flare, ring, ember, body };
+      }
+
+      let frameNo = 0;
       function draw(t) {
-        const { k } = compose(t);
-        const scale = camera(t, k);
+        const k = compose(t);
+        const cam = camera(t, k);
+        const fx = hitFx(t);
+        const ox = CX + cam.ox;
+        const oy = CY + cam.oy;
 
         ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
         ctx.filter = 'none';
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.drawImage(bg, 0, 0);
+
+        // The burning cell lights the space around it.
+        if (fx.ember > 0.01) {
+          const r = EMBER_R * cam.scale * 2.9;
+          const gr = ctx.createRadialGradient(ox, oy, EMBER_R * cam.scale * 0.6, ox, oy, r);
+          gr.addColorStop(0, `rgba(255,96,32,${0.3 * fx.ember})`);
+          gr.addColorStop(0.35, `rgba(200,50,20,${0.12 * fx.ember})`);
+          gr.addColorStop(1, 'rgba(120,20,10,0)');
+          ctx.fillStyle = gr;
+          ctx.fillRect(0, 0, W, H);
+        }
+        if (fx.body > 0.01) {
+          const r = EMBER_R * cam.scale * eoExpo(clamp((t - T.hit) / 0.5)) * 1.01;
+          const gr = ctx.createRadialGradient(ox - r * 0.28, oy - r * 0.3, 0, ox, oy, r);
+          gr.addColorStop(0, `rgba(255,196,120,${0.62 * fx.body})`);
+          gr.addColorStop(0.55, `rgba(240,108,42,${0.4 * fx.body})`);
+          gr.addColorStop(0.92, `rgba(165,42,18,${0.3 * fx.body})`);
+          gr.addColorStop(1, 'rgba(110,20,8,0)');
+          ctx.fillStyle = gr;
+          ctx.beginPath();
+          ctx.arc(ox, oy, r, 0, TAU);
+          ctx.fill();
+        }
 
         // Particles on their own layer so the bloom only picks them up.
         lx.setTransform(1, 0, 0, 1, 0, 0);
         lx.clearRect(0, 0, W, H);
-        lx.setTransform(scale, 0, 0, scale, CX - CX * scale, CY - CY * scale);
-        lx.strokeStyle = '#fff';
+        lx.setTransform(cam.scale, 0, 0, cam.scale, ox - CX * cam.scale, oy - CY * cam.scale);
         lx.lineWidth = 1;
         lx.lineCap = 'round';
+        let last = '';
         for (let i = 0; i < N; i++) {
           const a = OUT.a[i];
           if (a < 0.01) continue;
           const x = OUT.x[i];
           const y = OUT.y[i];
           const s = OUT.s[i];
-          const red = OUT.c[i] === 1;
+          const h = OUT.h[i];
+          const style = OUT.c[i] === 1 ? '#ff5a5f' : h < 0.04 ? '#fff' : PAL[Math.min(12, Math.round(h * 12))][Math.min(3, (a * 4) | 0)];
+          if (style !== last) {
+            lx.fillStyle = style;
+            lx.strokeStyle = style;
+            last = style;
+          }
           lx.globalAlpha = a > 1 ? 1 : a;
-          lx.fillStyle = red ? '#ff5a5f' : '#fff';
           lx.fillRect(x - s / 2, y - s / 2, s, s);
           const vx = STREAK[i * 2];
           const vy = STREAK[i * 2 + 1];
           if (vx * vx + vy * vy > 9) {
             lx.globalAlpha = Math.min(1, a) * 0.35;
-            lx.strokeStyle = red ? '#ff5a5f' : '#fff';
             lx.beginPath();
             lx.moveTo(x, y);
             lx.lineTo(x - vx, y - vy);
@@ -1010,40 +1378,103 @@
           if (a < 0.72 || OUT.s[i] < 1.6) continue;
           const g = 10 + OUT.s[i] * 5;
           lx.globalAlpha = Math.min(1, a) * 0.32;
-          lx.drawImage(OUT.c[i] === 1 ? glowRed : glow, OUT.x[i] - g / 2, OUT.y[i] - g / 2, g, g);
+          lx.drawImage(OUT.c[i] === 1 ? glowRed : OUT.h[i] > 0.5 ? glowEmber : glow, OUT.x[i] - g / 2, OUT.y[i] - g / 2, g, g);
         }
         lx.globalCompositeOperation = 'source-over';
         lx.globalAlpha = 1;
         lx.setTransform(1, 0, 0, 1, 0, 0);
 
         ctx.drawImage(layer, 0, 0);
+
+        // Chromatic split on impacts: warm-tinted copies offset left and right.
+        if (fx.ca > 0.8) {
+          for (const [col, dx, al] of [['rgb(255,50,30)', -fx.ca, 0.55], ['rgb(255,190,90)', fx.ca, 0.35]]) {
+            tx.globalCompositeOperation = 'source-over';
+            tx.clearRect(0, 0, W, H);
+            tx.drawImage(layer, 0, 0);
+            tx.globalCompositeOperation = 'source-in';
+            tx.fillStyle = col;
+            tx.fillRect(0, 0, W, H);
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = al;
+            ctx.drawImage(tint, dx, 0);
+          }
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'source-over';
+        }
+
         // Bloom: a blurred, downscaled copy added on top.
         sx.clearRect(0, 0, W / 4, H / 4);
         sx.filter = 'blur(5px)';
         sx.drawImage(layer, 0, 0, W / 4, H / 4);
         sx.filter = 'none';
         ctx.globalCompositeOperation = 'lighter';
-        ctx.globalAlpha = 0.85;
+        ctx.globalAlpha = Math.min(1, 0.85 + fx.flare * 0.5);
         ctx.drawImage(small, 0, 0, W, H);
+
+        // Lens: anamorphic streak and a ring on the biggest hits.
+        if (fx.flare > 0.01) {
+          ctx.globalAlpha = Math.min(1, fx.flare);
+          const sw = 1400 + fx.flare * 1400;
+          ctx.drawImage(streak, ox - sw / 2, oy - 40, sw, 80);
+          ctx.globalAlpha = Math.min(1, fx.flare) * 0.5;
+          ctx.drawImage(streak, ox - sw * 0.35, oy - 14, sw * 0.7, 28);
+        }
+        if (fx.ring >= 0) {
+          const q = fx.ring / 0.9;
+          const r = 80 + 1100 * eoExpo(q);
+          ctx.globalAlpha = (1 - q) * 0.7;
+          ctx.drawImage(ringSprite, ox - r, oy - r, r * 2, r * 2);
+        }
         ctx.globalAlpha = 1;
         ctx.globalCompositeOperation = 'source-over';
 
-        for (const c of CAPS) drawCaption(c, t);
+        drawBoot(t);
+        drawCaptions(t);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.filter = 'none';
         ctx.drawImage(vig, 0, 0);
 
-        // Fade from and to black.
-        const fade = Math.max(1 - smooth(0, 0.6, t), smooth(DUR - 0.7, DUR, t));
+        // Grain.
+        ctx.globalCompositeOperation = 'overlay';
+        ctx.globalAlpha = 0.45;
+        ctx.drawImage(GRAIN[frameNo++ % 4], 0, 0, W, H);
+        ctx.globalCompositeOperation = 'source-over';
+
+        // Silence before a hit: the picture holds its breath too.
+        let dim = 0;
+        for (const [a, b] of T.silence) if (t >= a && t < b && a > 3) dim = 0.45;
+        // Impact flash.
+        if (fx.flash > 0.004) {
+          ctx.globalAlpha = fx.flash;
+          ctx.fillStyle = '#fff6ec';
+          ctx.fillRect(0, 0, W, H);
+        }
+        const fade = Math.max(dim, smooth(DUR - 0.8, DUR, t));
         if (fade > 0) {
           ctx.globalAlpha = fade;
           ctx.fillStyle = '#000';
           ctx.fillRect(0, 0, W, H);
-          ctx.globalAlpha = 1;
         }
+        ctx.globalAlpha = 1;
+        // Letterbox.
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, W, BAR);
+        ctx.fillRect(0, H - BAR, W, BAR);
       }
 
       async function init() {
-        await Promise.all([document.fonts.load('500 56px Geist'), document.fonts.load('600 100px Geist'), document.fonts.load('400 19px "Geist Mono"')]);
+        T = await (await fetch('timeline.json')).json();
+        DUR = T.duration;
+        window.DURATION = DUR;
+        for (let k = 0; k < 20; k++) {
+          try {
+            await Promise.all([document.fonts.load('500 38px Geist'), document.fonts.load('600 100px Geist'), document.fonts.load('400 17px "Geist Mono"')]);
+            break;
+          } catch {
+            await new Promise((r) => setTimeout(r, 100));
+          }
+        }
         buildWeb();
         buildApp();
         buildTower();
@@ -1051,16 +1482,18 @@
         buildKiosk();
         buildShield();
         buildWord();
+        buildTimeline();
+        buildCaptions();
       }
 
       const params = new URLSearchParams(location.search);
       window.ready = init().then(() => true);
       window.seek = async (t) => {
         await window.ready;
+        frameNo = Math.round(t * 60);
         draw(t);
         return true;
       };
-      window.DURATION = DUR;
       if (params.has('render')) document.body.classList.add('render');
       else
         window.ready.then(() => {
