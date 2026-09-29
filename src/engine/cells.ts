@@ -115,7 +115,6 @@ export class CellEngine {
   private phyllo: { x: number; y: number }[] = [];
   private phylloCentroid: { x: number; y: number }[] = [];
   private wordPts: { x: number; y: number }[] = [];
-  private heroSpacing = 60;
   private netSpacing = 40;
   private rx = 200;
   private ry = 200;
@@ -367,7 +366,6 @@ export class CellEngine {
     this.rx = this.mobile ? w * 0.42 : Math.min(w * 0.26, this.unit * 0.56);
     this.ry = this.mobile ? h * 0.24 : this.unit * 0.37;
     const n = this.cells.length;
-    this.heroSpacing = Math.sqrt((w * h) / n);
     this.netSpacing = Math.sqrt((Math.PI * this.rx * this.ry) / n);
 
     this.buildPhyllotaxis();
@@ -666,10 +664,15 @@ export class CellEngine {
       },
       // name — colony dims and leans toward the centre
       {
-        fn: (c, _i, _q, out) => scatter(c, out, 0.4, 0.85, 0.22),
-        link: () => this.heroSpacing * 1.4,
-        linkAlpha: 0.28,
-        rate: () => 5,
+        // Tissue under the microscope: every cell a particle sphere, sizes vary with depth.
+        fn: (c, _i, _q, out) => {
+          scatter(c, out, 0.32, 1, 0.05);
+          out.r = c.seed2 < 0.12 ? 22 + c.seed * 16 : 6 + c.seed2 * 9;
+          out.a *= c.seed2 < 0.12 ? 0.5 : 1;
+        },
+        link: () => 0,
+        linkAlpha: 0,
+        rate: () => 0,
       },
       // single — everything collapses into one cell
       {
@@ -769,10 +772,13 @@ export class CellEngine {
       // ambient — a faint colony behind the rest of the page
       {
         // Out-of-focus tissue: larger, dimmer cells with visible membranes.
-        fn: (c, _i, _q, out) => scatter(c, out, 0.22, 1, 0),
-        link: () => this.heroSpacing * 1.45,
-        linkAlpha: 0.22,
-        rate: () => 5,
+        fn: (c, _i, _q, out) => {
+          scatter(c, out, 0.22, 1, 0);
+          out.r = 6 + c.seed2 * 9;
+        },
+        link: () => 0,
+        linkAlpha: 0,
+        rate: () => 0,
       },
     ];
   }
