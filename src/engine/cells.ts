@@ -179,6 +179,53 @@ export class CellEngine {
     ctx.globalAlpha = 1;
   }
 
+  private heroWord: { x: number; y: number }[] = [];
+  private heroP = 0;
+  private heroPTarget = 0;
+
+  /** 0 = the name written in stardust, 1 = the stardust turned into a spiral galaxy. */
+  setHeroProgress(p: number) {
+    this.heroPTarget = clamp(p);
+  }
+
+  /** Points that fill the word "CybCell", centred on screen. */
+  private sampleHeroWord() {
+    const off = document.createElement('canvas');
+    const g = off.getContext('2d', { willReadFrequently: true });
+    if (!g) return;
+    const maxW = this.mobile ? this.w * 0.84 : Math.min(this.w * 0.62, 980);
+    const font = (px: number) => `600 ${px}px Geist, "Helvetica Neue", Arial, sans-serif`;
+    g.font = font(100);
+    const fs = (100 * maxW) / g.measureText('CybCell').width;
+    const W = Math.ceil(maxW);
+    const H = Math.ceil(fs * 1.25);
+    off.width = W;
+    off.height = H;
+    g.font = font(fs);
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = '#fff';
+    g.fillText('CybCell', W / 2, H / 2);
+    const data = g.getImageData(0, 0, W, H).data;
+    const r = rng(0xc0de);
+    const pts: { x: number; y: number }[] = [];
+    const step = Math.max(1.3, Math.sqrt((W * H * 0.3) / 3600));
+    for (let y = 0; y < H; y += step)
+      for (let x = 0; x < W; x += step) {
+        const jx = x + (r() - 0.5) * step;
+        const jy = y + (r() - 0.5) * step;
+        const xi = jx | 0;
+        const yi = jy | 0;
+        if (xi < 0 || yi < 0 || xi >= W || yi >= H || data[(yi * W + xi) * 4 + 3] < 128) continue;
+        pts.push({ x: jx + this.w / 2 - W / 2, y: jy + this.h / 2 - H / 2 });
+      }
+    for (let i = pts.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [pts[i], pts[j]] = [pts[j], pts[i]];
+    }
+    this.heroWord = pts;
+  }
+
   private spiralR() {
     return Math.min(this.w * (this.mobile ? 0.46 : 0.3), this.h * 0.46);
   }
@@ -192,8 +239,8 @@ export class CellEngine {
     if (weight < 0.01) return;
     if (!this.dust.length) {
       const r = rng(0x5eed);
-      for (let k = 0; k < 1500; k++) {
-        const bulge = k < 260;
+      for (let k = 0; k < 3600; k++) {
+        const bulge = k < 560;
         const u = bulge ? Math.abs(r() - r()) * 0.18 : Math.pow(r(), 0.8);
         this.dust.push({
           u,
@@ -216,9 +263,20 @@ export class CellEngine {
       const d = this.dust[k];
       const th = d.arm * Math.PI + d.u * Math.PI * 3.1 + sp + d.j;
       const rr = R * (0.02 + 0.98 * d.u) * (1 + d.rj);
-      const x = cx + Math.cos(th) * rr;
-      const y = cy + Math.sin(th) * rr * 0.92;
-      ctx.globalAlpha = weight * d.a * (0.75 + 0.25 * Math.sin(tw * 1.3 + k));
+      let x = cx + Math.cos(th) * rr;
+      let y = cy + Math.sin(th) * rr * 0.92;
+      const wp = this.heroWord.length ? this.heroWord[k % this.heroWord.length] : null;
+      if (wp && this.heroP < 1) {
+        // Each grain leaves the letters at its own moment and swirls outward.
+        const g = clamp((this.heroP - (k % 97) / 97 * 0.35) / 0.65);
+        const e = g * g * (3 - 2 * g);
+        const sw = (1 - e) * 1.6;
+        const wx = cx + (wp.x - cx) * Math.cos(sw * e) - (wp.y - cy) * Math.sin(sw * e);
+        const wy = cy + (wp.x - cx) * Math.sin(sw * e) + (wp.y - cy) * Math.cos(sw * e);
+        x = wx + (x - wx) * e;
+        y = wy + (y - wy) * e;
+      }
+      ctx.globalAlpha = weight * (wp ? d.a + (1 - d.a) * (1 - clamp(this.heroP * 1.6)) : d.a) * (0.75 + 0.25 * Math.sin(tw * 1.3 + k));
       ctx.fillRect(x - d.s / 2, y - d.s / 2, d.s, d.s);
     }
     ctx.globalAlpha = 1;
@@ -251,6 +309,7 @@ export class CellEngine {
 
   /** Re-sample the organism word once web fonts are ready. */
   refreshWord() {
+    this.sampleHeroWord();
     this.sampleWord();
     this.assignWord();
   }
@@ -282,6 +341,7 @@ export class CellEngine {
 
     this.buildPhyllotaxis();
     this.sampleWord();
+    this.sampleHeroWord();
     this.assignWord();
     this.assignSwarm();
   }
@@ -566,7 +626,7 @@ export class CellEngine {
           out.x = this.w / 2 + Math.cos(th) * rr;
           out.y = this.h / 2 + Math.sin(th) * rr * 0.92;
           out.r = c.baseR * (c.tint ? 0.75 : 0.55);
-          out.a = 0.55 + 0.45 * c.seed2;
+          out.a = (0.55 + 0.45 * c.seed2) * smooth(0.45, 0.95, this.heroP);
           out.heat = 0;
         },
         link: () => 0,
@@ -709,6 +769,7 @@ export class CellEngine {
 
   private tick(dt: number) {
     this.time += dt;
+    this.heroP += (this.heroPTarget - this.heroP) * (1 - Math.exp(-dt * (this.reduced ? 30 : 4)));
     this.s += (this.sTarget - this.s) * (1 - Math.exp(-dt * (this.reduced ? 20 : 5)));
     if (Math.abs(this.sTarget - this.s) < 1e-4) this.s = this.sTarget;
 
@@ -849,21 +910,6 @@ export class CellEngine {
 
     // Cells near the pointer occasionally "talk" to it.
     const P = this.pointer;
-    if (P.active && rate > 2 && Math.random() < dt * 3) {
-      let best = -1;
-      let bd = 170;
-      for (let i = 0; i < cells.length; i++) {
-        const c = cells[i];
-        if (c.a < 0.3) continue;
-        const d = Math.hypot(c.x - P.x, c.y - P.y);
-        if (d < bd && Math.random() < 0.5) {
-          bd = d;
-          best = i;
-        }
-      }
-      if (best >= 0) this.emit(best, -1, 0, 1);
-    }
-
     const ctx = this.ctx;
     ctx.globalCompositeOperation = 'lighter';
     ctx.lineCap = 'round';
@@ -974,27 +1020,6 @@ export class CellEngine {
     }
 
     // Links from nearby cells to the pointer — the colony notices you.
-    const P = this.pointer;
-    if (P.active && linkAlpha > 0.05 && this.weight('organism') < 0.3) {
-      const R = 170;
-      ctx.lineWidth = 1;
-      for (const c of cells) {
-        if (c.a < 0.2) continue;
-        const d = Math.hypot(c.x - P.x, c.y - P.y);
-        if (d > R) continue;
-        ctx.strokeStyle = rgba(PEARL, (1 - d / R) * 0.22 * c.a);
-        ctx.beginPath();
-        ctx.moveTo(c.x, c.y);
-        ctx.lineTo(P.x, P.y);
-        ctx.stroke();
-      }
-      P.pulse *= 0.9;
-      ctx.strokeStyle = rgba(PEARL, 0.35 + P.pulse * 0.4);
-      ctx.beginPath();
-      ctx.arc(P.x, P.y, 4 + P.pulse * 6, 0, TAU);
-      ctx.stroke();
-    }
-
     // Glow.
     for (const c of cells) {
       if (c.a < 0.01 || c.r < 0.2) continue;
@@ -1108,53 +1133,33 @@ export class CellEngine {
 
   private drawMembrane(c: Cell, col: RGB) {
     if (c.r > 24) return this.drawParticleCell(c, col);
+    return this.drawDustCell(c, col);
+  }
+
+  /** A small cell as a ring of fine dots around a tiny nucleus cluster. */
+  private drawDustCell(c: Cell, col: RGB) {
     const ctx = this.ctx;
-    const big = c.r > 36;
-    const M = big ? 72 : c.r > 14 ? 28 : 14;
     const t = this.reduced ? 0 : this.time;
-    ctx.beginPath();
-    for (let k = 0; k <= M; k++) {
-      const ang = (k / M) * TAU;
-      const rr =
-        c.r *
-        (1 +
-          0.045 * Math.sin(ang * 3 + t * 1.3 + c.seed * 10) +
-          0.03 * Math.sin(ang * 5 - t * 0.9 + c.seed2 * 4) +
-          c.flash * 0.05 * Math.sin(ang * 8 + t * 6));
-      const x = c.x + Math.cos(ang) * rr;
-      const y = c.y + Math.sin(ang) * rr;
-      if (k === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+    const n = Math.max(10, Math.round(c.r * 2.4));
+    const spin = t * 0.3 + c.seed * 10;
+    const tilt = 0.55 + 0.35 * Math.sin(c.seed2 * 9);
+    ctx.fillStyle = rgba(col, 1);
+    for (let k = 0; k < n; k++) {
+      const a = (k / n) * TAU + spin;
+      const z = Math.sin(a);
+      const wob = 1 + 0.06 * Math.sin(a * 3 + t + c.seed * 7) + c.flash * 0.15;
+      const x = c.x + Math.cos(a) * c.r * wob;
+      const y = c.y + z * c.r * tilt * wob + Math.cos(a) * c.r * 0.1;
+      ctx.globalAlpha = clamp(c.a * (0.25 + 0.5 * (z + 1) / 2));
+      ctx.fillRect(x - 0.6, y - 0.6, 1.2, 1.2);
     }
-    ctx.fillStyle = rgba(col, 0.04 * c.a);
-    ctx.fill();
-    ctx.strokeStyle = rgba(col, (big ? 0.8 : 0.6) * c.a);
-    ctx.lineWidth = big ? 1.25 : 0.9;
-    ctx.stroke();
-
-    // Nucleus.
-    const nr = c.r * 0.34;
-    const nx = c.x + Math.sin(c.seed * 20 + t * 0.4) * c.r * 0.08;
-    const ny = c.y + Math.cos(c.seed2 * 20 + t * 0.35) * c.r * 0.08;
-    ctx.beginPath();
-    ctx.arc(nx, ny, nr, 0, TAU);
-    ctx.fillStyle = rgba(col, 0.12 * c.a);
-    ctx.fill();
-    ctx.strokeStyle = rgba(col, 0.45 * c.a);
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    if (!big) return;
-
-    // Organelles drifting in the cytoplasm.
-    for (let k = 0; k < 9; k++) {
-      const ang = k * 2.2 + t * (0.08 + k * 0.01);
-      const rr = c.r * (0.52 + ((k * 37) % 30) / 100);
-      ctx.beginPath();
-      ctx.arc(c.x + Math.cos(ang) * rr, c.y + Math.sin(ang) * rr, 1.2 + (k % 3), 0, TAU);
-      ctx.fillStyle = rgba(col, 0.55 * c.a);
-      ctx.fill();
+    for (let k = 0; k < 5; k++) {
+      const a = k * 2.4 + t * 0.5 + c.seed * 3;
+      const d = c.r * 0.22 * ((k * 37) % 10) / 10;
+      ctx.globalAlpha = clamp(c.a * 0.8);
+      ctx.fillRect(c.x + Math.cos(a) * d - 0.6, c.y + Math.sin(a) * d - 0.6, 1.2, 1.2);
     }
+    ctx.globalAlpha = 1;
   }
 
   private drawIntruder() {

@@ -76,6 +76,7 @@ function onScroll() {
     ticking = false;
     const s = scenePosition();
     engine?.setScene(s);
+    engine?.setHeroProgress(scrollY / (innerHeight * 0.9));
 
     nav.toggleAttribute('data-scrolled', scrollY > 24);
     const nowCovered = !!services && services.getBoundingClientRect().top <= 0;
