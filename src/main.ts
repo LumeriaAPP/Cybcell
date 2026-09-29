@@ -3,6 +3,7 @@ import { CellEngine, SCENES, type SceneId } from './engine/cells';
 import { initI18n, onLang, t } from './i18n';
 import { initDialogue } from './dialogue';
 import { Specimen, type SpecimenKind } from './specimen';
+import { initStepper } from './stepper';
 
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) =>
@@ -51,6 +52,34 @@ function scenePosition() {
   }
   return anchors[anchors.length - 1].scene;
 }
+
+/* One gesture per stage through the hero and the story. */
+function storyStops() {
+  const center = (k: number) => anchors.find((a) => a.scene === k)?.center;
+  const at = (k: number, f: number) => {
+    const c0 = center(k);
+    const c1 = center(k + 1) ?? c0;
+    return c0 === undefined || c1 === undefined ? NaN : c0 + f * (c1 - c0) - innerHeight / 2;
+  };
+  const stops = [
+    0, // the name in stardust
+    innerHeight * 0.95, // the galaxy
+    at(1, 0), // what the name means
+    at(2, 0), // one cell
+    at(3, 0.36), // division, up to 64 cells
+    at(4, 0), // signals
+    at(4, 0.95), // the intruder arrives
+    at(5, 0.33), // it is neutralised
+    at(6, 0), // the organism
+    storyEnd(),
+  ];
+  return stops.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+}
+function storyEnd() {
+  const el = $('#cells');
+  return el ? el.getBoundingClientRect().top + scrollY : Infinity;
+}
+initStepper(storyStops, storyEnd);
 
 /* --------------------------------------------------------- chrome on scroll */
 
