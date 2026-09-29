@@ -3,3 +3,6 @@ dist
 artifact
 *.log
 .DS_Store
+
+# video renders
+video/build

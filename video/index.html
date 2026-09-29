@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="az">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CybCell launch film</title>
+    <style>
+      @font-face {
+        font-family: 'Geist';
+        src: url('fonts/Geist-Medium.woff2') format('woff2');
+        font-weight: 500;
+      }
+      @font-face {
+        font-family: 'Geist';
+        src: url('fonts/Geist-SemiBold.woff2') format('woff2');
+        font-weight: 600;
+      }
+      @font-face {
+        font-family: 'Geist Mono';
+        src: url('fonts/GeistMono-Regular.woff2') format('woff2');
+        font-weight: 400;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #000;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        width: min(100vw, 177.78vh);
+        height: min(56.25vw, 100vh);
+        margin: auto;
+        position: absolute;
+        inset: 0;
+      }
+      body.render canvas {
+        width: 1920px;
+        height: 1080px;
+        position: static;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="film" width="1920" height="1080"></canvas>
+    <script type="module">
+      /*
+       * CybCell: 30-second launch film.
+       * Everything on screen is built from one population of particles
+       * ("cells") that morph from formation to formation. Every frame is a
+       * pure function of time, so window.seek(t) renders frame-exact.
+       */
+      const W = 1920;
+      const H = 1080;
+      const N = 7000;
+      const DUR = 30;
+      const CX = 960;
+      const CY = 470;
+      const TAU = Math.PI * 2;
+
+      const cv = document.getElementById('film');
+      const ctx = cv.getContext('2d');
+
+      const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v);
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const smooth = (a, b, x) => {
+        const t = clamp((x - a) / (b - a));
+        return t * t * (3 - 2 * t);
+      };
+      const eio = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+      const eioD = (t) => (t < 0.5 ? 12 * t * t : 3 * Math.pow(-2 * t + 2, 2));
+      const eoExpo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+      const hash = (n) => {
+        const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+        return x - Math.floor(x);
+      };
+
+      // Per-particle constants.
+      const R1 = new Float32Array(N);
+      const R2 = new Float32Array(N);
+      const R3 = new Float32Array(N);
+      const R4 = new Float32Array(N);
+      for (let i = 0; i < N; i++) {
+        R1[i] = hash(i * 4 + 1);
+        R2[i] = hash(i * 4 + 2);
+        R3[i] = hash(i * 4 + 3);
+        R4[i] = hash(i * 4 + 4);
+      }
+
+      const buf = () => ({
+        x: new Float32Array(N),
+        y: new Float32Array(N),
+        a: new Float32Array(N),
+        s: new Float32Array(N),
+        c: new Uint8Array(N),
+      });
+
+      /* ------------------------------------------------------ shape builder */
+
+      /** Builds a static point set from primitives, then resamples it to exactly N. */
+      function shape(build) {
+        const pts = [];
+        let seed = 1;
+        const push = (x, y, b, s, g) => pts.push([x, y, b, s, g]);
+        const api = {
+          poly(p, closed, gap, b = 0.8, s = 1.5, g = 0) {
+            const n = p.length;
+            const segs = closed ? n : n - 1;
+            for (let i = 0; i < segs; i++) {
+              const [x0, y0] = p[i];
+              const [x1, y1] = p[(i + 1) % n];
+              const m = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0) / gap));
+              for (let j = 0; j < m; j++) {
+                const f = j / m;
+                seed++;
+                push(x0 + (x1 - x0) * f + (hash(seed) - 0.5) * 1.6, y0 + (y1 - y0) * f + (hash(seed + 7) - 0.5) * 1.6, b * (0.75 + 0.25 * hash(seed + 3)), s, g);
+              }
+            }
+          },
+          line(x0, y0, x1, y1, gap, b, s, g) {
+            api.poly([[x0, y0], [x1, y1]], false, gap, b, s, g);
+          },
+          rr(x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            const p = [];
+            for (const [cx, cy, a0] of [[x + w - r, y + r, -Math.PI / 2], [x + w - r, y + h - r, 0], [x + r, y + h - r, Math.PI / 2], [x + r, y + r, Math.PI]])
+              for (let k = 0; k <= 6; k++) p.push([cx + Math.cos(a0 + (k / 6) * (Math.PI / 2)) * r, cy + Math.sin(a0 + (k / 6) * (Math.PI / 2)) * r]);
+            return p;
+          },
+          rect(x, y, w, h, r, gap, b, s, g) {
+            api.poly(api.rr(x, y, w, h, r), true, gap, b, s, g);
+          },
+          ring(cx, cy, r, gap, b, s, g, ry = r) {
+            const p = [];
+            for (let k = 0; k < 48; k++) p.push([cx + Math.cos((k / 48) * TAU) * r, cy + Math.sin((k / 48) * TAU) * ry]);
+            api.poly(p, true, gap, b, s, g);
+          },
+          fill(x, y, w, h, gap, b, s, keep, g) {
+            for (let yy = y + gap / 2; yy < y + h; yy += gap)
+              for (let xx = x + gap / 2; xx < x + w; xx += gap) {
+                seed++;
+                if (hash(seed) > keep) continue;
+                push(xx + (hash(seed + 1) - 0.5) * gap * 0.6, yy + (hash(seed + 2) - 0.5) * gap * 0.6, b * (0.6 + 0.4 * hash(seed + 5)), s, g);
+              }
+          },
+          pt: push,
+        };
+        build(api);
+        const M = pts.length;
+        const o = { x: new Float32Array(N), y: new Float32Array(N), b: new Float32Array(N), s: new Float32Array(N), g: new Uint8Array(N) };
+        for (let i = 0; i < N; i++) {
+          // Keep the build order so outline maps to outline between shapes.
+          const k = Math.min(M - 1, Math.floor((i * M) / N));
+          const p = pts[k];
+          const dup = M < N ? 1 : 0;
+          o.x[i] = p[0] + dup * (R1[i] - 0.5) * 2.2;
+          o.y[i] = p[1] + dup * (R2[i] - 0.5) * 2.2;
+          o.b[i] = p[2];
+          o.s[i] = p[3];
+          o.g[i] = p[4];
+        }
+        return o;
+      }
+
+      const fromShape = (sh, i, o, dx = 0, dy = 0, am = 1) => {
+        o.x[i] = sh.x[i] + dx;
+        o.y[i] = sh.y[i] + dy;
+        o.a[i] = sh.b[i] * am;
+        o.s[i] = sh.s[i];
+        o.c[i] = 0;
+      };
+
+      /* ------------------------------------------------------- formations */
+
+      // 0. Stars: a quiet field before anything exists.
+      function STARS(t, o) {
+        const rot = t * 0.012;
+        const cr = Math.cos(rot);
+        const sr = Math.sin(rot);
+        for (let i = 0; i < N; i++) {
+          const x = (R1[i] - 0.5) * W * 1.35;
+          const y = (R2[i] - 0.5) * H * 1.5;
+          o.x[i] = CX + x * cr - y * sr;
+          o.y[i] = 540 + x * sr + y * cr;
+          const tw = 0.6 + 0.4 * Math.sin(t * (1 + R3[i] * 2) + i);
+          o.a[i] = (0.06 + 0.5 * Math.pow(R3[i], 4)) * tw;
+          o.s[i] = 0.7 + R4[i] * 1.1;
+          o.c[i] = 0;
+        }
+      }
+
+      // 1. Cells: k stardust spheres. Particle i belongs to cell i mod k, so a
+      // cell's particles split evenly into its two children when k doubles.
+      function vogel(k) {
+        const pts = [];
+        for (let c = 0; c < k; c++) {
+          const r = Math.sqrt(c + 0.5);
+          const a = c * 2.39996;
+          pts.push([Math.cos(a) * r, Math.sin(a) * r]);
+        }
+        const mx = pts.reduce((s, p) => s + p[0], 0) / k;
+        const my = pts.reduce((s, p) => s + p[1], 0) / k;
+        return pts.map(([x, y]) => [x - mx, y - my]);
+      }
+      const VOGEL = {};
+      function CELLS(k) {
+        VOGEL[k] = vogel(k);
+        return (t, o) => {
+          const rc = 175 * Math.pow(k, -0.47);
+          const sp = rc * 2.35;
+          const V = VOGEL[k];
+          for (let i = 0; i < N; i++) {
+            const c = i % k;
+            const u = R2[i] * 2 - 1;
+            const ph = R3[i] * TAU;
+            const q = Math.sqrt(1 - u * u);
+            let rad;
+            let role;
+            if (R1[i] < 0.6) {
+              rad = 1 - R4[i] * 0.04;
+              role = 0;
+            } else if (R1[i] < 0.82) {
+              rad = Math.cbrt(R4[i]) * 0.34;
+              role = 2;
+            } else {
+              rad = 0.38 + Math.cbrt(R4[i]) * 0.52;
+              role = 1;
+            }
+            const breath = 1 + 0.025 * Math.sin(t * 2.1 + c * 1.7);
+            let x = Math.cos(ph) * q * rad;
+            let y = u * rad;
+            let z = Math.sin(ph) * q * rad;
+            const ay = t * 0.45;
+            const cy = Math.cos(ay);
+            const sy = Math.sin(ay);
+            const x1 = x * cy - z * sy;
+            const z1 = x * sy + z * cy;
+            const ax = 0.35;
+            const y2 = y * Math.cos(ax) - z1 * Math.sin(ax);
+            const z2 = y * Math.sin(ax) + z1 * Math.cos(ax);
+            const d = (z2 + 1) / 2;
+            o.x[i] = CX + V[c][0] * sp + x1 * rc * breath;
+            o.y[i] = CY + V[c][1] * sp + y2 * rc * breath;
+            o.a[i] = role === 0 ? 0.12 + 0.85 * d * d : role === 2 ? 0.45 + 0.55 * d : 0.1 + 0.35 * d;
+            o.s[i] = (role === 2 ? 1.3 : 1.35) * (0.7 + 0.6 * d) * clamp(0.75 + rc / 400, 0.8, 1.2);
+            o.c[i] = 0;
+          }
+        };
+      }
+
+      // 2. Website: a browser window with a page inside.
+      let WEB_SH;
+      function buildWeb() {
+        WEB_SH = shape((s) => {
+          s.rect(460, 160, 1000, 620, 22, 3, 0.9, 1.6, 0);
+          s.line(460, 212, 1460, 212, 4, 0.5, 1.2, 0);
+          for (let k = 0; k < 3; k++) s.ring(492 + k * 24, 186, 7, 2.2, 0.9, 1.4, 0);
+          s.rect(760, 174, 400, 24, 12, 4, 0.35, 1.1, 0);
+          s.fill(500, 236, 920, 40, 7, 0.22, 1.1, 0.5, 0);
+          s.ring(522, 256, 10, 2.2, 0.9, 1.4, 0);
+          for (let k = 0; k < 3; k++) s.line(1240 + k * 60, 256, 1280 + k * 60, 256, 3, 0.6, 1.2, 0);
+          s.line(500, 322, 1000, 322, 2.4, 1, 2.4, 0);
+          s.line(500, 360, 900, 360, 2.6, 0.55, 1.4, 0);
+          s.line(500, 392, 780, 392, 2.6, 0.45, 1.4, 0);
+          s.fill(500, 432, 170, 48, 4, 0.8, 1.3, 0.85, 1);
+          s.rect(500, 432, 170, 48, 24, 2.6, 1, 1.5, 1);
+          s.rect(1060, 300, 360, 250, 10, 3, 0.6, 1.3, 0);
+          s.poly([[1080, 530], [1170, 420], [1230, 490], [1290, 440], [1400, 530]], false, 3, 0.55, 1.2, 0);
+          s.ring(1350, 352, 22, 2.4, 0.7, 1.3, 0);
+          for (let k = 0; k < 3; k++) {
+            const x = 500 + k * 310;
+            s.rect(x, 600, 290, 150, 12, 3.5, 0.5, 1.2, 0);
+            s.line(x + 24, 640, x + 200, 640, 3, 0.65, 1.3, 0);
+            s.line(x + 24, 672, x + 150, 672, 3, 0.38, 1.1, 0);
+          }
+          // Cursor (group 2) and click ripple (group 3).
+          s.poly([[0, 0], [0, 36], [9, 27], [16, 42], [22, 39], [15, 25], [27, 25]], true, 1.8, 1, 1.6, 2);
+          s.ring(0, 0, 1, 1, 1, 1.4, 3);
+        });
+      }
+      function WEB(t, o) {
+        const lt = t - 6.1;
+        const mv = eio(smooth(0.5, 1.2, lt));
+        const cx = lerp(1290, 590, mv);
+        const cy = lerp(700, 462, mv);
+        const click = clamp((lt - 1.25) / 0.45);
+        for (let i = 0; i < N; i++) {
+          const g = WEB_SH.g[i];
+          if (g === 2) fromShape(WEB_SH, i, o, cx, cy, lt > 1.6 ? 1 - smooth(1.6, 1.9, lt) : 1);
+          else if (g === 3) {
+            const a = R1[i] * TAU;
+            const r = 12 + click * 70;
+            o.x[i] = 585 + Math.cos(a) * r;
+            o.y[i] = 456 + Math.sin(a) * r * 0.6;
+            o.a[i] = click > 0 && click < 1 ? (1 - click) * 0.9 : 0;
+            o.s[i] = 1.5;
+            o.c[i] = 0;
+          } else fromShape(WEB_SH, i, o, 0, 0, g === 1 ? 0.8 + 0.2 * Math.sin(t * 5) + (click > 0 && click < 1 ? 0.5 * (1 - click) : 0) : 1);
+        }
+      }
+
+      // 3. Phone app: live list, a notification drops in.
+      let APP_SH;
+      function buildApp() {
+        APP_SH = shape((s) => {
+          s.rect(780, 110, 360, 720, 54, 2.8, 0.95, 1.7, 0);
+          s.rect(795, 125, 330, 690, 42, 5, 0.22, 1.1, 0);
+          s.line(925, 140, 995, 140, 2, 1, 2.4, 0);
+          s.line(910, 812, 1010, 812, 2, 0.8, 1.8, 0);
+          s.line(810, 172, 880, 172, 2.4, 0.9, 1.8, 0);
+          s.ring(1105, 172, 12, 2.2, 0.8, 1.3, 0);
+          for (let j = 0; j < 6; j++) {
+            const y = 205 + j * 116;
+            s.rect(810, y, 300, 98, 16, 3.4, 0.5, 1.2, 4);
+            s.ring(846, y + 49, 18, 2.2, 0.75, 1.3, 4);
+            s.line(876, y + 38, 1080, y + 38, 3, 0.6, 1.3, 4);
+            s.line(876, y + 62, 1010, y + 62, 3, 0.35, 1.1, 4);
+          }
+          s.fill(806, 0, 308, 70, 4, 0.7, 1.3, 0.8, 5);
+          s.rect(806, 0, 308, 70, 18, 2.4, 1, 1.6, 5);
+          s.ring(838, 35, 13, 2, 1, 1.5, 5);
+          s.line(862, 26, 1060, 26, 2.4, 1, 1.8, 5);
+          s.line(862, 46, 990, 46, 2.6, 0.6, 1.3, 5);
+        });
+      }
+      function APP(t, o) {
+        const lt = t - 7.7;
+        const scroll = lt * 55;
+        const drop = eoExpo(clamp((lt - 0.45) / 0.5));
+        for (let i = 0; i < N; i++) {
+          const g = APP_SH.g[i];
+          if (g === 4) {
+            let y = APP_SH.y[i] - 205 - scroll;
+            y = ((y % 696) + 696) % 696;
+            const yy = 205 + y;
+            const edge = smooth(200, 240, yy) * (1 - smooth(760, 800, yy));
+            fromShape(APP_SH, i, o, 0, yy - APP_SH.y[i], edge);
+          } else if (g === 5) fromShape(APP_SH, i, o, 0, lerp(40, 130, drop), drop);
+          else fromShape(APP_SH, i, o);
+        }
+      }
+
+      // 4. AI: a network with pulses racing from input to output.
+      const LAYERS = [4, 6, 6, 4];
+      const LX = [600, 840, 1080, 1320];
+      const nodeY = (l, j) => CY + (j - (LAYERS[l] - 1) / 2) * 104;
+      const CONNS = [];
+      for (let l = 0; l < 3; l++) for (let a = 0; a < LAYERS[l]; a++) for (let b = 0; b < LAYERS[l + 1]; b++) CONNS.push([l, a, b]);
+      function AI(t, o) {
+        const nodes = [];
+        LAYERS.forEach((n, l) => {
+          for (let j = 0; j < n; j++) nodes.push([LX[l], nodeY(l, j)]);
+        });
+        for (let i = 0; i < N; i++) {
+          const r = R1[i];
+          o.c[i] = 0;
+          if (r < 0.24) {
+            // Nodes: small rotating spheres.
+            const nd = nodes[i % nodes.length];
+            const u = R2[i] * 2 - 1;
+            const ph = R3[i] * TAU + t * 0.9;
+            const q = Math.sqrt(1 - u * u);
+            const rad = R4[i] < 0.7 ? 26 : 26 * Math.cbrt(R4[i]) * 0.5;
+            const d = (Math.sin(ph) * q + 1) / 2;
+            o.x[i] = nd[0] + Math.cos(ph) * q * rad;
+            o.y[i] = nd[1] + u * rad;
+            o.a[i] = R4[i] < 0.7 ? 0.2 + 0.8 * d : 0.9;
+            o.s[i] = 1.4;
+          } else if (r < 0.8) {
+            // Connections: dotted lines.
+            const cn = CONNS[Math.floor(R2[i] * CONNS.length)];
+            const f = R3[i];
+            const x0 = LX[cn[0]];
+            const y0 = nodeY(cn[0], cn[1]);
+            const x1 = LX[cn[0] + 1];
+            const y1 = nodeY(cn[0] + 1, cn[2]);
+            o.x[i] = lerp(x0, x1, f);
+            o.y[i] = lerp(y0, y1, f);
+            o.a[i] = 0.1 + 0.08 * Math.sin(t * 2 + i);
+            o.s[i] = 1;
+          } else if (r < 0.92) {
+            // Pulses: a path through all four layers.
+            const path = [0, 1, 2, 3].map((l) => Math.floor(hash(i * 13 + l) * LAYERS[l]));
+            const u = (t * 0.85 + R2[i]) % 1;
+            const seg = Math.min(2, Math.floor(u * 3));
+            const f = u * 3 - seg;
+            const lag = R3[i] * 0.06;
+            const ff = clamp(f - lag);
+            o.x[i] = lerp(LX[seg], LX[seg + 1], ff);
+            o.y[i] = lerp(nodeY(seg, path[seg]), nodeY(seg + 1, path[seg + 1]), ff);
+            o.a[i] = lag < 0.01 ? 1 : 0.7 - lag * 8;
+            o.s[i] = lag < 0.01 ? 2.4 : 1.4;
+          } else {
+            // Data streaming in (left) and answers leaving (right).
+            const side = R2[i] < 0.5;
+            const u = (t * 0.35 + R3[i]) % 1;
+            const lane = Math.floor(R4[i] * 4);
+            if (side) {
+              o.x[i] = lerp(300, LX[0] - 34, u);
+              o.y[i] = nodeY(0, lane) + Math.sin(u * 9 + i) * 3;
+            } else {
+              o.x[i] = lerp(LX[3] + 34, 1620, u);
+              o.y[i] = nodeY(3, lane) + Math.sin(u * 9 + i) * 3;
+            }
+            o.a[i] = Math.sin(u * Math.PI) * 0.6;
+            o.s[i] = 1.2;
+          }
+        }
+      }
+
+      // 5. 3D tower, built floor by floor; a floor opens.
+      const TW = { W: 390, D: 250, F: 14, h: 33 };
+      let TOWER;
+      function buildTower() {
+        const pts = [];
+        const { W: Wt, D, F, h } = TW;
+        const per = 2 * (Wt + D);
+        const at = (d) => {
+          d = ((d % per) + per) % per;
+          if (d < Wt) return [-Wt / 2 + d, -D / 2];
+          d -= Wt;
+          if (d < D) return [Wt / 2, -D / 2 + d];
+          d -= D;
+          if (d < Wt) return [Wt / 2 - d, D / 2];
+          return [-Wt / 2, D / 2 - (d - Wt)];
+        };
+        let s = 5;
+        for (let f = 0; f <= F; f++) {
+          for (let k = 0; k < 150; k++) {
+            const [x, z] = at((k / 150) * per);
+            pts.push([x, f * h, z, f, 0.8, 1.3]);
+          }
+          if (f === F) break;
+          for (const [x, z] of [[-Wt / 2, -D / 2], [Wt / 2, -D / 2], [Wt / 2, D / 2], [-Wt / 2, D / 2]])
+            for (let j = 1; j < 8; j++) pts.push([x, f * h + (j / 8) * h, z, f, 0.9, 1.4]);
+          for (let k = 0; k < 56; k++) {
+            const [x, z] = at((k / 56) * per);
+            for (let j = 1; j <= 3; j++) pts.push([x, f * h + (j / 4) * h, z, f, 0.45, 1]);
+          }
+          for (let k = 0; k < 10; k++) {
+            s++;
+            const [x, z] = at(hash(s) * per);
+            pts.push([x, f * h + h * 0.5, z, f, 1.4, 2.4]);
+          }
+        }
+        for (let k = 0; k < 110; k++) {
+          const u = k / 110;
+          const d = u * 440;
+          const x = d < 130 ? -65 + d : d < 220 ? 65 : d < 350 ? 65 - (d - 220) : -65;
+          const z = d < 130 ? -45 : d < 220 ? -45 + (d - 130) : d < 350 ? 45 : 45 - (d - 350);
+          pts.push([x, F * h + 26, z, F, 0.8, 1.3]);
+        }
+        const plan = pts.length;
+        for (let k = 0; k < 260; k++) {
+          const u = k / 260;
+          if (k < 120) pts.push([-TW.W / 2 + u * (260 / 120) * TW.W * 0.46, 7 * h + 1, 0, 70, 1, 1.5]);
+          else if (k < 190) pts.push([-60, 7 * h + 1, -TW.D / 2 + ((k - 120) / 70) * TW.D, 70, 1, 1.5]);
+          else pts.push([70, 7 * h + 1, -TW.D / 2 + ((k - 190) / 70) * TW.D, 70, 1, 1.5]);
+        }
+        void plan;
+        for (let gx = -6; gx <= 6; gx++)
+          for (let k = -30; k <= 30; k++) {
+            pts.push([gx * 55, 0, k * 11, 99, 0.18 * (1 - Math.abs(k) / 31), 1]);
+            pts.push([k * 11, 0, gx * 55, 99, 0.18 * (1 - Math.abs(k) / 31), 1]);
+          }
+        const M = pts.length;
+        TOWER = { x: new Float32Array(N), y: new Float32Array(N), z: new Float32Array(N), f: new Uint8Array(N), b: new Float32Array(N), s: new Float32Array(N), delay: new Float32Array(N) };
+        // Ground grid first, floors from the bottom up.
+        const order = pts.map((p, k) => k).sort((a, b) => (pts[a][3] === 99 ? -1 : pts[a][3]) - (pts[b][3] === 99 ? -1 : pts[b][3]));
+        for (let i = 0; i < N; i++) {
+          const p = pts[order[Math.min(M - 1, Math.floor((i * M) / N))]];
+          TOWER.x[i] = p[0] + (M < N ? (R1[i] - 0.5) * 2 : 0);
+          TOWER.y[i] = p[1];
+          TOWER.z[i] = p[2];
+          TOWER.f[i] = p[3];
+          TOWER.b[i] = p[4];
+          TOWER.s[i] = p[5];
+          TOWER.delay[i] = p[3] === 99 ? 0 : p[3] === 70 ? 0 : (Math.min(p[3], TW.F) / TW.F) * 1.25;
+        }
+      }
+      function TOWERF(t, o) {
+        const A = 0.55 + (t - 12.1) * 0.3;
+        const ca = Math.cos(A);
+        const sa = Math.sin(A);
+        const base = CY + (TW.F * TW.h) / 2 + 20;
+        const lift = 105 * eio(smooth(13.85, 14.35, t)) * (1 - eio(smooth(15.05, 15.45, t)));
+        const open = lift / 105;
+        for (let i = 0; i < N; i++) {
+          const f = TOWER.f[i];
+          const up = f !== 99 && f !== 70 && f > 7 ? lift : 0;
+          const x = TOWER.x[i];
+          const z = TOWER.z[i];
+          const X = x * ca - z * sa;
+          const Z = x * sa + z * ca;
+          const d = clamp((Z + 250) / 500);
+          o.x[i] = CX + X;
+          o.y[i] = base - TOWER.y[i] - up + Z * 0.3;
+          let a = TOWER.b[i] * (0.35 + 0.75 * d);
+          if (f === 70) a = open * 0.95;
+          else if (f === 7) a += 0.5 * open;
+          if (TOWER.s[i] > 2) a *= 0.7 + 0.3 * Math.sin(t * 1.3 + i);
+          o.a[i] = a;
+          o.s[i] = TOWER.s[i] * (0.8 + 0.4 * d);
+          o.c[i] = 0;
+        }
+      }
+
+      // 6. Marketing: a rising chart and a growth line with an arrow.
+      let CHART_SH;
+      const BARS = [0.2, 0.28, 0.26, 0.4, 0.52, 0.68, 0.9];
+      function buildChart() {
+        const x0 = 510;
+        const y0 = 740;
+        const Wc = 900;
+        const Hc = 520;
+        const slot = Wc / BARS.length;
+        const bw = slot * 0.5;
+        CHART_SH = shape((s) => {
+          s.line(x0 - 20, y0 + 8, x0 + Wc + 20, y0 + 8, 2.6, 0.55, 1.3, 0);
+          for (const gy of [0.33, 0.66, 1]) s.line(x0, y0 - gy * Hc, x0 + Wc, y0 - gy * Hc, 9, 0.14, 1, 0);
+          BARS.forEach((h, k) => {
+            const bx = x0 + slot * k + (slot - bw) / 2;
+            const bh = h * Hc;
+            s.fill(bx, y0 - bh, bw, bh, 5, 0.45, 1.2, 0.5, 10 + k);
+            s.rect(bx, y0 - bh, bw, bh, 3, 3, 0.9, 1.4, 10 + k);
+          });
+          const tops = BARS.map((h, k) => [x0 + slot * (k + 0.5), y0 - h * Hc - 50]);
+          s.poly(tops, false, 2.4, 1, 2.2, 20);
+          const [ax, ay] = tops[tops.length - 1];
+          const [bx, by] = tops[tops.length - 2];
+          const ang = Math.atan2(ay - by, ax - bx);
+          for (const sgn of [-1, 1]) s.line(ax, ay, ax + Math.cos(ang + Math.PI + sgn * 0.5) * 34, ay + Math.sin(ang + Math.PI + sgn * 0.5) * 34, 2, 1, 2.2, 21);
+        });
+        CHART_SH.delay = new Float32Array(N);
+        for (let i = 0; i < N; i++) {
+          const g = CHART_SH.g[i];
+          if (g >= 10 && g < 20) {
+            const k = g - 10;
+            const hr = (740 - CHART_SH.y[i]) / (BARS[k] * 520);
+            CHART_SH.delay[i] = k * 0.1 + hr * 0.55;
+          } else if (g === 20) CHART_SH.delay[i] = 0.95 + ((CHART_SH.x[i] - 510) / 900) * 0.55;
+          else if (g === 21) CHART_SH.delay[i] = 1.55;
+          else CHART_SH.delay[i] = 0;
+        }
+      }
+      function CHART(t, o) {
+        for (let i = 0; i < N; i++) {
+          const g = CHART_SH.g[i];
+          fromShape(CHART_SH, i, o, 0, 0, g >= 10 && g < 20 ? 0.85 + 0.15 * Math.sin(t * 2 + i * 0.3) : 1);
+        }
+      }
+
+      // 7. Hardware: a self-service kiosk takes a contactless payment.
+      let KIOSK_SH;
+      function buildKiosk() {
+        KIOSK_SH = shape((s) => {
+          s.rect(810, 110, 300, 660, 28, 2.8, 0.95, 1.6, 0);
+          s.rect(835, 145, 250, 340, 14, 3.2, 0.6, 1.3, 0);
+          s.line(852, 170, 940, 170, 2.4, 0.9, 1.8, 0);
+          for (let r = 0; r < 3; r++)
+            for (let c = 0; c < 2; c++) {
+              const x = 852 + c * 118;
+              const y = 192 + r * 88;
+              if (r === 2 && c === 1) s.fill(x, y, 104, 74, 4, 0.8, 1.3, 0.8, 9);
+              s.rect(x, y, 104, 74, 8, 3, r === 2 && c === 1 ? 1 : 0.45, 1.2, r === 2 && c === 1 ? 9 : 0);
+            }
+          s.rect(852, 452, 216, 22, 11, 2.6, 0.8, 1.3, 0);
+          s.rect(915, 520, 90, 52, 8, 2.6, 0.8, 1.4, 0);
+          for (let k = 0; k < 3; k++) {
+            const r = 40 + k * 22;
+            const p = [];
+            for (let j = 0; j <= 14; j++) {
+              const a = -2.45 + (j / 14) * 1.7;
+              p.push([960 + Math.cos(a) * r, 520 + Math.sin(a) * r]);
+            }
+            s.poly(p, false, 2.4, 1, 1.6, 30 + k);
+          }
+          s.rect(0, 0, 64, 118, 12, 2.2, 1, 1.5, 12);
+          s.line(900, 600, 1020, 600, 2, 0.9, 2, 0);
+          s.rect(915, 600, 90, 118, 4, 2.2, 0.85, 1.3, 13);
+          for (let k = 1; k <= 5; k++) s.line(927, 600 + k * 19, 993, 600 + k * 19, 3, 0.45, 1.1, 13);
+          s.poly([[905, 312], [945, 350], [1015, 270]], false, 2, 1, 2.4, 14);
+          s.line(945, 770, 945, 815, 3, 0.6, 1.2, 0);
+          s.line(975, 770, 975, 815, 3, 0.6, 1.2, 0);
+          s.rect(870, 815, 180, 16, 8, 3, 0.6, 1.2, 0);
+        });
+      }
+      function KIOSK(t, o) {
+        const shift = -46;
+        const lt = t - 19.1;
+        const ph = eio(smooth(0.35, 0.75, lt)) * (1 - eio(smooth(1.45, 1.8, lt)));
+        const waves = smooth(0.7, 0.8, lt) * (1 - smooth(1.35, 1.5, lt));
+        const paper = eio(smooth(1.1, 1.6, lt));
+        const ok = smooth(1.2, 1.35, lt);
+        for (let i = 0; i < N; i++) {
+          const g = KIOSK_SH.g[i];
+          if (g === 12) fromShape(KIOSK_SH, i, o, lerp(1380, 1022, ph), 470 + shift, ph);
+          else if (g >= 30 && g < 33) {
+            const k = g - 30;
+            fromShape(KIOSK_SH, i, o, 0, shift, waves * (0.4 + 0.6 * Math.max(0, Math.sin(t * 9 - k * 1.2))));
+          } else if (g === 13) {
+            const vis = KIOSK_SH.y[i] <= 600 + paper * 118 ? 1 : 0;
+            fromShape(KIOSK_SH, i, o, 0, shift, vis * smooth(0, 0.05, paper));
+          } else if (g === 14) fromShape(KIOSK_SH, i, o, 0, shift, ok);
+          else if (g === 9) fromShape(KIOSK_SH, i, o, 0, shift, 0.7 + 0.3 * Math.sin(t * 6));
+          else fromShape(KIOSK_SH, i, o, 0, shift);
+        }
+      }
+
+      // 8. Support: a shield, a radar sweep, threats that burst at the edge.
+      let SHIELD_SH;
+      function shieldPoly(sc) {
+        const p = [[-180, -240], [180, -240], [180, 20]];
+        for (let k = 1; k <= 14; k++) {
+          const u = k / 14;
+          p.push([(1 - u) * (1 - u) * 180 + 2 * (1 - u) * u * 160, (1 - u) * (1 - u) * 20 + 2 * (1 - u) * u * 180 + u * u * 260]);
+        }
+        for (let k = 1; k <= 14; k++) {
+          const u = k / 14;
+          p.push([-(u * u * 180 + 2 * (1 - u) * u * 160), (1 - u) * (1 - u) * 260 + 2 * (1 - u) * u * 180 + u * u * 20]);
+        }
+        return p.map(([x, y]) => [CX + x * sc, 490 + y * sc]);
+      }
+      function buildShield() {
+        SHIELD_SH = shape((s) => {
+          s.poly(shieldPoly(1), true, 2.4, 1, 1.7, 0);
+          s.poly(shieldPoly(0.86), true, 3.6, 0.3, 1.1, 0);
+          s.poly([[880, 480], [940, 545], [1060, 405]], false, 2, 1, 2.6, 14);
+          for (let k = 0; k < 360; k++) s.pt(CX + Math.cos((k / 360) * TAU) * 420, 490 + Math.sin((k / 360) * TAU) * 420, 1, 1.3, 15);
+          for (let k = 0; k < 200; k++) s.pt(CX + Math.cos((k / 200) * TAU) * 490, 490 + Math.sin((k / 200) * TAU) * 490, 0.12, 1, 0);
+          for (let k = 0; k < 480; k++) s.pt(0, 0, 1, 1.6, 16);
+        });
+        SHIELD_SH.delay = new Float32Array(N);
+        for (let i = 0; i < N; i++) if (SHIELD_SH.g[i] === 14) SHIELD_SH.delay[i] = 0.15 + ((SHIELD_SH.x[i] - 880) / 180) * 0.3;
+      }
+      function SHIELD(t, o) {
+        const sweep = t * 1.6;
+        let tk = 0;
+        for (let i = 0; i < N; i++) {
+          const g = SHIELD_SH.g[i];
+          if (g === 15) {
+            const a = Math.atan2(SHIELD_SH.y[i] - 490, SHIELD_SH.x[i] - CX);
+            const k = Math.pow(Math.max(0, Math.cos(a - sweep)), 10);
+            fromShape(SHIELD_SH, i, o, 0, 0, 0.06 + 0.8 * k);
+          } else if (g === 16) {
+            const th = tk++ % 6;
+            const ang = [-0.3, -2.8, 0.55, -1.2, 2.55, -1.95][th];
+            const t0 = 21.35 + th * 0.24;
+            const ta = t0 + 0.62;
+            o.c[i] = 1;
+            o.s[i] = 1.8;
+            if (t < ta) {
+              const d = lerp(600, 290, clamp((t - t0) / 0.62));
+              o.x[i] = CX + Math.cos(ang) * d + (R2[i] - 0.5) * 22;
+              o.y[i] = 490 + Math.sin(ang) * d + (R3[i] - 0.5) * 22;
+              o.a[i] = t < t0 ? 0 : 0.95;
+            } else {
+              const q = clamp((t - ta) / 0.55);
+              const r = 10 + eoExpo(q) * 85;
+              const a = R2[i] * TAU;
+              o.x[i] = CX + Math.cos(ang) * 290 + Math.cos(a) * r;
+              o.y[i] = 490 + Math.sin(ang) * 290 + Math.sin(a) * r;
+              o.a[i] = (1 - q) * 0.9;
+            }
+          } else fromShape(SHIELD_SH, i, o);
+        }
+        // The shield brightens briefly on each impact.
+        let hit = 0;
+        for (let k = 0; k < 6; k++) hit = Math.max(hit, 1 - clamp((t - (21.35 + k * 0.24 + 0.62)) / 0.35) - (t < 21.35 + k * 0.24 + 0.62 ? 1 : 0));
+        if (hit > 0) for (let i = 0; i < N; i++) if (SHIELD_SH.g[i] === 0) o.a[i] = Math.min(1.4, o.a[i] + hit * 0.45);
+      }
+
+      // 9. Galaxy: all solutions as one turning ecosystem.
+      function GALAXY(t, o) {
+        const rot = (t - 23) * 0.32;
+        for (let i = 0; i < N; i++) {
+          o.c[i] = 0;
+          if (R1[i] < 0.16) {
+            const r = Math.pow(R2[i], 1.6) * 90;
+            const a = R3[i] * TAU + rot * 1.5;
+            o.x[i] = CX + Math.cos(a) * r;
+            o.y[i] = CY + Math.sin(a) * r * 0.55;
+            o.a[i] = 0.5 + 0.5 * R4[i];
+            o.s[i] = 1.2 + R4[i] * 0.8;
+          } else if (R1[i] < 0.9) {
+            const u = Math.pow(R2[i], 0.85);
+            const arm = i % 2;
+            const j = (R3[i] + R3[(i * 7) % N] + R4[i] - 1.5) * 0.36;
+            const th = arm * Math.PI + u * Math.PI * 3.2 + rot + j;
+            const r = 480 * (0.04 + 0.96 * u) * (1 + (R4[i] - 0.5) * 0.12);
+            const d = (Math.sin(th) + 1) / 2;
+            o.x[i] = CX + Math.cos(th) * r;
+            o.y[i] = CY + Math.sin(th) * r * 0.52;
+            o.a[i] = (0.2 + 0.7 * Math.pow(R4[i], 2)) * (0.6 + 0.4 * d) * (0.7 + 0.3 * Math.sin(t * 2 + i));
+            o.s[i] = R4[i] > 0.94 ? 2.2 : 0.8 + 0.6 * d;
+          } else {
+            const a = R2[i] * TAU;
+            const r = 520 + R3[i] * 480;
+            o.x[i] = CX + Math.cos(a + rot * 0.3) * r;
+            o.y[i] = CY + Math.sin(a + rot * 0.3) * r * 0.55;
+            o.a[i] = 0.08 + 0.2 * R4[i];
+            o.s[i] = 0.9;
+          }
+        }
+      }
+
+      // 10. The name: CybCell in stardust, with a quiet halo.
+      let WORD;
+      function buildWord() {
+        const off = document.createElement('canvas');
+        const g = off.getContext('2d', { willReadFrequently: true });
+        const maxW = 1160;
+        g.font = '600 100px Geist';
+        const fs = (100 * maxW) / g.measureText('CybCell').width;
+        off.width = maxW + 40;
+        off.height = Math.ceil(fs * 1.3);
+        g.font = `600 ${fs}px Geist`;
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillStyle = '#fff';
+        g.fillText('CybCell', off.width / 2, off.height / 2);
+        const data = g.getImageData(0, 0, off.width, off.height).data;
+        const pts = [];
+        const step = 3.4;
+        let s = 0;
+        for (let y = 0; y < off.height; y += step)
+          for (let x = 0; x < off.width; x += step) {
+            s++;
+            const jx = x + (hash(s) - 0.5) * step;
+            const jy = y + (hash(s + 1) - 0.5) * step;
+            const xi = jx | 0;
+            const yi = jy | 0;
+            if (xi < 0 || yi < 0 || xi >= off.width || yi >= off.height || data[(yi * off.width + xi) * 4 + 3] < 128) continue;
+            pts.push([jx + CX - off.width / 2, jy + 455 - off.height / 2]);
+          }
+        const M = pts.length;
+        WORD = { x: new Float32Array(N), y: new Float32Array(N), on: new Uint8Array(N), delay: new Float32Array(N) };
+        const take = Math.min(M, Math.floor(N * 0.86));
+        for (let i = 0; i < N; i++) {
+          if (i < take) {
+            const p = pts[Math.floor((i * M) / take)];
+            WORD.x[i] = p[0];
+            WORD.y[i] = p[1];
+            WORD.on[i] = 1;
+            WORD.delay[i] = ((p[0] - 380) / 1160) * 0.55;
+          } else {
+            const a = R2[i] * TAU;
+            const r = 640 + R3[i] * 420;
+            WORD.x[i] = CX + Math.cos(a) * r;
+            WORD.y[i] = 455 + Math.sin(a) * r * 0.5;
+            WORD.on[i] = 0;
+            WORD.delay[i] = 0;
+          }
+        }
+      }
+      function WORDF(t, o) {
+        for (let i = 0; i < N; i++) {
+          o.c[i] = 0;
+          if (WORD.on[i]) {
+            o.x[i] = WORD.x[i] + Math.sin(t * 1.3 + R1[i] * 40) * 1.4;
+            o.y[i] = WORD.y[i] + Math.cos(t * 1.1 + R2[i] * 40) * 1.4;
+            o.a[i] = (0.7 + 0.3 * R3[i]) * (0.82 + 0.18 * Math.sin(t * 2.4 + i));
+            o.s[i] = R4[i] > 0.94 ? 2.3 : 1.5;
+          } else {
+            o.x[i] = WORD.x[i] + Math.sin(t * 0.2 + i) * 8;
+            o.y[i] = WORD.y[i] + Math.cos(t * 0.2 + i) * 5;
+            o.a[i] = 0.06 + 0.18 * R4[i];
+            o.s[i] = 0.9;
+          }
+        }
+      }
+
+      /* --------------------------------------------------------- timeline */
+
+      const SEG = [
+        { t0: 0, f: STARS },
+        { t0: 0.8, f: CELLS(1), blend: 1.7, swirl: 220 },
+        { t0: 3.3, f: CELLS(2), blend: 0.42, swirl: 30 },
+        { t0: 3.9, f: CELLS(4), blend: 0.42, swirl: 30 },
+        { t0: 4.5, f: CELLS(8), blend: 0.42, swirl: 30 },
+        { t0: 5.1, f: CELLS(16), blend: 0.45, swirl: 30 },
+        { t0: 6.0, f: WEB, blend: 0.95, swirl: 160 },
+        { t0: 7.7, f: APP, blend: 0.75, swirl: 70 },
+        { t0: 9.0, f: AI, blend: 0.9, swirl: 140 },
+        { t0: 12.0, f: TOWERF, blend: 0.8, swirl: 120, delay: () => TOWER.delay },
+        { t0: 15.5, f: CHART, blend: 0.8, swirl: 120, delay: () => CHART_SH.delay },
+        { t0: 19.0, f: KIOSK, blend: 0.8, swirl: 130 },
+        { t0: 21.0, f: SHIELD, blend: 0.75, swirl: 110, delay: () => SHIELD_SH.delay },
+        { t0: 23.0, f: GALAXY, blend: 1.2, swirl: 260 },
+        { t0: 26.4, f: WORDF, blend: 1.0, swirl: 180, delay: () => WORD.delay },
+      ];
+
+      const A = buf();
+      const B = buf();
+      const OUT = buf();
+      const STREAK = new Float32Array(N * 2);
+
+      function compose(t) {
+        let k = 0;
+        for (let i = 0; i < SEG.length; i++) if (SEG[i].t0 <= t) k = i;
+        const seg = SEG[k];
+        const blend = seg.blend || 0;
+        const delays = seg.delay ? seg.delay() : null;
+        const maxDelay = delays ? 1.6 : 0;
+        const inTransition = k > 0 && t < seg.t0 + blend * 1.3 + maxDelay;
+        seg.f(t, B);
+        if (!inTransition) {
+          OUT.x.set(B.x);
+          OUT.y.set(B.y);
+          OUT.a.set(B.a);
+          OUT.s.set(B.s);
+          OUT.c.set(B.c);
+          STREAK.fill(0);
+          return { k, g: 1 };
+        }
+        SEG[k - 1].f(t, A);
+        const sw = seg.swirl || 0;
+        let gSum = 0;
+        for (let i = 0; i < N; i++) {
+          const st = R4[i] * blend * 0.3 + (delays ? delays[i] : 0);
+          const g = clamp((t - seg.t0 - st) / blend);
+          const e = eio(g);
+          const dx = B.x[i] - A.x[i];
+          const dy = B.y[i] - A.y[i];
+          const len = Math.hypot(dx, dy) || 1;
+          const arc = Math.sin(Math.PI * e) * sw * (R1[i] - 0.5) * 2;
+          OUT.x[i] = A.x[i] + dx * e + (-dy / len) * arc;
+          OUT.y[i] = A.y[i] + dy * e + (dx / len) * arc;
+          const mid = Math.sin(Math.PI * g) * 0.25;
+          OUT.a[i] = lerp(A.a[i], B.a[i], e) + mid * Math.max(A.a[i], B.a[i]);
+          OUT.s[i] = lerp(A.s[i], B.s[i], e);
+          OUT.c[i] = e < 0.5 ? A.c[i] : B.c[i];
+          // Motion streak: direction of travel, length from speed.
+          const v = (eioD(g) / blend) * (1 / 60) * 1.6;
+          let sxv = dx * v;
+          let syv = dy * v;
+          const sl = Math.hypot(sxv, syv);
+          if (sl > 34) {
+            sxv *= 34 / sl;
+            syv *= 34 / sl;
+          }
+          STREAK[i * 2] = sxv;
+          STREAK[i * 2 + 1] = syv;
+          gSum += g;
+        }
+        return { k, g: gSum / N };
+      }
+
+      /* ---------------------------------------------------------- captions */
+
+      const CAPS = [
+        { t0: 0.95, t1: 3.05, text: 'Hər şey bir hüceyrədən başlayır.' },
+        { t0: 3.45, t1: 5.85, text: 'Biz biznesinizin rəqəmsal hüceyrələrini qururuq.' },
+        { t0: 6.35, t1: 8.9, label: '01  Sayt və tətbiq', text: 'Saytlar və mobil tətbiqlər.' },
+        { t0: 9.3, t1: 11.9, label: '02  Süni intellekt', text: 'Süni intellekt inteqrasiyası.' },
+        { t0: 12.3, t1: 15.35, label: '03  3D və AR', text: 'Bina tikilməmiş satılır.' },
+        { t0: 15.8, t1: 18.85, label: '04  Marketinq', text: 'Diqqəti satışa çeviririk.' },
+        { t0: 19.3, t1: 20.9, label: '05  Avadanlıq', text: 'Kiosk, POS, ağıllı ekranlar.' },
+        { t0: 21.3, t1: 22.9, label: '06  Dəstək', text: '24/7 dəstək və təhlükəsizlik.' },
+        { t0: 23.4, t1: 24.95, text: 'Hər həll bir hüceyrədir.' },
+        { t0: 25.05, t1: 26.3, text: 'Birlikdə ekosistem.' },
+        { t0: 27.35, t1: 30.5, text: 'Biznesiniz üçün rəqəmsal ekosistem.', y: 690, size: 40, dim: true },
+      ];
+
+      function drawCaption(c, t) {
+        if (t < c.t0 - 0.05 || t > c.t1 + 0.5) return;
+        const size = c.size || 56;
+        const y = c.y || 918;
+        const out = 1 - eio(clamp((t - c.t1) / 0.4));
+        ctx.save();
+        ctx.textBaseline = 'alphabetic';
+        if (c.label) {
+          const q = eoExpo(clamp((t - c.t0) / 0.7));
+          ctx.font = '400 19px "Geist Mono"';
+          ctx.letterSpacing = '2px';
+          ctx.fillStyle = `rgba(160,166,178,${0.95 * q * out})`;
+          const lw = ctx.measureText(c.label).width;
+          const lx = CX - (lw + 44) / 2;
+          ctx.fillRect(lx, y - size - 36, 30 * q, 1.5);
+          ctx.fillText(c.label, lx + 44, y - size - 29);
+        }
+        ctx.font = `500 ${size}px Geist`;
+        ctx.letterSpacing = `${-size * 0.028}px`;
+        const words = c.text.split(' ');
+        const space = ctx.measureText(' ').width;
+        const widths = words.map((w) => ctx.measureText(w).width);
+        const total = widths.reduce((a, b) => a + b, 0) + space * (words.length - 1);
+        let x = CX - total / 2;
+        words.forEach((w, j) => {
+          const q = eoExpo(clamp((t - c.t0 - j * 0.07) / 0.75));
+          const a = q * out;
+          if (a > 0.003) {
+            ctx.filter = `blur(${((1 - q) * 9 + (1 - out) * 6).toFixed(2)}px)`;
+            ctx.fillStyle = c.dim ? `rgba(170,176,188,${a})` : `rgba(245,246,248,${a})`;
+            ctx.fillText(w, x, y + (1 - q) * 26 - (1 - out) * 14);
+          }
+          x += widths[j] + space;
+        });
+        ctx.restore();
+      }
+
+      /* ------------------------------------------------------------ render */
+
+      const glow = document.createElement('canvas');
+      glow.width = glow.height = 64;
+      (() => {
+        const g = glow.getContext('2d');
+        const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+        gr.addColorStop(0, 'rgba(255,255,255,0.9)');
+        gr.addColorStop(0.22, 'rgba(255,255,255,0.28)');
+        gr.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = gr;
+        g.fillRect(0, 0, 64, 64);
+      })();
+      const glowRed = document.createElement('canvas');
+      glowRed.width = glowRed.height = 64;
+      (() => {
+        const g = glowRed.getContext('2d');
+        const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+        gr.addColorStop(0, 'rgba(255,90,95,0.9)');
+        gr.addColorStop(0.25, 'rgba(229,72,77,0.3)');
+        gr.addColorStop(1, 'rgba(229,72,77,0)');
+        g.fillStyle = gr;
+        g.fillRect(0, 0, 64, 64);
+      })();
+      const bg = document.createElement('canvas');
+      bg.width = W;
+      bg.height = H;
+      (() => {
+        const g = bg.getContext('2d');
+        const gr = g.createRadialGradient(CX, 500, 0, CX, 500, 1150);
+        gr.addColorStop(0, '#0c111b');
+        gr.addColorStop(0.5, '#070a10');
+        gr.addColorStop(1, '#020304');
+        g.fillStyle = gr;
+        g.fillRect(0, 0, W, H);
+      })();
+      const vig = document.createElement('canvas');
+      vig.width = W;
+      vig.height = H;
+      (() => {
+        const g = vig.getContext('2d');
+        const gr = g.createRadialGradient(CX, 540, 420, CX, 540, 1250);
+        gr.addColorStop(0, 'rgba(0,0,0,0)');
+        gr.addColorStop(1, 'rgba(0,0,0,0.62)');
+        g.fillStyle = gr;
+        g.fillRect(0, 0, W, H);
+      })();
+      const layer = document.createElement('canvas');
+      layer.width = W;
+      layer.height = H;
+      const lx = layer.getContext('2d');
+      const small = document.createElement('canvas');
+      small.width = W / 4;
+      small.height = H / 4;
+      const sx = small.getContext('2d');
+
+      function camera(t, k) {
+        const seg = SEG[k];
+        const t1 = k + 1 < SEG.length ? SEG[k + 1].t0 : DUR;
+        const p = clamp((t - seg.t0) / (t1 - seg.t0));
+        let scale = 1 + 0.045 * eio(p);
+        // A small breath at each transition.
+        const tb = t - seg.t0;
+        if (k > 0 && tb < (seg.blend || 0)) scale *= 1 - 0.02 * Math.sin((Math.PI * tb) / seg.blend);
+        return scale;
+      }
+
+      function draw(t) {
+        const { k } = compose(t);
+        const scale = camera(t, k);
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+        ctx.filter = 'none';
+        ctx.drawImage(bg, 0, 0);
+
+        // Particles on their own layer so the bloom only picks them up.
+        lx.setTransform(1, 0, 0, 1, 0, 0);
+        lx.clearRect(0, 0, W, H);
+        lx.setTransform(scale, 0, 0, scale, CX - CX * scale, CY - CY * scale);
+        lx.strokeStyle = '#fff';
+        lx.lineWidth = 1;
+        lx.lineCap = 'round';
+        for (let i = 0; i < N; i++) {
+          const a = OUT.a[i];
+          if (a < 0.01) continue;
+          const x = OUT.x[i];
+          const y = OUT.y[i];
+          const s = OUT.s[i];
+          const red = OUT.c[i] === 1;
+          lx.globalAlpha = a > 1 ? 1 : a;
+          lx.fillStyle = red ? '#ff5a5f' : '#fff';
+          lx.fillRect(x - s / 2, y - s / 2, s, s);
+          const vx = STREAK[i * 2];
+          const vy = STREAK[i * 2 + 1];
+          if (vx * vx + vy * vy > 9) {
+            lx.globalAlpha = Math.min(1, a) * 0.35;
+            lx.strokeStyle = red ? '#ff5a5f' : '#fff';
+            lx.beginPath();
+            lx.moveTo(x, y);
+            lx.lineTo(x - vx, y - vy);
+            lx.stroke();
+          }
+        }
+        lx.globalCompositeOperation = 'lighter';
+        for (let i = 0; i < N; i++) {
+          const a = OUT.a[i];
+          if (a < 0.72 || OUT.s[i] < 1.6) continue;
+          const g = 10 + OUT.s[i] * 5;
+          lx.globalAlpha = Math.min(1, a) * 0.32;
+          lx.drawImage(OUT.c[i] === 1 ? glowRed : glow, OUT.x[i] - g / 2, OUT.y[i] - g / 2, g, g);
+        }
+        lx.globalCompositeOperation = 'source-over';
+        lx.globalAlpha = 1;
+        lx.setTransform(1, 0, 0, 1, 0, 0);
+
+        ctx.drawImage(layer, 0, 0);
+        // Bloom: a blurred, downscaled copy added on top.
+        sx.clearRect(0, 0, W / 4, H / 4);
+        sx.filter = 'blur(5px)';
+        sx.drawImage(layer, 0, 0, W / 4, H / 4);
+        sx.filter = 'none';
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.85;
+        ctx.drawImage(small, 0, 0, W, H);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+
+        for (const c of CAPS) drawCaption(c, t);
+        ctx.filter = 'none';
+        ctx.drawImage(vig, 0, 0);
+
+        // Fade from and to black.
+        const fade = Math.max(1 - smooth(0, 0.6, t), smooth(DUR - 0.7, DUR, t));
+        if (fade > 0) {
+          ctx.globalAlpha = fade;
+          ctx.fillStyle = '#000';
+          ctx.fillRect(0, 0, W, H);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      async function init() {
+        await Promise.all([document.fonts.load('500 56px Geist'), document.fonts.load('600 100px Geist'), document.fonts.load('400 19px "Geist Mono"')]);
+        buildWeb();
+        buildApp();
+        buildTower();
+        buildChart();
+        buildKiosk();
+        buildShield();
+        buildWord();
+      }
+
+      const params = new URLSearchParams(location.search);
+      window.ready = init().then(() => true);
+      window.seek = async (t) => {
+        await window.ready;
+        draw(t);
+        return true;
+      };
+      window.DURATION = DUR;
+      if (params.has('render')) document.body.classList.add('render');
+      else
+        window.ready.then(() => {
+          const start = performance.now() - (Number(params.get('t')) || 0) * 1000;
+          const loop = (now) => {
+            draw(((now - start) / 1000) % DUR);
+            requestAnimationFrame(loop);
+          };
+          requestAnimationFrame(loop);
+        });
+    </script>
+  </body>
+</html>
