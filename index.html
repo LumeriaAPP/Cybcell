@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="az">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>CybCell</title>
+    <meta name="description" content="CybCell rəqəmsal sistemləri canlı orqanizm kimi qurur: kiber təhlükəsizlik, süni intellekt, proqram təminatı və bulud infrastrukturu. Hüceyrələr danışır, sistemlər yaşayır." />
+    <meta name="theme-color" content="#030809" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CybCell · Hüceyrələr danışır" />
+    <meta property="og:description" content="Rəqəmsal sistemləri canlı orqanizm kimi qururuq: modul, əlaqəli, özünü qoruyan." />
+    <meta property="og:image" content="./og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;500&family=Onest:wght@300;400;500;600&family=Unbounded:wght@300;400;500;700&display=swap"
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "CybCell",
+        "description": "Kiber təhlükəsizlik, süni intellekt, proqram təminatı və bulud infrastrukturu.",
+        "slogan": "Hüceyrələr danışır. Sistemlər yaşayır."
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main" data-i18n="skip">Əsas məzmuna keç</a>
+
+    <canvas id="colony" aria-hidden="true"></canvas>
+    <div class="scrim" aria-hidden="true"></div>
+    <div class="progress" aria-hidden="true"><span></span></div>
+
+    <header class="nav" data-nav>
+      <a class="brand" href="#top" aria-label="CybCell, başa qayıt">
+        <svg class="brand__mark" viewBox="0 0 44 26" aria-hidden="true">
+          <circle cx="13" cy="13" r="10" />
+          <circle cx="31" cy="13" r="10" />
+          <circle class="brand__nucleus" cx="13" cy="13" r="2.6" />
+          <circle class="brand__nucleus" cx="31" cy="13" r="2.6" />
+          <line x1="15.6" y1="13" x2="28.4" y2="13" />
+        </svg>
+        <span class="brand__word">cyb<b>cell</b></span>
+      </a>
+      <nav class="nav__links" aria-label="Əsas naviqasiya" data-i18n-attr="aria-label:nav.label">
+        <a href="#concept" data-i18n="nav.concept">Konsept</a>
+        <a href="#cells" data-i18n="nav.services">Xidmətlər</a>
+        <a href="#dialogue" data-i18n="nav.dialogue">Dialoq</a>
+        <a href="#lifecycle" data-i18n="nav.process">Proses</a>
+      </nav>
+      <div class="nav__end">
+        <button class="lang" type="button" data-lang-toggle aria-label="Switch to English">
+          <span data-l="az">AZ</span><span data-l="en">EN</span>
+        </button>
+        <a class="btn btn--small" href="#contact" data-i18n="nav.contact">Əlaqə</a>
+      </div>
+    </header>
+
+    <aside class="hud" aria-hidden="true">
+      <span><i data-i18n="hud.cells">Hüceyrə</i> <b data-hud="cells">000</b></span>
+      <span><i data-i18n="hud.links">Əlaqə</i> <b data-hud="links">000</b></span>
+      <span><i data-i18n="hud.signals">Siqnal/san</i> <b data-hud="sps">00</b></span>
+    </aside>
+
+    <ol class="rail" aria-hidden="true">
+      <li data-rail="2"><span>01</span><em data-i18n="ch1.name">Hüceyrə</em></li>
+      <li data-rail="3"><span>02</span><em data-i18n="ch2.name">Bölünmə</em></li>
+      <li data-rail="4"><span>03</span><em data-i18n="ch3.name">Siqnal</em></li>
+      <li data-rail="5"><span>04</span><em data-i18n="ch4.name">İmmunitet</em></li>
+      <li data-rail="6"><span>05</span><em data-i18n="ch5.name">Orqanizm</em></li>
+    </ol>
+
+    <main id="main">
+      <!-- HERO -->
+      <section class="hero" id="top" data-scene="hero">
+        <div class="wrap hero__inner">
+          <p class="eyebrow"><span class="live-dot"></span><span data-i18n="hero.eyebrow">Kibernetik hüceyrə sistemləri</span></p>
+          <h1 class="hero__title">
+            <span class="line" data-i18n="hero.l1">Hüceyrələr</span>
+            <span class="line" data-i18n="hero.l2">danışır.</span>
+          </h1>
+          <p class="hero__sub" data-i18n="hero.sub">Sistemlər yaşayır.</p>
+          <p class="hero__lede" data-i18n="hero.lede">
+            CybCell rəqəmsal sistemləri canlı orqanizm kimi qurur. Hər modul müstəqil qərar verir, qonşuları ilə danışır və bütün sistemi qoruyur.
+          </p>
+          <div class="hero__actions">
+            <a class="btn" href="#contact" data-i18n="hero.cta">Layihəni başlat</a>
+            <a class="btn btn--ghost" href="#concept" data-i18n="hero.cta2">Necə işləyir</a>
+          </div>
+        </div>
+        <div class="wrap hero__foot">
+          <p class="hint" data-i18n="hero.hint">Ekrana toxunun, hüceyrələr cavab verəcək</p>
+          <a class="scroll-cue" href="#concept" aria-label="Aşağı sürüşdür" data-i18n-attr="aria-label:hero.scroll">
+            <span></span>
+          </a>
+        </div>
+      </section>
+
+      <!-- NAME -->
+      <section class="name" id="concept" data-scene="name">
+        <div class="wrap">
+          <p class="eyebrow" data-i18n="name.eyebrow">Adın mənası</p>
+          <div class="equation">
+            <div class="term">
+              <p class="term__word term__word--outline">CYB</p>
+              <p class="term__label" data-i18n="name.cyb.label">kibernetika</p>
+              <p class="term__text" data-i18n="name.cyb.text">Canlı orqanizmlərdə və maşınlarda idarəetmə və əlaqə haqqında elm. Norbert Viner, 1948.</p>
+            </div>
+            <p class="op" aria-hidden="true">+</p>
+            <div class="term">
+              <p class="term__word term__word--outline">CELL</p>
+              <p class="term__label" data-i18n="name.cell.label">hüceyrə</p>
+              <p class="term__text" data-i18n="name.cell.text">Həyatın ən kiçik müstəqil vahidi. Hər canlı bir hüceyrədən başlayır.</p>
+            </div>
+            <p class="op" aria-hidden="true">=</p>
+            <div class="term term--result">
+              <p class="term__word">CYBCELL</p>
+              <p class="term__label" data-i18n="name.result.label">bizim yanaşmamız</p>
+              <p class="term__text" data-i18n="name.result.text">Rəqəmsal sistemin canlı hüceyrəsi: özü qərar verir, qonşuları ilə danışır, bütövü qoruyur.</p>
+            </div>
+          </div>
+          <p class="name__claim reveal" data-i18n="name.claim">Proqram təminatını orqanizm kimi yetişdiririk: kodla, məlumatla və təhlükəsizliklə.</p>
+        </div>
+      </section>
+
+      <!-- STORY -->
+      <section class="story" id="story" aria-label="CybCell hekayəsi" data-i18n-attr="aria-label:story.label">
+        <article class="chapter" data-scene="single">
+          <div class="wrap chapter__inner">
+            <p class="chapter__index"><span>01 / 05</span><span data-i18n="ch1.name">Hüceyrə</span></p>
+            <h2 class="chapter__title scramble" data-i18n="ch1.title">Hər şey bir hüceyrədən başlayır.</h2>
+            <p class="chapter__body" data-i18n="ch1.body">Hər sistemi ən kiçik, müstəqil vahiddən qururuq. Hər hüceyrənin öz yaddaşı, öz qaydası və öz vəzifəsi var. Bir hüceyrə düzgün qurulubsa, milyonu da düzgün işləyəcək.</p>
+            <p class="chapter__tech" data-i18n="ch1.tech">Modul arxitektura · Təmiz kod · Test olunmuş vahidlər</p>
+          </div>
+        </article>
+
+        <article class="chapter chapter--long" data-scene="division">
+          <div class="wrap chapter__inner">
+            <p class="chapter__index"><span>02 / 05</span><span data-i18n="ch2.name">Bölünmə</span></p>
+            <h2 class="chapter__title scramble" data-i18n="ch2.title">Böyümək bölünməkdir.</h2>
+            <p class="chapter__body" data-i18n="ch2.body">Yük artanda sistem çökmür, bölünür. Hər yeni hüceyrə valideyninin genetik kodunu daşıyır: eyni keyfiyyət, eyni təhlükəsizlik, istənilən miqyas.</p>
+            <p class="chapter__tech" data-i18n="ch2.tech">Mikroservislər · Kubernetes · Avtomatik miqyaslanma</p>
+          </div>
+        </article>
+
+        <article class="chapter" data-scene="signal">
+          <div class="wrap chapter__inner">
+            <p class="chapter__index"><span>03 / 05</span><span data-i18n="ch3.name">Siqnal</span></p>
+            <h2 class="chapter__title scramble" data-i18n="ch3.title">Hüceyrələr danışır.</h2>
+            <p class="chapter__body" data-i18n="ch3.body">Tək hüceyrə məlumatdır. Danışan hüceyrələr zəkadır. Sistemlərimiz real vaxtda bir-birinə siqnal ötürür, xəbəri yayır və qərarı birlikdə verir.</p>
+            <p class="chapter__tech" data-i18n="ch3.tech">API · Hadisə axınları · Real vaxt məlumatı</p>
+          </div>
+        </article>
+
+        <article class="chapter chapter--long" data-scene="immune">
+          <div class="wrap chapter__inner">
+            <p class="chapter__index"><span>04 / 05</span><span data-i18n="ch4.name">İmmunitet</span></p>
+            <h2 class="chapter__title scramble" data-i18n="ch4.title">Təhlükəni tanıyır və zərərsizləşdirir.</h2>
+            <p class="chapter__body" data-i18n="ch4.body">Yad element şəbəkəyə girən an ən yaxın hüceyrə həyəcan siqnalı verir. Qonşular dərhal reaksiya göstərir, təhlükəni mühasirəyə alır və təcrid edir. Müdafiə bütün orqanizmin refleksidir.</p>
+            <p class="chapter__tech chapter__tech--alarm" data-i18n="ch4.tech">Kiber təhlükəsizlik · 24/7 SOC · Zero Trust</p>
+          </div>
+        </article>
+
+        <article class="chapter chapter--organism" data-scene="organism">
+          <div class="wrap chapter__inner">
+            <p class="chapter__index"><span>05 / 05</span><span data-i18n="ch5.name">Orqanizm</span></p>
+            <h2 class="chapter__title scramble" data-i18n="ch5.title">Birlikdə canlıdırlar.</h2>
+            <p class="chapter__body" data-i18n="ch5.body">Minlərlə hüceyrə bir məqsəd ətrafında birləşəndə yeni bir şey yaranır: öyrənən, uyğunlaşan və özünü bərpa edən sistem. Biz buna CybCell deyirik.</p>
+            <p class="chapter__tech" data-i18n="ch5.tech">Süni intellekt · Özünü bərpa edən infrastruktur</p>
+          </div>
+        </article>
+      </section>
+
+      <!-- SERVICES -->
+      <section class="section services" id="cells" data-scene="ambient">
+        <div class="wrap">
+          <header class="section__head reveal">
+            <p class="eyebrow" data-i18n="svc.eyebrow">Hüceyrə növləri</p>
+            <h2 class="section__title scramble" data-i18n="svc.title">Hər xidmət ixtisaslaşmış bir hüceyrədir.</h2>
+            <p class="section__intro" data-i18n="svc.intro">Bədəndə hər hüceyrənin öz işi var. Bizdə də belədir: altı ixtisas, bir orqanizm.</p>
+          </header>
+
+          <div class="cards">
+            <article class="card reveal">
+              <svg class="card__glyph" viewBox="0 0 64 64" aria-hidden="true">
+                <circle cx="32" cy="32" r="15" />
+                <circle cx="32" cy="32" r="5" class="fill" />
+                <g class="spin">
+                  <path d="M32 17V9M32 55v-8M17 32H9M55 32h-8M21.4 21.4l-5.6-5.6M48.2 48.2l-5.6-5.6M21.4 42.6l-5.6 5.6M48.2 15.8l-5.6 5.6" />
+                  <path d="M29 9h6M29 55h6M9 29v6M55 29v6" />
+                </g>
+              </svg>
+              <p class="card__type" data-i18n="svc.1.type">T-limfosit · immun hüceyrə</p>
+              <h3 class="card__title" data-i18n="svc.1.title">Kiber təhlükəsizlik</h3>
+              <p class="card__text" data-i18n="svc.1.text">Penetrasiya testləri, 24/7 monitorinq və insidentlərə cavab. Təhlükəni sistemə daxil olmamış tanıyırıq.</p>
+              <ul class="tags"><li>Pentest</li><li>SOC</li><li>Zero Trust</li></ul>
+            </article>
+
+            <article class="card reveal">
+              <svg class="card__glyph" viewBox="0 0 64 64" aria-hidden="true">
+                <circle cx="30" cy="32" r="8" />
+                <circle cx="30" cy="32" r="3" class="fill" />
+                <path d="M38 32h18M50 32l5-5M50 32l5 5M23.5 26.5 14 17M14 17h-4M14 17v-5M23 37l-9 9M14 46l-5 1M24 29l-12-2M30 24V12M30 12l-4-4M30 12l4-4" />
+                <g class="pulse"><circle cx="56" cy="32" r="2" class="fill" /></g>
+              </svg>
+              <p class="card__type" data-i18n="svc.2.type">Neyron · sinir hüceyrəsi</p>
+              <h3 class="card__title" data-i18n="svc.2.title">Süni intellekt</h3>
+              <p class="card__text" data-i18n="svc.2.text">LLM inteqrasiyaları, kompüter görmə və proqnozlaşdırıcı analitika. Məlumatdan öyrənən sistemlər.</p>
+              <ul class="tags"><li>LLM</li><li>Computer Vision</li><li>MLOps</li></ul>
+            </article>
+
+            <article class="card reveal">
+              <svg class="card__glyph" viewBox="0 0 64 64" aria-hidden="true">
+                <circle cx="32" cy="32" r="18" stroke-dasharray="3 4" class="spin" />
+                <circle cx="32" cy="32" r="11" />
+                <circle cx="32" cy="32" r="3.5" class="fill" />
+                <circle cx="24" cy="26" r="1.6" class="fill" />
+                <circle cx="40" cy="37" r="1.6" class="fill" />
+              </svg>
+              <p class="card__type" data-i18n="svc.3.type">Kök hüceyrə · istənilən formaya düşür</p>
+              <h3 class="card__title" data-i18n="svc.3.title">Proqram təminatı</h3>
+              <p class="card__text" data-i18n="svc.3.text">Veb, mobil və korporativ platformalar. Biznesinizə uyğun formaya düşən, böyüyən məhsullar.</p>
+              <ul class="tags"><li>Web</li><li>Mobile</li><li>SaaS</li></ul>
+            </article>
+
+            <article class="card reveal">
+              <svg class="card__glyph" viewBox="0 0 64 64" aria-hidden="true">
+                <ellipse cx="32" cy="32" rx="20" ry="13" />
+                <ellipse cx="32" cy="32" rx="10" ry="5" />
+                <path class="flow" d="M4 52c10-6 18-6 28 0s18 6 28 0" />
+              </svg>
+              <p class="card__type" data-i18n="svc.4.type">Eritrosit · resurs daşıyıcısı</p>
+              <h3 class="card__title" data-i18n="svc.4.title">Bulud və DevOps</h3>
+              <p class="card__text" data-i18n="svc.4.text">Kubernetes, CI/CD və bulud miqrasiyası. Resursları hər hüceyrəyə vaxtında çatdırırıq.</p>
+              <ul class="tags"><li>Kubernetes</li><li>CI/CD</li><li>Cloud</li></ul>
+            </article>
+
+            <article class="card reveal">
+              <svg class="card__glyph" viewBox="0 0 64 64" aria-hidden="true">
+                <circle cx="32" cy="38" r="14" />
+                <circle cx="32" cy="38" r="4" class="fill" />
+                <path d="M32 24V12M32 12l-6-6M32 12l6-6M20 30l-8-8M12 22l-6 1M12 22l-1-6M44 30l8-8M52 22l6 1M52 22l1-6" />
+                <g class="pulse"><circle cx="32" cy="6" r="1.6" class="fill" /><circle cx="6" cy="23" r="1.6" class="fill" /><circle cx="58" cy="23" r="1.6" class="fill" /></g>
+              </svg>
+              <p class="card__type" data-i18n="svc.5.type">Reseptor · hiss edən hüceyrə</p>
+              <h3 class="card__title" data-i18n="svc.5.title">IoT və sensorlar</h3>
+              <p class="card__text" data-i18n="svc.5.text">Sensor şəbəkələri, edge hesablama və ağıllı qurğular. Fiziki dünyanı hiss edən sistemlər.</p>
+              <ul class="tags"><li>IoT</li><li>Edge</li><li>Embedded</li></ul>
+            </article>
+
+            <article class="card reveal">
+              <svg class="card__glyph" viewBox="0 0 64 64" aria-hidden="true">
+                <circle cx="32" cy="32" r="20" />
+                <circle cx="32" cy="32" r="14" stroke-dasharray="1 3" />
+                <circle cx="32" cy="32" r="8" />
+                <circle cx="32" cy="32" r="3" class="fill" />
+                <path d="M32 12v4M32 48v4M12 32h4M48 32h4" />
+              </svg>
+              <p class="card__type" data-i18n="svc.6.type">Yaddaş B-hüceyrəsi · heç nə unutmur</p>
+              <h3 class="card__title" data-i18n="svc.6.title">Məlumat və analitika</h3>
+              <p class="card__text" data-i18n="svc.6.text">Məlumat anbarları, BI panelləri və real vaxt analitikası. Hər siqnal yadda qalır, hər qərar faktlara söykənir.</p>
+              <ul class="tags"><li>Data Lake</li><li>BI</li><li>Streaming</li></ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- DIALOGUE -->
+      <section class="section dialogue" id="dialogue">
+        <div class="wrap dialogue__grid">
+          <header class="section__head reveal">
+            <p class="eyebrow" data-i18n="dlg.eyebrow">Canlı dialoq</p>
+            <h2 class="section__title scramble" data-i18n="dlg.title">Hüceyrələr bu an danışır.</h2>
+            <p class="section__intro" data-i18n="dlg.intro">Hər hadisə bir mesajdır. Hüceyrələr bir-birini xəbərdar edir, yükü bölüşür və təhlükəni birlikdə zərərsizləşdirir. Bu axın sistemlərimizin daxilindəki dialoqun sadələşdirilmiş nümunəsidir.</p>
+            <dl class="legend">
+              <div><dt class="tag tag--syn">SYN</dt><dd data-i18n="dlg.l.syn">qoşulma</dd></div>
+              <div><dt class="tag tag--div">DIV</dt><dd data-i18n="dlg.l.div">bölünmə</dd></div>
+              <div><dt class="tag tag--alert">ALERT</dt><dd data-i18n="dlg.l.alert">həyəcan</dd></div>
+              <div><dt class="tag tag--heal">HEAL</dt><dd data-i18n="dlg.l.heal">bərpa</dd></div>
+            </dl>
+          </header>
+          <div class="terminal reveal" data-no-pulse>
+            <div class="terminal__bar">
+              <span class="terminal__path">cybcell://<span data-i18n="dlg.path">şəbəkə</span>/dialog</span>
+              <span class="terminal__live"><span class="live-dot"></span><span data-i18n="dlg.live">canlı</span></span>
+            </div>
+            <ol class="terminal__log" data-dialogue aria-live="off"></ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- VITALS -->
+      <section class="section vitals" id="vitals">
+        <div class="wrap">
+          <header class="section__head reveal">
+            <p class="eyebrow" data-i18n="vit.eyebrow">Həyati göstəricilər</p>
+            <h2 class="section__title scramble" data-i18n="vit.title">Sağlam sistemin nəbzi.</h2>
+            <p class="section__intro" data-i18n="vit.intro">Qurduğumuz hər sistem üçün eyni standartları hədəf götürürük.</p>
+          </header>
+          <div class="monitor reveal">
+            <svg class="ecg" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+              <g class="ecg__track">
+                <path d="M0 70H90l10-6 10 6h20l8 18 12-78 12 84 8-24h30l14-10 14 10H300H390l10-6 10 6h20l8 18 12-78 12 84 8-24h30l14-10 14 10H600H690l10-6 10 6h20l8 18 12-78 12 84 8-24h30l14-10 14 10H900H990l10-6 10 6h20l8 18 12-78 12 84 8-24h30l14-10 14 10H1200H1290l10-6 10 6h20l8 18 12-78 12 84 8-24h30l14-10 14 10H1500H1590l10-6 10 6h20l8 18 12-78 12 84 8-24h30l14-10 14 10H1800H1890l10-6 10 6h20l8 18 12-78 12 84 8-24h30l14-10 14 10H2100H2190l10-6 10 6h20l8 18 12-78 12 84 8-24h30l14-10 14 10H2400" />
+              </g>
+            </svg>
+            <dl class="readouts">
+              <div class="readout">
+                <dt data-i18n="vit.1.label">Nəzarət</dt>
+                <dd class="readout__value">24/7</dd>
+                <dd class="readout__text" data-i18n="vit.1.text">Hüceyrələr heç vaxt yatmır.</dd>
+              </div>
+              <div class="readout">
+                <dt data-i18n="vit.2.label">Reaksiya hədəfi</dt>
+                <dd class="readout__value">&lt;50<small>ms</small></dd>
+                <dd class="readout__text" data-i18n="vit.2.text">Siqnaldan qərara qədər.</dd>
+              </div>
+              <div class="readout">
+                <dt data-i18n="vit.3.label">Əlçatanlıq hədəfi</dt>
+                <dd class="readout__value">99.9<small>%</small></dd>
+                <dd class="readout__text" data-i18n="vit.3.text">Sistem hər an oyaqdır.</dd>
+              </div>
+              <div class="readout">
+                <dt data-i18n="vit.4.label">Tək nöqtəli nasazlıq</dt>
+                <dd class="readout__value">0</dd>
+                <dd class="readout__text" data-i18n="vit.4.text">Bir hüceyrə dayansa, digəri davam edir.</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIFECYCLE -->
+      <section class="section lifecycle" id="lifecycle">
+        <div class="wrap">
+          <header class="section__head reveal">
+            <p class="eyebrow" data-i18n="lc.eyebrow">Həyat dövrü</p>
+            <h2 class="section__title scramble" data-i18n="lc.title">Layihə necə yaşayır.</h2>
+          </header>
+          <ol class="steps">
+            <li class="step reveal">
+              <span class="step__node" aria-hidden="true"></span>
+              <p class="step__index">01</p>
+              <h3 class="step__title" data-i18n="lc.1.title">Diaqnoz</h3>
+              <p class="step__text" data-i18n="lc.1.text">Sisteminizi, risklərinizi və məqsədlərinizi öyrənirik. Harada ağrıdığını dəqiq bilmədən müalicə başlamır.</p>
+            </li>
+            <li class="step reveal">
+              <span class="step__node" aria-hidden="true"></span>
+              <p class="step__index">02</p>
+              <h3 class="step__title" data-i18n="lc.2.title">Genom</h3>
+              <p class="step__text" data-i18n="lc.2.text">Arxitekturanı və dizaynı hüceyrə səviyyəsində planlaşdırırıq. Hər modulun vəzifəsi və əlaqələri əvvəlcədən yazılır.</p>
+            </li>
+            <li class="step reveal">
+              <span class="step__node" aria-hidden="true"></span>
+              <p class="step__index">03</p>
+              <h3 class="step__title" data-i18n="lc.3.title">Böyümə</h3>
+              <p class="step__text" data-i18n="lc.3.text">Qısa iterasiyalarla qurur, test edir və işə salırıq. Hər mərhələnin sonunda işləyən nəticə görürsünüz.</p>
+            </li>
+            <li class="step reveal">
+              <span class="step__node" aria-hidden="true"></span>
+              <p class="step__index">04</p>
+              <h3 class="step__title" data-i18n="lc.4.title">İmmunitet</h3>
+              <p class="step__text" data-i18n="lc.4.text">İşə düşən sistemi qoruyur, izləyir və təkmilləşdiririk. Orqanizm yaşadıqca biz yanındayıq.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="section contact" id="contact">
+        <div class="wrap contact__grid">
+          <header class="section__head reveal">
+            <p class="eyebrow" data-i18n="ct.eyebrow">Əlaqə</p>
+            <h2 class="contact__title scramble" data-i18n="ct.title">Sisteminizi canlandıraq.</h2>
+            <p class="section__intro" data-i18n="ct.intro">Layihənizi bir neçə cümlə ilə yazın. Mesajınızı oxuyub sizinlə əlaqə saxlayacağıq.</p>
+            <div class="direct">
+              <p class="direct__label" data-i18n="ct.direct">Birbaşa yazın</p>
+              <p class="direct__row">
+                <span class="direct__mail" data-email>hello@cybcell.az</span>
+                <button class="copy" type="button" data-copy data-i18n="ct.copy">Kopyala</button>
+              </p>
+            </div>
+          </header>
+          <form class="form reveal" data-form novalidate data-no-pulse>
+            <div class="field">
+              <label for="f-name" data-i18n="ct.f.name">Adınız</label>
+              <input id="f-name" name="name" type="text" autocomplete="name" required />
+            </div>
+            <div class="field">
+              <label for="f-email" data-i18n="ct.f.email">E-poçt</label>
+              <input id="f-email" name="email" type="email" autocomplete="email" required />
+            </div>
+            <div class="field field--wide">
+              <label for="f-company" data-i18n="ct.f.company">Şirkət (istəyə bağlı)</label>
+              <input id="f-company" name="company" type="text" autocomplete="organization" />
+            </div>
+            <div class="field field--wide">
+              <label for="f-msg" data-i18n="ct.f.msg">Layihə haqqında</label>
+              <textarea id="f-msg" name="message" rows="4" required></textarea>
+            </div>
+            <div class="form__foot field--wide">
+              <button class="btn" type="submit" data-i18n="ct.send">Siqnal göndər</button>
+              <p class="form__status" role="status" data-status></p>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <div class="footer__brand">
+          <a class="brand" href="#top" aria-label="CybCell">
+            <svg class="brand__mark" viewBox="0 0 44 26" aria-hidden="true">
+              <circle cx="13" cy="13" r="10" />
+              <circle cx="31" cy="13" r="10" />
+              <circle class="brand__nucleus" cx="13" cy="13" r="2.6" />
+              <circle class="brand__nucleus" cx="31" cy="13" r="2.6" />
+              <line x1="15.6" y1="13" x2="28.4" y2="13" />
+            </svg>
+            <span class="brand__word">cyb<b>cell</b></span>
+          </a>
+          <p class="footer__tag" data-i18n="ft.tag">Hüceyrələr danışır. Sistemlər yaşayır.</p>
+        </div>
+        <nav class="footer__nav" aria-label="Alt naviqasiya" data-i18n-attr="aria-label:ft.nav">
+          <a href="#concept" data-i18n="nav.concept">Konsept</a>
+          <a href="#cells" data-i18n="nav.services">Xidmətlər</a>
+          <a href="#dialogue" data-i18n="nav.dialogue">Dialoq</a>
+          <a href="#lifecycle" data-i18n="nav.process">Proses</a>
+          <a href="#contact" data-i18n="nav.contact">Əlaqə</a>
+        </nav>
+        <p class="footer__legal">© <span data-year>2026</span> CybCell. <span data-i18n="ft.rights">Bütün hüquqlar qorunur.</span></p>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
