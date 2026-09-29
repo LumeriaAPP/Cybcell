@@ -20,9 +20,10 @@ export const SCENES = [
 export type SceneId = (typeof SCENES)[number];
 
 type RGB = readonly [number, number, number];
-const PLASMA: RGB = [92, 246, 216];
-const SYNAPSE: RGB = [165, 148, 255];
-const ALARM: RGB = [255, 84, 112];
+// Monochrome: cells in soft white, highlights in pure white, red only for a threat.
+const PEARL: RGB = [228, 228, 228];
+const AMBER: RGB = [255, 255, 255];
+const ALARM: RGB = [229, 72, 77];
 
 const TAU = Math.PI * 2;
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
@@ -60,7 +61,7 @@ interface Cell {
   ny: number;
   baseR: number;
   netR: number;
-  tint: number; // 0 = plasma, 1 = synapse
+  tint: number; // 0 = pearl, 1 = amber
   nb: number[]; // neighbours this frame
   swarm: number; // rank in the immune swarm, -1 if not part of it
   word: number; // index into the organism word points, -1 if unused
@@ -80,7 +81,7 @@ interface Signal {
   t: number;
   dur: number;
   hops: number;
-  kind: 0 | 1 | 2; // plasma / synapse / alarm
+  kind: 0 | 1 | 2; // pearl / amber / alarm
 }
 
 interface Scene {
@@ -136,7 +137,6 @@ export class CellEngine {
   private reduced: boolean;
   private tmpA: Target = { x: 0, y: 0, r: 0, a: 0, heat: 0 };
   private tmpB: Target = { x: 0, y: 0, r: 0, a: 0, heat: 0 };
-  private hudFont = '10px "Martian Mono", ui-monospace, monospace';
   readonly stats: EngineStats = { cells: 0, links: 0, sps: 0 };
 
   constructor(private canvas: HTMLCanvasElement) {
@@ -144,7 +144,7 @@ export class CellEngine {
     if (!ctx) throw new Error('Canvas 2D is not available');
     this.ctx = ctx;
     this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.sprites = { p: makeSprite(PLASMA), s: makeSprite(SYNAPSE), a: makeSprite(ALARM) };
+    this.sprites = { p: makeSprite(PEARL), s: makeSprite(AMBER), a: makeSprite(ALARM) };
     this.scenes = this.buildScenes();
     this.resize();
     this.bindEvents();
@@ -299,7 +299,7 @@ export class CellEngine {
     const off = document.createElement('canvas');
     const g = off.getContext('2d', { willReadFrequently: true });
     if (!g) return;
-    const font = (px: number) => `700 ${px}px Unbounded, "Arial Black", system-ui, sans-serif`;
+    const font = (px: number) => `600 ${px}px Geist, "Helvetica Neue", Arial, sans-serif`;
     g.font = font(100);
     const widest = Math.max(...lines.map((l) => g.measureText(l).width));
     const fs = (100 * maxW) / widest;
@@ -312,7 +312,14 @@ export class CellEngine {
     g.textBaseline = 'middle';
     g.textAlign = 'center';
     g.fillStyle = '#fff';
-    lines.forEach((l, k) => g.fillText(l, W / 2, lh * (k + 0.5)));
+    // A light outline thickens the strokes so the word stays legible in cells.
+    g.strokeStyle = '#fff';
+    g.lineWidth = fs * 0.06;
+    g.lineJoin = 'round';
+    lines.forEach((l, k) => {
+      g.fillText(l, W / 2, lh * (k + 0.5));
+      g.strokeText(l, W / 2, lh * (k + 0.5));
+    });
     const data = g.getImageData(0, 0, W, H).data;
     const inside = (x: number, y: number) => {
       const xi = x | 0;
@@ -570,9 +577,10 @@ export class CellEngine {
       },
       // ambient — a faint colony behind the rest of the page
       {
-        fn: (c, _i, _q, out) => scatter(c, out, 0.34, 0.85, 0),
-        link: () => this.heroSpacing * 1.5,
-        linkAlpha: 0.3,
+        // Out-of-focus tissue: larger, dimmer cells with visible membranes.
+        fn: (c, _i, _q, out) => scatter(c, out, 0.22, 1, 0),
+        link: () => this.heroSpacing * 1.45,
+        linkAlpha: 0.22,
         rate: () => 5,
       },
     ];
@@ -721,7 +729,7 @@ export class CellEngine {
     while (this.spawnAcc >= 1 && guard++ < 12) {
       this.spawnAcc -= 1;
       let from = -1;
-      let kind: 0 | 1 | 2 = Math.random() < 0.8 ? 0 : 1;
+      let kind: 0 | 1 | 2 = Math.random() < 0.3 ? 0 : 1;
       if (this.alarm > 0.3 && Math.random() < 0.7) {
         // Alarm signals start at hot cells.
         for (let tries = 0; tries < 12 && from < 0; tries++) {
@@ -791,24 +799,24 @@ export class CellEngine {
       const tb = Math.max(0, e - 0.22);
       const x0 = lerp(A.x, B.x, tb);
       const y0 = lerp(A.y, B.y, tb);
-      const col = s.kind === 2 ? ALARM : s.kind === 1 ? SYNAPSE : PLASMA;
+      const col = s.kind === 2 ? ALARM : s.kind === 1 ? AMBER : PEARL;
       const alpha = Math.min(A.a, s.to >= 0 ? (B as Cell).a : 1);
       const grad = ctx.createLinearGradient(x0, y0, x, y);
       grad.addColorStop(0, rgba(col, 0));
-      grad.addColorStop(1, rgba(col, 0.85 * alpha));
+      grad.addColorStop(1, rgba(col, 0.6 * alpha));
       ctx.strokeStyle = grad;
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = 1.1;
       ctx.beginPath();
       ctx.moveTo(x0, y0);
       ctx.lineTo(x, y);
       ctx.stroke();
       const spr = this.sprites[s.kind === 2 ? 'a' : s.kind === 1 ? 's' : 'p'];
-      ctx.globalAlpha = alpha;
-      ctx.drawImage(spr, x - 9, y - 9, 18, 18);
+      ctx.globalAlpha = alpha * 0.5;
+      ctx.drawImage(spr, x - 6, y - 6, 12, 12);
       ctx.globalAlpha = 1;
-      ctx.fillStyle = rgba([235, 255, 250], alpha);
+      ctx.fillStyle = rgba([255, 255, 255], alpha);
       ctx.beginPath();
-      ctx.arc(x, y, 1.3, 0, TAU);
+      ctx.arc(x, y, 1.1, 0, TAU);
       ctx.fill();
     }
     this.signals = next;
@@ -856,7 +864,7 @@ export class CellEngine {
       ctx.globalCompositeOperation = 'lighter';
       ctx.lineWidth = 1;
       for (let k = 0; k < BUCKETS; k++) {
-        ctx.strokeStyle = rgba(PLASMA, ((k + 0.5) / BUCKETS) * 0.55);
+        ctx.strokeStyle = rgba(PEARL, ((k + 0.5) / BUCKETS) * 0.32);
         ctx.stroke(paths[k]);
       }
       ctx.strokeStyle = rgba(ALARM, 0.45 * this.alarm);
@@ -872,14 +880,17 @@ export class CellEngine {
         if (c.a < 0.2) continue;
         const d = Math.hypot(c.x - P.x, c.y - P.y);
         if (d > R) continue;
-        ctx.strokeStyle = rgba(SYNAPSE, (1 - d / R) * 0.5 * c.a);
+        ctx.strokeStyle = rgba(PEARL, (1 - d / R) * 0.22 * c.a);
         ctx.beginPath();
         ctx.moveTo(c.x, c.y);
         ctx.lineTo(P.x, P.y);
         ctx.stroke();
       }
       P.pulse *= 0.9;
-      ctx.drawImage(this.sprites.s, P.x - 14 - P.pulse * 10, P.y - 14 - P.pulse * 10, 28 + P.pulse * 20, 28 + P.pulse * 20);
+      ctx.strokeStyle = rgba(PEARL, 0.35 + P.pulse * 0.4);
+      ctx.beginPath();
+      ctx.arc(P.x, P.y, 4 + P.pulse * 6, 0, TAU);
+      ctx.stroke();
     }
 
     // Glow.
@@ -887,7 +898,7 @@ export class CellEngine {
       if (c.a < 0.01 || c.r < 0.2) continue;
       visible++;
       const g = c.r * 5.5 + 8 + c.flash * c.r * 3;
-      ctx.globalAlpha = clamp(c.a * (0.32 + c.flash * 0.6) * (c.r > 30 ? 0.55 : 1));
+      ctx.globalAlpha = clamp(c.a * (0.1 + c.flash * 0.3) * (c.r > 30 ? 0.5 : 1));
       ctx.drawImage(this.sprites[c.tint ? 's' : 'p'], c.x - g / 2, c.y - g / 2, g, g);
       if (c.heat > 0.02) {
         ctx.globalAlpha = clamp(c.a * c.heat * 0.8);
@@ -901,10 +912,10 @@ export class CellEngine {
     for (let i = 0; i < cells.length; i++) {
       const c = cells[i];
       if (c.a < 0.01 || c.r < 0.2) continue;
-      const col = mix(c.tint ? SYNAPSE : PLASMA, ALARM, c.heat);
-      if (c.r >= 5.5) this.drawMembrane(c, col, i);
+      const col = mix(c.tint ? AMBER : PEARL, ALARM, c.heat);
+      if (c.r >= 5.5) this.drawMembrane(c, col);
       const core = c.r >= 5.5 ? Math.max(1.2, c.r * 0.16) : Math.max(0.9, c.r * 0.5);
-      ctx.fillStyle = rgba(mix(col, [240, 255, 252], 0.55 + c.flash * 0.45), c.a);
+      ctx.fillStyle = rgba(mix(col, [255, 255, 255], 0.5 + c.flash * 0.5), c.a);
       ctx.beginPath();
       ctx.arc(c.x, c.y, core, 0, TAU);
       ctx.fill();
@@ -918,7 +929,7 @@ export class CellEngine {
       wv.t += 1 / 60;
       if (wv.t > 1) continue;
       next.push(wv);
-      ctx.strokeStyle = rgba(SYNAPSE, (1 - wv.t) * 0.6);
+      ctx.strokeStyle = rgba(PEARL, (1 - wv.t) * 0.3);
       ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.arc(wv.x, wv.y, 10 + wv.t * 240, 0, TAU);
@@ -930,7 +941,7 @@ export class CellEngine {
     this.stats.links = links;
   }
 
-  private drawMembrane(c: Cell, col: RGB, i: number) {
+  private drawMembrane(c: Cell, col: RGB) {
     const ctx = this.ctx;
     const big = c.r > 36;
     const M = big ? 72 : c.r > 14 ? 28 : 14;
@@ -949,10 +960,10 @@ export class CellEngine {
       if (k === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
-    ctx.fillStyle = rgba(col, 0.07 * c.a);
+    ctx.fillStyle = rgba(col, 0.04 * c.a);
     ctx.fill();
-    ctx.strokeStyle = rgba(col, (big ? 0.85 : 0.7) * c.a);
-    ctx.lineWidth = big ? 1.5 : 1;
+    ctx.strokeStyle = rgba(col, (big ? 0.8 : 0.6) * c.a);
+    ctx.lineWidth = big ? 1.25 : 0.9;
     ctx.stroke();
 
     // Nucleus.
@@ -975,58 +986,9 @@ export class CellEngine {
       const rr = c.r * (0.52 + ((k * 37) % 30) / 100);
       ctx.beginPath();
       ctx.arc(c.x + Math.cos(ang) * rr, c.y + Math.sin(ang) * rr, 1.2 + (k % 3), 0, TAU);
-      ctx.fillStyle = rgba(k % 4 === 0 ? SYNAPSE : col, 0.7 * c.a);
+      ctx.fillStyle = rgba(col, 0.55 * c.a);
       ctx.fill();
     }
-
-    // Instrument overlay: a rotating reticle and a readout.
-    ctx.save();
-    ctx.translate(c.x, c.y);
-    ctx.rotate(t * 0.15);
-    ctx.setLineDash([2, 6]);
-    ctx.strokeStyle = rgba(col, 0.4 * c.a);
-    ctx.beginPath();
-    ctx.arc(0, 0, c.r * 1.32, 0, TAU);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.strokeStyle = rgba(col, 0.75 * c.a);
-    ctx.lineWidth = 1.5;
-    for (let k = 0; k < 4; k++) {
-      ctx.beginPath();
-      ctx.arc(0, 0, c.r * 1.5, k * (TAU / 4), k * (TAU / 4) + 0.35);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    if (i !== 0) return;
-    ctx.font = this.hudFont;
-    ctx.textBaseline = 'middle';
-    // Callout to the right, else to the left, else centred above the cell.
-    const fitsRight = c.x + c.r * 1.62 + 130 < this.w - 8;
-    const fitsLeft = c.x - c.r * 1.62 - 130 > 8;
-    if (!fitsRight && !fitsLeft) {
-      ctx.textAlign = 'center';
-      ctx.fillStyle = rgba(col, 0.8 * c.a);
-      ctx.fillText(`CELL 0x${(i + 1).toString(16).padStart(4, '0').toUpperCase()} · Ø ${(c.r * 0.22).toFixed(1)} µm`, c.x, c.y - c.r * 1.75);
-      ctx.textAlign = 'left';
-      return;
-    }
-    const dir = fitsRight ? 1 : -1;
-    ctx.textAlign = dir > 0 ? 'left' : 'right';
-    const lx = c.x + dir * c.r * 1.62;
-    const ly = c.y - c.r * 1.05;
-    ctx.strokeStyle = rgba(col, 0.4 * c.a);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(c.x + dir * c.r * 1.06, c.y - c.r * 0.7);
-    ctx.lineTo(lx - dir * 6, ly);
-    ctx.lineTo(lx + dir * 120, ly);
-    ctx.stroke();
-    ctx.fillStyle = rgba(col, 0.8 * c.a);
-    ctx.fillText(`CELL 0x${(i + 1).toString(16).padStart(4, '0').toUpperCase()}`, lx, ly - 10);
-    ctx.fillStyle = rgba([180, 205, 200], 0.7 * c.a);
-    ctx.fillText(`Ø ${(c.r * 0.22).toFixed(1)} µm · ACTIVE`, lx, ly + 11);
-    ctx.textAlign = 'left';
   }
 
   private drawIntruder() {
@@ -1037,7 +999,7 @@ export class CellEngine {
     const R = this.unit * 0.035 * (0.3 + 0.7 * I.scale);
     const g = R * 7;
     ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = I.alpha * 0.8;
+    ctx.globalAlpha = I.alpha * 0.45;
     ctx.drawImage(this.sprites.a, I.x - g / 2, I.y - g / 2, g, g);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
@@ -1066,18 +1028,6 @@ export class CellEngine {
     ctx.fillStyle = rgba(ALARM, 0.8 * I.alpha);
     ctx.fill();
     ctx.restore();
-
-    ctx.font = this.hudFont;
-    ctx.textBaseline = 'middle';
-    const dir = I.x + R * 1.8 + 140 > this.w - 8 ? -1 : 1;
-    ctx.textAlign = dir > 0 ? 'left' : 'right';
-    const tx = I.x + dir * R * 1.8;
-    const ty = I.y - R * 1.6;
-    ctx.fillStyle = rgba(ALARM, 0.9 * I.alpha);
-    ctx.fillText('UNKNOWN SIGNATURE', tx, ty);
-    ctx.fillStyle = rgba([255, 190, 200], 0.6 * I.alpha);
-    ctx.fillText(`THREAT ${(I.scale * 100).toFixed(0).padStart(3, '0')}%`, tx, ty + 14);
-    ctx.textAlign = 'left';
   }
 }
 

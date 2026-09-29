@@ -2,6 +2,7 @@ import './styles.css';
 import { CellEngine, SCENES, type SceneId } from './engine/cells';
 import { initI18n, onLang, t } from './i18n';
 import { initDialogue } from './dialogue';
+import { Specimen, type SpecimenKind } from './specimen';
 
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) =>
@@ -55,13 +56,17 @@ function scenePosition() {
 
 const root = document.documentElement;
 const nav = $('[data-nav]')!;
-const progress = $('.progress span')!;
 const rail = $('.rail')!;
 const railItems = $$('[data-rail]');
-const hud = $('.hud')!;
 const navLinks = $$<HTMLAnchorElement>('.nav__links a');
 const sections = navLinks.map((a) => $(a.hash)).filter(Boolean) as HTMLElement[];
 const narrow = matchMedia('(max-width: 820px)');
+const stacked = matchMedia('(max-width: 960px)');
+const services = $('#cells');
+
+// The colony is only visible until the services section covers it.
+let covered = false;
+const syncEngine = () => (document.hidden || covered ? engine?.stop() : engine?.start());
 
 let ticking = false;
 function onScroll() {
@@ -72,14 +77,15 @@ function onScroll() {
     const s = scenePosition();
     engine?.setScene(s);
 
-    const max = root.scrollHeight - innerHeight;
-    progress.style.setProperty('--p', String(max > 0 ? scrollY / max : 0));
     nav.toggleAttribute('data-scrolled', scrollY > 24);
-
+    const nowCovered = !!services && services.getBoundingClientRect().top <= 0;
+    if (nowCovered !== covered) {
+      covered = nowCovered;
+      syncEngine();
+    }
 
     // Story rail: chapters are scenes 2..6.
     const inStory = s > 1.55 && s < 6.5;
-    hud.toggleAttribute('data-hidden', !engine || s < 0.45 || s > 6.6);
     rail.toggleAttribute('data-visible', inStory);
     const active = Math.round(s);
     railItems.forEach((li) => li.toggleAttribute('data-active', Number(li.dataset.rail) === active));
@@ -94,6 +100,8 @@ function onScroll() {
       root.style.setProperty('--scrim-left', String(story * (1 - organism)));
       root.style.setProperty('--scrim-bottom', String(organism));
     }
+
+    pickSpecimen();
 
     // Current section in the nav.
     const mid = innerHeight * 0.4;
@@ -131,74 +139,83 @@ document.fonts?.ready.then(() => {
   measure();
   onScroll();
 });
-document.addEventListener('visibilitychange', () => (document.hidden ? engine?.stop() : engine?.start()));
+document.addEventListener('visibilitychange', syncEngine);
 new ResizeObserver(() => measure()).observe(document.body);
 
-/* Live instrument readout. */
-if (engine) {
-  const cellsEl = $('[data-hud="cells"]')!;
-  const linksEl = $('[data-hud="links"]')!;
-  const spsEl = $('[data-hud="sps"]')!;
-  setInterval(() => {
-    const st = engine!.stats;
-    cellsEl.textContent = String(st.cells).padStart(3, '0');
-    linksEl.textContent = String(st.links).padStart(3, '0');
-    spsEl.textContent = String(st.sps).padStart(2, '0');
-  }, 250);
-}
+/* ---------------------------------------------------------- the microscope */
 
-/* ---------------------------------------------------------- decode headings */
+const viewer = $('.viewer');
+const viewerCanvas = $<HTMLCanvasElement>('[data-viewer-canvas]');
+const specimenRows = $$('.specimen');
+let pickSpecimen = () => {};
 
-const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·/<>#*+';
-const scrambling = new WeakMap<Element, number>();
+if (viewer && viewerCanvas && specimenRows.length) {
+  const specimen = new Specimen(viewerCanvas);
+  let active = specimenRows.find((r) => r.hasAttribute('data-active')) ?? specimenRows[0];
+  let hovering = false;
+  let focusTimer = 0;
 
-function scramble(el: HTMLElement) {
-  if (reduced) return;
-  const final = el.textContent ?? '';
-  const start = performance.now();
-  const duration = Math.min(1100, 260 + final.length * 18);
-  const id = (scrambling.get(el) ?? 0) + 1;
-  scrambling.set(el, id);
-  const frame = (now: number) => {
-    if (scrambling.get(el) !== id) return;
-    const p = Math.min(1, (now - start) / duration);
-    const settled = Math.floor(final.length * p);
-    let out = final.slice(0, settled);
-    for (let i = settled; i < final.length; i++) {
-      const ch = final[i];
-      out += ch === ' ' || ch === '\n' ? ch : GLYPHS[(Math.random() * GLYPHS.length) | 0];
-    }
-    el.textContent = out;
-    if (p < 1) requestAnimationFrame(frame);
-    else el.textContent = final;
+  const label = () => {
+    const i = specimenRows.indexOf(active) + 1;
+    $('[data-viewer-no]')!.textContent = `${t('fig')} ${i}`;
+    const name = $('[data-cell-name]', active)?.textContent ?? '';
+    const role = $('[data-cell-role]', active)?.textContent ?? '';
+    $('[data-viewer-type]')!.textContent = `${name}, ${role}`;
   };
-  requestAnimationFrame(frame);
-}
 
-const seen = new WeakSet<Element>();
-const decoder = new IntersectionObserver(
-  (entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting || seen.has(e.target)) continue;
-      seen.add(e.target);
-      scramble(e.target as HTMLElement);
+  const activate = (row: HTMLElement) => {
+    if (row === active) return;
+    active.removeAttribute('data-active');
+    row.setAttribute('data-active', '');
+    active = row;
+    // A focus pull between specimens.
+    viewer.setAttribute('data-focusing', '');
+    clearTimeout(focusTimer);
+    focusTimer = window.setTimeout(() => {
+      specimen.set(row.dataset.kind as SpecimenKind);
+      label();
+      viewer.removeAttribute('data-focusing');
+    }, reduced ? 0 : 320);
+  };
+
+  pickSpecimen = () => {
+    if (hovering || stacked.matches) return;
+    const line = innerHeight * 0.48;
+    let best = active;
+    let bd = Infinity;
+    for (const row of specimenRows) {
+      const r = row.getBoundingClientRect();
+      const d = Math.abs(r.top + r.height / 2 - line);
+      if (d < bd) {
+        bd = d;
+        best = row;
+      }
     }
-  },
-  { threshold: 0.6 },
-);
-$$('.scramble').forEach((el) => decoder.observe(el));
-// A language switch replaces text; stop any decode that is mid-flight.
-onLang(() => $$('.scramble').forEach((el) => scrambling.set(el, (scrambling.get(el) ?? 0) + 1)));
+    activate(best);
+  };
 
-/* ------------------------------------------------------ card pointer glow */
-
-$$('.card').forEach((card) =>
-  card.addEventListener('pointermove', (e) => {
-    const r = card.getBoundingClientRect();
-    card.style.setProperty('--mx', `${e.clientX - r.left}px`);
-    card.style.setProperty('--my', `${e.clientY - r.top}px`);
-  }),
-);
+  specimenRows.forEach((row) =>
+    row.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      hovering = true;
+      activate(row);
+    }),
+  );
+  $('[data-specimens]')!.addEventListener('pointerleave', () => (hovering = false));
+  onLang(label);
+  label();
+  let inView = false;
+  new IntersectionObserver(([e]) => {
+    inView = e.isIntersecting;
+    if (inView) specimen.start();
+    else specimen.stop();
+  }).observe(viewer);
+  // Stacked layout: the figure sits above the list and cycles on its own.
+  setInterval(() => {
+    if (!stacked.matches || !inView || reduced) return;
+    activate(specimenRows[(specimenRows.indexOf(active) + 1) % specimenRows.length]);
+  }, 4800);
+}
 
 /* ------------------------------------------------------------- dialogue */
 
