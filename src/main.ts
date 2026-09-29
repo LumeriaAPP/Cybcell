@@ -61,16 +61,19 @@ function storyStops() {
     const c1 = center(k + 1) ?? c0;
     return c0 === undefined || c1 === undefined ? NaN : c0 + f * (c1 - c0) - innerHeight / 2;
   };
+  const k = (id: SceneId) => SCENES.indexOf(id);
   const stops = [
     0, // the name in stardust
     innerHeight * 0.95, // the galaxy
-    at(1, 0), // what the name means
-    at(2, 0), // one cell
-    at(3, 0.36), // division, up to 64 cells
-    at(4, 0), // signals
-    at(4, 0.95), // the intruder arrives
-    at(5, 0.33), // it is neutralised
-    at(6, 0), // the organism
+    at(k('name'), 0),
+    at(k('single'), 0),
+    at(k('division'), 0.36), // up to 64 cells
+    at(k('signal'), 0),
+    at(k('building'), 0.12), // the tower, fully built
+    at(k('marketing'), 0.12), // the chart, fully grown
+    at(k('marketing'), 0.95), // the intruder arrives
+    at(k('immune'), 0.33), // it is neutralised
+    at(k('organism'), 0),
     storyEnd(),
   ];
   return stops.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
@@ -115,14 +118,15 @@ function onScroll() {
     }
 
     // Story rail: chapters are scenes 2..6.
-    const inStory = s > 1.55 && s < 6.5;
+    const ORG = SCENES.indexOf('organism');
+    const inStory = s > 1.55 && s < ORG + 0.5;
     rail.toggleAttribute('data-visible', inStory);
     const active = Math.round(s);
     railItems.forEach((li) => li.toggleAttribute('data-active', Number(li.dataset.rail) === active));
 
     // Scrims keep chapter text readable over the colony.
-    const story = smoothstep(1.4, 2, s) * (1 - smoothstep(6.5, 7, s));
-    const organism = smoothstep(5.5, 6, s) * (1 - smoothstep(6.5, 7, s));
+    const story = smoothstep(1.4, 2, s) * (1 - smoothstep(ORG + 0.5, ORG + 1, s));
+    const organism = smoothstep(ORG - 0.5, ORG, s) * (1 - smoothstep(ORG + 0.5, ORG + 1, s));
     if (narrow.matches) {
       root.style.setProperty('--scrim-left', '0');
       root.style.setProperty('--scrim-bottom', String(story));
@@ -182,6 +186,7 @@ let pickSpecimen = () => {};
 if (viewer && viewerCanvas && specimenRows.length) {
   const specimen = new Specimen(viewerCanvas);
   let active = specimenRows.find((r) => r.hasAttribute('data-active')) ?? specimenRows[0];
+  specimen.set(active.dataset.kind as SpecimenKind);
   let hovering = false;
   let focusTimer = 0;
 

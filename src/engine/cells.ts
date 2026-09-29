@@ -13,6 +13,8 @@ export const SCENES = [
   'single',
   'division',
   'signal',
+  'building',
+  'marketing',
   'immune',
   'organism',
   'ambient',
@@ -231,6 +233,209 @@ export class CellEngine {
     this.heroMask = { data: alpha, W, H, ox: this.w / 2 - W / 2, oy: this.h / 2 - H / 2 };
   }
 
+  /* ------------------------------------------- building & marketing scenes */
+
+  /** Local progress (0..1) and blend weight of a scene. */
+  private sceneState(id: SceneId) {
+    const k = SCENES.indexOf(id);
+    const { a, b, t, qa, qb } = this.blend();
+    const w = (a === k ? 1 - t : 0) + (b === k ? t : 0);
+    const q = a === k ? qa : b === k ? qb : a > k ? 1 : 0;
+    return { w, q };
+  }
+
+  private tower: { x: number; y: number; z: number; f: number; s: number; sx: number; sy: number }[] = [];
+  private towerNodes: number[] = [];
+  private readonly FLOORS = 14;
+
+  /** A residential tower as a point cloud: floor slabs and facade mullions. */
+  private buildTower() {
+    const r = rng(0x70e7);
+    const W = 1;
+    const D = 0.62;
+    const hF = 0.1;
+    const pts: typeof this.tower = [];
+    const perim = (t: number): [number, number] => {
+      const P = 2 * (W + D);
+      let d = (t % 1) * P;
+      if (d < W) return [-W / 2 + d, -D / 2];
+      d -= W;
+      if (d < D) return [W / 2, -D / 2 + d];
+      d -= D;
+      if (d < W) return [W / 2 - d, D / 2];
+      d -= W;
+      return [-W / 2, D / 2 - d];
+    };
+    const start = () => [(r() - 0.5) * 2.4, -0.6 - r() * 0.8] as const;
+    for (let f = 0; f <= this.FLOORS; f++) {
+      const y = f * hF;
+      const n = 130;
+      for (let i = 0; i < n; i++) {
+        const [x, z] = perim(i / n + r() * 0.002);
+        const [sx, sy] = start();
+        pts.push({ x, y, z, f, s: 0.9 + r() * 0.6, sx, sy });
+      }
+      if (f === this.FLOORS) break;
+      // Corner columns, drawn dense so the silhouette reads.
+      for (const [cxp, czp] of [[-W / 2, -D / 2], [W / 2, -D / 2], [W / 2, D / 2], [-W / 2, D / 2]])
+        for (let j = 1; j < 8; j++) {
+          const [sx, sy] = start();
+          pts.push({ x: cxp, y: y + (j / 8) * hF, z: czp, f, s: 1.3, sx, sy });
+        }
+      // Lit windows scattered over the facades.
+      for (let i = 0; i < 9; i++) {
+        const [x, z] = perim(r());
+        const [sx, sy] = start();
+        pts.push({ x, y: y + hF * (0.35 + r() * 0.3), z, f, s: 2, sx, sy });
+      }
+      // Mullions: short vertical runs between this slab and the next.
+      const cols = 52;
+      for (let i = 0; i < cols; i++) {
+        const [x, z] = perim(i / cols);
+        for (let j = 1; j <= 3; j++) {
+          const [sx, sy] = start();
+          pts.push({ x, y: y + (j / 4) * hF, z, f, s: 0.7 + r() * 0.4, sx, sy });
+        }
+      }
+    }
+    // Rooftop plant room.
+    for (let i = 0; i < 90; i++) {
+      const t = i / 90;
+      const x = t < 0.25 ? -0.2 + t * 1.6 : t < 0.5 ? 0.2 : t < 0.75 ? 0.2 - (t - 0.5) * 1.6 : -0.2;
+      const z = t < 0.25 ? -0.12 : t < 0.5 ? -0.12 + (t - 0.25) * 0.96 : t < 0.75 ? 0.12 : 0.12 - (t - 0.75) * 0.96;
+      const [sx, sy] = start();
+      pts.push({ x, y: this.FLOORS * hF + 0.08, z, f: this.FLOORS, s: 1, sx, sy });
+    }
+    this.tower = pts;
+    // Cells sit on slab points as bright nodes.
+    this.towerNodes = [];
+    const n = this.cells.length;
+    for (let i = 0; i < n; i++) this.towerNodes.push(Math.floor(((i * 0.61803398875) % 1) * pts.length));
+  }
+
+  private towerFrame() {
+    const S = ((this.mobile ? 0.32 : 0.52) * this.h) / 1.4;
+    const A = (this.reduced ? 0 : this.time * 0.18) + 0.65;
+    return { S, cosA: Math.cos(A), sinA: Math.sin(A), baseY: this.cy + 0.72 * S, cx: this.cx };
+  }
+
+  private towerProject(i: number, fr: ReturnType<CellEngine['towerFrame']>) {
+    const p = this.tower[i];
+    const x1 = p.x * fr.cosA - p.z * fr.sinA;
+    const z1 = p.x * fr.sinA + p.z * fr.cosA;
+    return { x: fr.cx + x1 * fr.S, y: fr.baseY - p.y * fr.S + z1 * fr.S * 0.32, depth: clamp((z1 + 0.6) / 1.2) };
+  }
+
+  /** How far the tower has risen: floors appear one after another. */
+  private towerBuilt(q: number) {
+    return clamp(q * 1.8) * (this.FLOORS + 1.5);
+  }
+
+  private drawTower(weight: number, q: number) {
+    if (weight < 0.01) return;
+    if (!this.tower.length) this.buildTower();
+    const ctx = this.ctx;
+    const fr = this.towerFrame();
+    const built = this.towerBuilt(q);
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < this.tower.length; i++) {
+      const p = this.tower[i];
+      const g = clamp(built - p.f);
+      if (g <= 0) continue;
+      const e = 1 - Math.pow(1 - g, 3);
+      const tp = this.towerProject(i, fr);
+      const sx = fr.cx + p.sx * fr.S;
+      const sy = fr.baseY + p.sy * fr.S * -0.2 + fr.S * 0.4;
+      const x = sx + (tp.x - sx) * e;
+      const y = sy + (tp.y - sy) * e;
+      // The floor being laid glows brighter for a moment.
+      const fresh = g < 1 ? 0.35 : 0;
+      const lit = p.s >= 2 ? 0.5 + 0.5 * Math.sin((this.reduced ? 0 : this.time) * 0.8 + i) : 0;
+      ctx.globalAlpha = clamp(weight * (0.3 + 0.7 * tp.depth + fresh + lit) * e);
+      ctx.fillRect(x - p.s / 2, y - p.s / 2, p.s, p.s);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  private chart: { x: number; y: number; bar: number; hr: number; s: number }[] = [];
+  private chartLine: { x: number; y: number }[] = [];
+  private readonly BARS = [0.2, 0.28, 0.26, 0.4, 0.52, 0.68, 0.9];
+
+  /** A rising bar chart in stardust with a trend line through the bar tops. */
+  private buildChart() {
+    const r = rng(0xc4a7);
+    const Wc = this.mobile ? this.w * 0.84 : Math.min(this.w * 0.44, 640);
+    const Hc = this.mobile ? this.h * 0.3 : this.h * 0.5;
+    const x0 = this.cx - Wc / 2;
+    const y0 = this.cy + Hc / 2;
+    const slot = Wc / this.BARS.length;
+    const bw = slot * 0.5;
+    const pts: typeof this.chart = [];
+    const step = Math.max(3, Math.sqrt((Wc * Hc * 0.45) / 3000));
+    this.BARS.forEach((h, k) => {
+      const bx = x0 + slot * k + (slot - bw) / 2;
+      const bh = h * Hc;
+      for (let y = 0; y < bh; y += step)
+        for (let x = 0; x < bw; x += step) {
+          const edge = x < step || x > bw - step * 1.5 || y > bh - step * 1.5;
+          if (!edge && r() < 0.35) continue;
+          pts.push({ x: bx + x + (r() - 0.5) * step * 0.6, y: y0 - y - (r() - 0.5) * step * 0.6, bar: k, hr: y / bh, s: edge ? 1.3 : 0.8 + r() * 0.4 });
+        }
+    });
+    // Baseline and faint guides.
+    for (let x = 0; x < Wc; x += 3) pts.push({ x: x0 + x, y: y0 + 6, bar: -1, hr: 0, s: 1 });
+    for (const gy of [0.33, 0.66, 1]) for (let x = 0; x < Wc; x += 9) pts.push({ x: x0 + x, y: y0 - gy * Hc, bar: -2, hr: 0, s: 0.8 });
+    this.chart = pts;
+    // Trend line above the bar tops, ending in an upward arrow.
+    const line: { x: number; y: number }[] = [];
+    const tops = this.BARS.map((h, k) => ({ x: x0 + slot * (k + 0.5), y: y0 - h * Hc - Hc * 0.08 }));
+    const n = this.cells.length;
+    for (let i = 0; i < n; i++) {
+      const f = (i / (n - 1)) * (tops.length - 1);
+      const k = Math.min(tops.length - 2, Math.floor(f));
+      const u = f - k;
+      line.push({ x: tops[k].x + (tops[k + 1].x - tops[k].x) * u, y: tops[k].y + (tops[k + 1].y - tops[k].y) * u });
+    }
+    this.chartLine = line;
+  }
+
+  private drawChart(weight: number, q: number) {
+    if (weight < 0.01 || !this.chart.length) return;
+    const ctx = this.ctx;
+    const tw = this.reduced ? 0 : this.time;
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < this.chart.length; i++) {
+      const p = this.chart[i];
+      let a: number;
+      if (p.bar === -1) a = 0.5 * clamp(q * 4);
+      else if (p.bar === -2) a = 0.12 * clamp(q * 4);
+      else {
+        const grow = clamp(q * 2.2 - p.bar * 0.1);
+        const eg = 1 - Math.pow(1 - grow, 3);
+        a = p.hr <= eg ? 0.45 + 0.55 * (1 - Math.abs(p.hr - eg) * 0.5) : 0;
+        a *= 0.85 + 0.15 * Math.sin(tw * 1.5 + i);
+      }
+      if (a <= 0) continue;
+      ctx.globalAlpha = clamp(weight * a);
+      ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s);
+    }
+    // Arrow head at the end of the trend line.
+    const L = this.chartLine;
+    const lineOn = clamp(q * 2.2 - 0.6);
+    if (L.length > 2 && lineOn > 0.95) {
+      const a = L[L.length - 1];
+      const b = L[L.length - 3];
+      const ang = Math.atan2(a.y - b.y, a.x - b.x);
+      for (const s of [-1, 1])
+        for (let j = 1; j <= 7; j++) {
+          const aa = ang + Math.PI + s * 0.5;
+          ctx.globalAlpha = clamp(weight * 0.9);
+          ctx.fillRect(a.x + Math.cos(aa) * j * 2.6 - 0.8, a.y + Math.sin(aa) * j * 2.6 - 0.8, 1.6, 1.6);
+        }
+    }
+    ctx.globalAlpha = 1;
+  }
+
   private spiralR() {
     return Math.min(this.w * (this.mobile ? 0.46 : 0.3), this.h * 0.46);
   }
@@ -371,6 +576,8 @@ export class CellEngine {
     this.buildPhyllotaxis();
     this.sampleWord();
     this.sampleHeroWord();
+    this.tower = [];
+    this.buildChart();
     this.assignWord();
     this.assignSwarm();
   }
@@ -722,6 +929,43 @@ export class CellEngine {
         linkAlpha: 0.7,
         rate: (q) => 22 + q * 22,
       },
+      // building — cells gather and lay a tower floor by floor
+      {
+        fn: (c, i, q, out) => {
+          if (!this.tower.length) this.buildTower();
+          const idx = this.towerNodes[i] ?? 0;
+          const p = this.tower[idx];
+          const tp = this.towerProject(idx, this.towerFrame());
+          const g = clamp(this.towerBuilt(q) - p.f);
+          out.x = tp.x;
+          out.y = tp.y;
+          out.r = 1.3 + tp.depth * 0.8;
+          out.a = g * (0.35 + 0.65 * tp.depth);
+          out.heat = 0;
+          void c;
+        },
+        link: () => 0,
+        linkAlpha: 0,
+        rate: () => 0,
+      },
+      // marketing — a rising chart; cells ride the growth line and pass signals along it
+      {
+        fn: (c, i, q, out) => {
+          if (!this.chartLine.length) this.buildChart();
+          const p = this.chartLine[i] ?? this.chartLine[0];
+          const n = this.chartLine.length;
+          const on = clamp(q * 2.2 - 0.6);
+          out.x = p.x;
+          out.y = p.y;
+          out.r = 1.6;
+          out.a = i / n <= on ? 1 : 0;
+          out.heat = 0;
+          void c;
+        },
+        link: () => (this.mobile ? this.w * 0.84 : Math.min(this.w * 0.44, 640)) / this.cells.length * 2.6,
+        linkAlpha: 0.9,
+        rate: () => 24,
+      },
       // immune — an intruder arrives, cells raise the alarm and surround it
       {
         fn: (c, _i, _q, out) => {
@@ -1015,6 +1259,10 @@ export class CellEngine {
     ctx.clearRect(0, 0, this.w, this.h);
     this.drawDust(this.weight('hero'));
     this.drawWordDust(this.weight('organism'));
+    const tw = this.sceneState('building');
+    this.drawTower(tw.w, tw.q);
+    const mk = this.sceneState('marketing');
+    this.drawChart(mk.w, mk.q);
 
     // Links, bucketed by alpha so each bucket is a single stroke.
     const BUCKETS = 8;

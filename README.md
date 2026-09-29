@@ -6,14 +6,18 @@ CybCell-in rəsmi saytı. Sayt şirkətin adını hekayə kimi danışır: **CYB
 
 Səhifənin arxasında canlı bir hüceyrə koloniyası yaşayır. Aşağı sürüşdürdükcə koloniya dəyişir:
 
-| Səhnə | Nə baş verir | Texnoloji mənası |
+| Səhnə | Nə baş verir | Mənası |
 | --- | --- | --- |
-| Giriş | Koloniya bir hüceyrədən bölünərək yaranır, hüceyrələr bir-birinə siqnal ötürür | — |
-| 01 Hüceyrə | Hər şey bir hüceyrəyə yığılır | Modul arxitektura |
-| 02 Bölünmə | 1 → 2 → 4 … 64, hər yeni hüceyrə valideynindən doğulur | Mikroservislər, avtomatik miqyaslanma |
-| 03 Siqnal | Şəbəkə, hüceyrələr mesajı bir-birinə ötürür | API, hadisə axınları |
-| 04 İmmunitet | Yad virus daxil olur, həyəcan yayılır, hüceyrələr onu mühasirəyə alıb zərərsizləşdirir | Kiber təhlükəsizlik |
-| 05 Orqanizm | Hüceyrələr birləşib **CYBCELL** sözünü yazır | Süni intellekt, özünü bərpa edən sistemlər |
+| Giriş | "CybCell" ulduz tozundan yazılır, sürüşdürəndə spiral qalaktikaya çevrilir | Rəqəmsal ekosistem |
+| 01 Hüceyrə | Hər şey bir hüceyrəyə yığılır | Hər həll bir hüceyrədir |
+| 02 Böyümə | 1 → 64 hüceyrə bölünməsi | Biznes böyüdükcə sistem də böyüyür |
+| 03 İnteqrasiya | Hüceyrələr şəbəkədə siqnal ötürür | Sayt, tətbiq, e-menyu, CRM bir-biri ilə danışır |
+| 04 3D və AR | Hüceyrələr qat-qat bina tikir, bina fırlanır | 3D satış sistemi, virtual tur, AR menyu |
+| 05 Marketinq | Hüceyrələrdən yüksələn satış qrafiki, artım xətti boyunca siqnallar | SMM, reklam, brendinq, analitika |
+| 06 Dəstək | Virus daxil olur, hüceyrələr onu mühasirəyə alıb zərərsizləşdirir | 24/7 monitorinq və texniki dəstək |
+| 07 Ekosistem | Hüceyrələr CYBCELL sözünü yazır | Hamısı birlikdə |
+
+Giriş və hekayədə hər sürüşdürmə bir mərhələyə keçir (`src/stepper.ts`).
 
 Kursoru hərəkət etdirəndə hüceyrələr sizə siqnal göndərir, ekrana toxunanda isə şok dalğası yaranır.
 
@@ -56,13 +60,14 @@ Build nisbi yollarla yığıldığı üçün `dist/` qovluğunu istənilən stat
 | Azərbaycanca mətnlər | `index.html` |
 | İngiliscə mətnlər | `src/i18n.ts` (açarlar `data-i18n` atributları ilə eynidir) |
 | Canlı dialoqun mesajları | `src/dialogue.ts` |
+| Nümunə layihələr (Nova Residence, Zəfəran Bistro, Clock & Coffee) | `index.html`, `#work` bölməsi |
 | E-poçt ünvanı | `index.html`, `data-email` elementi (hazırda `hello@cybcell.az`) |
 | Rənglər, şriftlər (Geist, Geist Mono; qara-ağ palitra) | `src/styles.css`, ən yuxarıdakı `:root` bloku |
 | Hüceyrə mühərriki və səhnələr | `src/engine/cells.ts` |
 | Mikroskopdakı hüceyrə animasiyaları | `src/specimen.ts` |
 | Sosial önizləmə şəkli | `public/og.png` (1200×630) |
 
-> Xidmətlərin siyahısı, göstəricilər (24/7, <50 ms, 99.9%) və e-poçt ünvanı nümunə kimi yazılıb. Onları şirkətin real məlumatları ilə yeniləyin.
+> Göstəricilər (24/7, <2 s, 99.9%) və e-poçt ünvanı nümunə kimi yazılıb. Onları şirkətin real məlumatları ilə yeniləyin.
 
 ## Struktur
 

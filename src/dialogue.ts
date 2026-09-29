@@ -1,44 +1,57 @@
 import { lang, onLang, type Lang } from './i18n';
 
-type Kind = 'SYN' | 'ACK' | 'SYNC' | 'LOAD' | 'DIV' | 'ALERT' | 'SCAN' | 'QUAR' | 'HEAL' | 'LEARN';
+type Kind = 'SYNC' | 'ACK' | 'ORDER' | 'LEAD' | 'TASK' | 'ADS' | 'OPT' | 'ALERT' | 'FIX' | 'OK';
+
+type Name = Record<Lang, string> | string;
 
 interface Line {
   kind: Kind;
-  from: string;
-  to: Record<Lang, string> | string;
+  from: Name;
+  to: Name;
   text: Record<Lang, string>;
 }
 
-const all = { az: 'hamı', en: 'all' };
-const neighbours = { az: 'qonşular', en: 'neighbours' };
+const N = {
+  menu: { az: 'e-menyu', en: 'e-menu' },
+  site: { az: 'sayt', en: 'website' },
+  app: { az: 'tətbiq', en: 'app' },
+  kitchen: { az: 'mətbəx', en: 'kitchen' },
+  tour: { az: '3D tur', en: '3D tour' },
+  crm: 'CRM',
+  sales: { az: 'satış', en: 'sales' },
+  ads: { az: 'reklam', en: 'ads' },
+  stats: { az: 'analitika', en: 'analytics' },
+  kiosk: 'kiosk-3',
+  support: { az: 'dəstək', en: 'support' },
+  monitor: { az: 'monitorinq', en: 'monitoring' },
+  all: { az: 'hamı', en: 'all' },
+};
 
-/** Four short scenes from a cell network's day, looped. */
+/** A day in a business ecosystem, looped. */
 const SCRIPT: Line[] = [
-  { kind: 'SYN', from: '0A1F', to: { az: 'şəbəkə', en: 'network' }, text: { az: 'Salam. Yeni hüceyrəyəm, qoşulmaq istəyirəm.', en: 'Hi. I’m a new cell and I’d like to join.' } },
-  { kind: 'ACK', from: '7F3A', to: '0A1F', text: { az: 'Genom yoxlanıldı. Xoş gəldin.', en: 'Genome verified. Welcome aboard.' } },
-  { kind: 'SYNC', from: '0A1F', to: '7F3A', text: { az: 'Vəziyyət sinxronlaşdı: 2 048 qeyd.', en: 'State synchronised: 2,048 records.' } },
-  { kind: 'LOAD', from: '7F3A', to: all, text: { az: 'Yük 84%-ə çatdı. Kömək lazımdır.', en: 'Load at 84%. I need a hand.' } },
-  { kind: 'DIV', from: '7F3A', to: '7F3B', text: { az: 'Bölünürəm. Trafikin yarısını sən götür.', en: 'Dividing. You take half the traffic.' } },
-  { kind: 'ACK', from: '7F3B', to: '7F3A', text: { az: 'Götürdüm. Yük indi 42%.', en: 'Got it. Load is now 42%.' } },
-  { kind: 'ALERT', from: '5B2E', to: neighbours, text: { az: 'Port 443-də anomaliya. İmza tanınmır.', en: 'Anomaly on port 443. Unknown signature.' } },
-  { kind: 'SCAN', from: '91C4', to: '5B2E', text: { az: 'Təsdiqlənir: eyni IP-dən 3 şübhəli sorğu.', en: 'Confirmed: 3 suspicious requests from one IP.' } },
-  { kind: 'QUAR', from: '5B2E', to: 'firewall', text: { az: 'Mənbə karantinə alındı.', en: 'Source quarantined.' } },
-  { kind: 'HEAL', from: '91C4', to: all, text: { az: 'Təhlükə zərərsizləşdirildi. Normal rejim.', en: 'Threat neutralised. Back to normal.' } },
-  { kind: 'LEARN', from: 'E00D', to: '5B2E', text: { az: 'Bu imzanı yadda saxladım.', en: 'I’ve memorised that signature.' } },
-  { kind: 'SYNC', from: 'E00D', to: all, text: { az: 'Yeni qayda paylandı. Növbəti cəhd 12 ms-də bloklanacaq.', en: 'New rule shared. Next attempt gets blocked in 12 ms.' } },
+  { kind: 'SYNC', from: N.menu, to: N.site, text: { az: 'Latte qiyməti 5.20 ₼ oldu.', en: 'Latte is now 5.20 ₼.' } },
+  { kind: 'ACK', from: N.site, to: N.menu, text: { az: 'Qəbul etdim. Menyu səhifəsi yeniləndi.', en: 'Got it. Menu page updated.' } },
+  { kind: 'ORDER', from: N.app, to: N.kitchen, text: { az: 'Yeni sifariş #2048: 2 latte, 1 cheesecake.', en: 'New order #2048: 2 lattes, 1 cheesecake.' } },
+  { kind: 'LEAD', from: N.tour, to: N.crm, text: { az: 'Müştəri 12-ci mərtəbədəki 3 otaqlı mənzilə 4 dəqiqə baxdı.', en: 'A buyer spent 4 minutes in the 3-room flat on floor 12.' } },
+  { kind: 'TASK', from: N.crm, to: N.sales, text: { az: 'Zəng planlandı: sabah 11:00.', en: 'Call scheduled: tomorrow, 11:00.' } },
+  { kind: 'ADS', from: N.ads, to: N.stats, text: { az: '"Payız endirimi" kampaniyası: 1 240 klik, 86 sifariş.', en: '"Autumn sale" campaign: 1,240 clicks, 86 orders.' } },
+  { kind: 'OPT', from: N.stats, to: N.ads, text: { az: 'Axşam saatları daha yaxşı satır. Büdcəni ora keçirirəm.', en: 'Evenings convert better. Moving budget there.' } },
+  { kind: 'ALERT', from: N.kiosk, to: N.support, text: { az: 'Çek kağızı bitmək üzrədir.', en: 'Receipt paper is running low.' } },
+  { kind: 'FIX', from: N.support, to: N.kiosk, text: { az: 'Texnik yoldadır, 20 dəqiqəyə çatır.', en: 'Technician on the way, 20 minutes.' } },
+  { kind: 'OK', from: N.monitor, to: N.all, text: { az: 'Bütün sistemlər normal işləyir.', en: 'All systems running normally.' } },
 ];
 
 const TAG_CLASS: Record<Kind, string> = {
-  SYN: '',
-  ACK: '',
   SYNC: '',
-  HEAL: '',
-  LEARN: '',
-  LOAD: 'tag--div',
-  DIV: 'tag--div',
+  ACK: '',
+  ORDER: '',
+  LEAD: '',
+  TASK: '',
+  ADS: '',
+  OPT: '',
+  OK: '',
   ALERT: 'tag--alert',
-  SCAN: 'tag--alert',
-  QUAR: 'tag--alert',
+  FIX: '',
 };
 
 const MAX_LINES = 9;
@@ -65,11 +78,12 @@ export function initDialogue(root: HTMLOListElement) {
     const L = lang();
     const li = document.createElement('li');
     li.className = 'msg';
-    const to = typeof line.to === 'string' ? (line.to === 'firewall' ? line.to : `C·${line.to}`) : line.to[L];
+    const name = (n: Name) => (typeof n === 'string' ? n : n[L]);
+    const to = name(line.to);
     li.innerHTML = `
       <span class="msg__time">${stamp()}</span>
       <span class="tag ${TAG_CLASS[line.kind]}">${line.kind}</span>
-      <span class="msg__route"><b>C·${line.from}</b> → ${to}</span>
+      <span class="msg__route"><b>${name(line.from)}</b> → ${to}</span>
       <span class="msg__text"></span>`;
     const text = li.querySelector<HTMLElement>('.msg__text')!;
     root.appendChild(li);
