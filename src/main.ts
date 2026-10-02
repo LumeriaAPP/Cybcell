@@ -1,14 +1,13 @@
 import './styles.css';
-import { CellEngine, SCENES, type SceneId } from './engine/cells';
+import { CellEngine, ACTIVE_SCENES, SCENES, type SceneId } from './engine/cells';
 import { initI18n, onLang, t } from './i18n';
 import { initDialogue } from './dialogue';
 import { Specimen, type SpecimenKind } from './specimen';
-import { initStepper } from './stepper';
+import { initContact } from './contact';
 
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) =>
   Array.from(root.querySelectorAll<T>(sel));
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 initI18n();
 
@@ -21,6 +20,7 @@ try {
   engine.start();
 } catch {
   canvas.remove();
+  document.documentElement.setAttribute('data-colony-unavailable', '');
 }
 
 /* Scroll → scene position. Each [data-scene] element's centre is a keyframe. */
@@ -35,7 +35,7 @@ function measure() {
   anchors = $$('[data-scene]')
     .map((el) => {
       const r = el.getBoundingClientRect();
-      return { el, scene: SCENES.indexOf(el.dataset.scene as SceneId), center: r.top + scrollY + r.height / 2 };
+      return { el, scene: ACTIVE_SCENES.indexOf(el.dataset.scene as (typeof ACTIVE_SCENES)[number]), center: r.top + scrollY + r.height / 2 };
     })
     .filter((a) => a.scene >= 0)
     .sort((a, b) => a.center - b.center);
@@ -52,37 +52,6 @@ function scenePosition() {
   }
   return anchors[anchors.length - 1].scene;
 }
-
-/* One gesture per stage through the hero and the story. */
-function storyStops() {
-  const center = (k: number) => anchors.find((a) => a.scene === k)?.center;
-  const at = (k: number, f: number) => {
-    const c0 = center(k);
-    const c1 = center(k + 1) ?? c0;
-    return c0 === undefined || c1 === undefined ? NaN : c0 + f * (c1 - c0) - innerHeight / 2;
-  };
-  const k = (id: SceneId) => SCENES.indexOf(id);
-  const stops = [
-    0, // the name in stardust
-    innerHeight * 0.95, // the galaxy
-    at(k('name'), 0),
-    at(k('single'), 0),
-    at(k('division'), 0.36), // up to 64 cells
-    at(k('signal'), 0),
-    at(k('building'), 0.12), // the tower, fully built
-    at(k('marketing'), 0.12), // the chart, fully grown
-    at(k('marketing'), 0.95), // the intruder arrives
-    at(k('immune'), 0.33), // it is neutralised
-    at(k('organism'), 0),
-    storyEnd(),
-  ];
-  return stops.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
-}
-function storyEnd() {
-  const el = $('#cells');
-  return el ? el.getBoundingClientRect().top + scrollY : Infinity;
-}
-initStepper(storyStops, storyEnd);
 
 /* --------------------------------------------------------- chrome on scroll */
 
@@ -108,7 +77,6 @@ function onScroll() {
     ticking = false;
     const s = scenePosition();
     engine?.setScene(s);
-    engine?.setHeroProgress(scrollY / (innerHeight * 0.9));
 
     nav.toggleAttribute('data-scrolled', scrollY > 24);
     const nowCovered = !!services && services.getBoundingClientRect().top <= 0;
@@ -117,23 +85,18 @@ function onScroll() {
       syncEngine();
     }
 
-    // Story rail: chapters are scenes 2..6.
-    const ORG = SCENES.indexOf('organism');
-    const inStory = s > 1.55 && s < ORG + 0.5;
+    // The three story sections share one calm scene transition path.
+    const firstStory = ACTIVE_SCENES.indexOf('single');
+    const lastStory = ACTIVE_SCENES.indexOf('organism');
+    const inStory = s > firstStory - 0.5 && s < lastStory + 0.5;
     rail.toggleAttribute('data-visible', inStory);
-    const active = Math.round(s);
-    railItems.forEach((li) => li.toggleAttribute('data-active', Number(li.dataset.rail) === active));
+    const activeScene: SceneId = ACTIVE_SCENES[Math.round(s)];
+    railItems.forEach((li) => li.toggleAttribute('data-active', Number(li.dataset.rail) === SCENES.indexOf(activeScene)));
 
-    // Scrims keep chapter text readable over the colony.
-    const story = smoothstep(1.4, 2, s) * (1 - smoothstep(ORG + 0.5, ORG + 1, s));
-    const organism = smoothstep(ORG - 0.5, ORG, s) * (1 - smoothstep(ORG + 0.5, ORG + 1, s));
-    if (narrow.matches) {
-      root.style.setProperty('--scrim-left', '0');
-      root.style.setProperty('--scrim-bottom', String(story));
-    } else {
-      root.style.setProperty('--scrim-left', String(story * (1 - organism)));
-      root.style.setProperty('--scrim-bottom', String(organism));
-    }
+    // Keep story copy readable while letting the illustrations breathe.
+    const story = smoothstep(firstStory - 0.6, firstStory, s) * (1 - smoothstep(lastStory + 0.4, lastStory + 1, s));
+    root.style.setProperty('--scrim-left', narrow.matches ? '0' : String(story));
+    root.style.setProperty('--scrim-bottom', narrow.matches ? String(story) : '0');
 
     pickSpecimen();
 
@@ -184,72 +147,62 @@ const specimenRows = $$('.specimen');
 let pickSpecimen = () => {};
 
 if (viewer && viewerCanvas && specimenRows.length) {
-  const specimen = new Specimen(viewerCanvas);
-  let active = specimenRows.find((r) => r.hasAttribute('data-active')) ?? specimenRows[0];
-  specimen.set(active.dataset.kind as SpecimenKind);
-  let hovering = false;
-  let focusTimer = 0;
+  try {
+    const specimen = new Specimen(viewerCanvas);
+    let active = specimenRows.find((r) => r.hasAttribute('data-active')) ?? specimenRows[0];
+    specimen.set(active.dataset.kind as SpecimenKind);
+    let hovering = false;
 
-  const label = () => {
-    const i = specimenRows.indexOf(active) + 1;
-    $('[data-viewer-no]')!.textContent = `${t('fig')} ${i}`;
-    const name = $('[data-cell-name]', active)?.textContent ?? '';
-    const role = $('[data-cell-role]', active)?.textContent ?? '';
-    $('[data-viewer-type]')!.textContent = `${name}, ${role}`;
-  };
+    const label = () => {
+      const i = specimenRows.indexOf(active) + 1;
+      $('[data-viewer-no]')!.textContent = `${t('fig')} ${i}`;
+      const name = $('[data-cell-name]', active)?.textContent ?? '';
+      const role = $('[data-cell-role]', active)?.textContent ?? '';
+      $('[data-viewer-type]')!.textContent = `${name}, ${role}`;
+    };
 
-  const activate = (row: HTMLElement) => {
-    if (row === active) return;
-    active.removeAttribute('data-active');
-    row.setAttribute('data-active', '');
-    active = row;
-    // A focus pull between specimens.
-    viewer.setAttribute('data-focusing', '');
-    clearTimeout(focusTimer);
-    focusTimer = window.setTimeout(() => {
+    const activate = (row: HTMLElement) => {
+      if (row === active) return;
+      active.removeAttribute('data-active');
+      row.setAttribute('data-active', '');
+      active = row;
       specimen.set(row.dataset.kind as SpecimenKind);
       label();
-      viewer.removeAttribute('data-focusing');
-    }, reduced ? 0 : 320);
-  };
+    };
 
-  pickSpecimen = () => {
-    if (hovering || stacked.matches) return;
-    const line = innerHeight * 0.48;
-    let best = active;
-    let bd = Infinity;
-    for (const row of specimenRows) {
-      const r = row.getBoundingClientRect();
-      const d = Math.abs(r.top + r.height / 2 - line);
-      if (d < bd) {
-        bd = d;
-        best = row;
+    pickSpecimen = () => {
+      if (hovering || stacked.matches) return;
+      const line = innerHeight * 0.48;
+      let best = active;
+      let bd = Infinity;
+      for (const row of specimenRows) {
+        const r = row.getBoundingClientRect();
+        const d = Math.abs(r.top + r.height / 2 - line);
+        if (d < bd) {
+          bd = d;
+          best = row;
+        }
       }
-    }
-    activate(best);
-  };
+      activate(best);
+    };
 
-  specimenRows.forEach((row) =>
-    row.addEventListener('pointerenter', (e) => {
-      if (e.pointerType !== 'mouse') return;
-      hovering = true;
-      activate(row);
-    }),
-  );
-  $('[data-specimens]')!.addEventListener('pointerleave', () => (hovering = false));
-  onLang(label);
-  label();
-  let inView = false;
-  new IntersectionObserver(([e]) => {
-    inView = e.isIntersecting;
-    if (inView) specimen.start();
-    else specimen.stop();
-  }).observe(viewer);
-  // Stacked layout: the figure sits above the list and cycles on its own.
-  setInterval(() => {
-    if (!stacked.matches || !inView || reduced) return;
-    activate(specimenRows[(specimenRows.indexOf(active) + 1) % specimenRows.length]);
-  }, 4800);
+    specimenRows.forEach((row) =>
+      row.addEventListener('pointerenter', (e) => {
+        if (e.pointerType !== 'mouse') return;
+        hovering = true;
+        activate(row);
+      }),
+    );
+    $('[data-specimens]')!.addEventListener('pointerleave', () => (hovering = false));
+    onLang(label);
+    label();
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) specimen.start();
+      else specimen.stop();
+    }).observe(viewer);
+  } catch {
+    viewer.hidden = true;
+  }
 }
 
 /* ------------------------------------------------------------- dialogue */
@@ -259,52 +212,6 @@ if (log) initDialogue(log);
 
 /* -------------------------------------------------------------- contact */
 
-const email = $('[data-email]')!.textContent!.trim();
-const copyBtn = $<HTMLButtonElement>('[data-copy]')!;
-copyBtn.addEventListener('click', async () => {
-  try {
-    await navigator.clipboard.writeText(email);
-    copyBtn.textContent = t('ct.copied');
-  } catch {
-    const range = document.createRange();
-    range.selectNodeContents($('[data-email]')!);
-    const sel = getSelection();
-    sel?.removeAllRanges();
-    sel?.addRange(range);
-  }
-  setTimeout(() => (copyBtn.textContent = t('ct.copy')), 1800);
-});
-
-const form = $<HTMLFormElement>('[data-form]')!;
-const status = $('[data-status]')!;
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const data = new FormData(form);
-  const get = (k: string) => String(data.get(k) ?? '').trim();
-  const fields = {
-    name: get('name'),
-    email: get('email'),
-    company: get('company'),
-    message: get('message'),
-  };
-  const okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email);
-  (['name', 'email', 'message'] as const).forEach((k) => {
-    const input = form.elements.namedItem(k) as HTMLInputElement;
-    const bad = !fields[k] || (k === 'email' && !okEmail);
-    input.setAttribute('aria-invalid', String(bad));
-  });
-  if (!fields.name || !okEmail || !fields.message) {
-    status.textContent = t('ct.err');
-    status.dataset.tone = 'error';
-    return;
-  }
-  const subject = `CybCell · ${fields.name}${fields.company ? ` (${fields.company})` : ''}`;
-  const body = `${fields.message}\n\n— ${fields.name}\n${fields.email}${fields.company ? `\n${fields.company}` : ''}`;
-  status.textContent = t('ct.ok');
-  status.dataset.tone = 'ok';
-  const rect = form.getBoundingClientRect();
-  engine?.pulse(rect.left + rect.width / 2, rect.top + rect.height / 2);
-  window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-});
+initContact();
 
 $$('[data-year]').forEach((el) => (el.textContent = String(new Date().getFullYear())));

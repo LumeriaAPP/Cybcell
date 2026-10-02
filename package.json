@@ -9,9 +9,11 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
     "build:single": "npm run build && node scripts/single-file.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "typescript": "^5.6.3",
     "vite": "^7.0.0"
   }

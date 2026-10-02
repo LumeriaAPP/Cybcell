@@ -7,7 +7,7 @@ const dist = 'dist';
 let html = readFileSync(join(dist, 'index.html'), 'utf8');
 
 html = html.replace(/<link rel="stylesheet" crossorigin href="\.\/(assets\/[^"]+\.css)">/g, (_, file) =>
-  `<style>\n${readFileSync(join(dist, file), 'utf8')}\n</style>`,
+  `<style>\n${readFileSync(join(dist, file), 'utf8').replace(/url\((['\"]?)(?:\.\/)?([^)'\"]+\.woff2)\1\)/g, (_match, _quote, font) => `url(data:font/woff2;base64,${readFileSync(join(dist, 'assets', font)).toString('base64')})`)}\n</style>`,
 );
 html = html.replace(/<script type="module" crossorigin src="\.\/(assets\/[^"]+\.js)"><\/script>/g, (_, file) =>
   `<script type="module">\n${readFileSync(join(dist, file), 'utf8').replace(/<\/script/g, '<\\/script')}\n</script>`,

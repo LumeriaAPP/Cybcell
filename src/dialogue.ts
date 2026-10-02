@@ -61,7 +61,7 @@ const MAX_LINES = 9;
 const PREFILL = 5;
 
 export function initDialogue(root: HTMLOListElement) {
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const calm = matchMedia('(prefers-reduced-motion: reduce), (max-width: 820px), (pointer: coarse)').matches;
   let index = 0;
   let clock = Date.now();
   let visible = false;
@@ -77,7 +77,7 @@ export function initDialogue(root: HTMLOListElement) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
   };
 
-  const render = (line: Line, animate: boolean, g: number) => {
+  const render = (line: Line, animate: boolean) => {
     const L = lang();
     const li = document.createElement('li');
     li.className = 'msg';
@@ -93,37 +93,21 @@ export function initDialogue(root: HTMLOListElement) {
     while (root.children.length > MAX_LINES) root.firstElementChild?.remove();
 
     const full = line.text[L];
-    if (!animate || reduced) {
-      text.textContent = full;
-      return Promise.resolve();
-    }
-    li.classList.add('msg--typing');
-    return new Promise<void>((done) => {
-      let n = 0;
-      const step = () => {
-        if (g !== gen) return done();
-        n += 1 + (Math.random() < 0.3 ? 1 : 0);
-        text.textContent = full.slice(0, n);
-        if (n < full.length) setTimeout(step, 18 + Math.random() * 30);
-        else {
-          li.classList.remove('msg--typing');
-          done();
-        }
-      };
-      step();
-    });
+    if (!animate || calm) li.style.animation = 'none';
+    text.textContent = full;
+    return Promise.resolve();
   };
 
   const loop = async () => {
-    if (running) return;
+    if (running || calm) return;
     running = true;
     const g = gen;
     await sleep(500);
     while (visible && g === gen) {
-      await render(SCRIPT[index], true, g);
+      await render(SCRIPT[index], true);
       if (g !== gen) break;
       index = (index + 1) % SCRIPT.length;
-      await sleep(900 + Math.random() * 900);
+      await sleep(4500);
     }
     running = false;
     if (visible && g !== gen) loop();
@@ -132,7 +116,7 @@ export function initDialogue(root: HTMLOListElement) {
   const prefill = () => {
     root.innerHTML = '';
     clock = Date.now() - 20_000;
-    for (let i = 0; i < PREFILL; i++) render(SCRIPT[(index + i) % SCRIPT.length], false, gen);
+    for (let i = 0; i < PREFILL; i++) render(SCRIPT[(index + i) % SCRIPT.length], false);
     index = (index + PREFILL) % SCRIPT.length;
   };
 

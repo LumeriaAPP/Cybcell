@@ -1,6 +1,8 @@
 /**
  * The figure next to the solutions list: one canvas that shows each service
  * at work, drawn from fine particles in the same stardust style as the hero.
+ * Each service has a representative resting frame, rendered only on change
+ * or resize. There is no idle animation loop, including on mobile devices.
  * All geometry is in unit coordinates (0..1) and scaled to the canvas.
  */
 
@@ -25,11 +27,8 @@ export class Specimen {
   private ctx: CanvasRenderingContext2D;
   private S = 400;
   private kind: SpecimenKind = 'web';
-  private t = 0;
-  private last = 0;
-  private raf = 0;
   private running = false;
-  private reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  private dirty = false;
   private glow: HTMLCanvasElement;
 
   private drops: { u: number; y: number; v: number; die: number; seed: number }[] = [];
@@ -42,10 +41,13 @@ export class Specimen {
   private tower: { x: number; y: number; z: number; f: number; s: number }[] = [];
 
   constructor(private canvas: HTMLCanvasElement) {
-    this.ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D is not available');
+    this.ctx = ctx;
     this.glow = document.createElement('canvas');
     this.glow.width = this.glow.height = 64;
-    const g = this.glow.getContext('2d')!;
+    const g = this.glow.getContext('2d');
+    if (!g) throw new Error('Canvas 2D is not available');
     const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
     grad.addColorStop(0, 'rgba(255,255,255,0.9)');
     grad.addColorStop(0.25, 'rgba(255,255,255,0.25)');
@@ -59,49 +61,40 @@ export class Specimen {
   set(kind: SpecimenKind) {
     if (kind === this.kind) return;
     this.kind = kind;
-    this.t = 0;
     this.drops = [];
     this.threats = [];
     this.pulses = [];
     this.pile = 0;
-    if (this.reduced) this.frame(0);
+    this.dirty = true;
+    if (this.running) this.frame(0);
   }
 
   start() {
-    if (this.running) return;
     this.running = true;
-    this.last = performance.now();
-    const loop = (now: number) => {
-      if (!this.running) return;
-      const dt = Math.min((now - this.last) / 1000, 0.05);
-      this.last = now;
-      this.frame(this.reduced ? 0 : dt);
-      this.raf = requestAnimationFrame(loop);
-    };
-    this.raf = requestAnimationFrame(loop);
+    if (this.dirty) this.frame(0);
   }
 
   stop() {
     this.running = false;
-    cancelAnimationFrame(this.raf);
   }
 
   private resize() {
     const box = this.canvas.getBoundingClientRect();
-    const size = Math.max(200, Math.round(box.width));
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.canvas.width = size * dpr;
-    this.canvas.height = size * dpr;
+    const size = Math.max(1, Math.round(box.width));
+    const dpr = Math.min(window.devicePixelRatio || 1, window.innerWidth < 820 ? 1.25 : 1.5);
+    if (this.canvas.width === Math.round(size * dpr) && this.canvas.height === Math.round(size * dpr)) return;
+    this.canvas.width = Math.round(size * dpr);
+    this.canvas.height = Math.round(size * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.S = size;
     this.frame(0);
   }
 
   private frame(dt: number) {
-    this.t += dt;
+    this.dirty = false;
     this.ctx.clearRect(0, 0, this.S, this.S);
-    // A resting frame for reduced motion still shows each scene mid-action.
-    const t = this.reduced ? 2.6 : this.t;
+    // Pick a fully formed, representative illustration for every service.
+    const t = this.kind === 'web' ? 3.3 : this.kind === 'kiosk' ? 5.3 : 2.6;
     switch (this.kind) {
       case 'web':
         return this.drawWeb(t);
@@ -515,7 +508,7 @@ export class Specimen {
         this.drops.push({ u: Math.random() * 1.9 - 0.95, y: 0.08, v: 0.12 + Math.random() * 0.05, die: r < 0.35 ? 0.32 : r < 0.6 ? 0.46 : r < 0.72 ? 0.6 : 2, seed: Math.random() * 1000 });
       }
     } else if (!this.drops.length) {
-      for (let i = 0; i < 160; i++) this.drops.push({ u: hash(i) * 1.9 - 0.95, y: 0.08 + hash(i + 5) * 0.7, v: 0.13, die: 2, seed: i });
+      for (let i = 0; i < (window.innerWidth < 820 ? 80 : 160); i++) this.drops.push({ u: hash(i) * 1.9 - 0.95, y: 0.08 + hash(i + 5) * 0.7, v: 0.13, die: 2, seed: i });
     }
     const keep = [];
     for (const d of this.drops) {
