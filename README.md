@@ -8,26 +8,28 @@ Səhifənin arxasında canlı bir hüceyrə koloniyası yaşayır. Aşağı sür
 
 | Səhnə | Nə baş verir | Mənası |
 | --- | --- | --- |
-| Giriş | Hüceyrələr bir dəfə CybCell loqosuna yığılır | Rəqəmsal ekosistem |
-| 01 Hüceyrə | Bir hüceyrə canlanır | Hər həll bir hüceyrədir |
-| 02 Əlaqə | Hüceyrələr şəbəkədə siqnal ötürür | Sayt, tətbiq, e-menyu, CRM bir-birinə bağlıdır |
-| 03 Ekosistem | Hüceyrələr vahid sistem yaradır | Hamısı birlikdə |
+| Giriş | "CybCell" ulduz tozundan yazılır, sürüşdürəndə spiral qalaktikaya çevrilir | Rəqəmsal ekosistem |
+| 01 Hüceyrə | Hər şey bir hüceyrəyə yığılır | Hər həll bir hüceyrədir |
+| 02 Böyümə | 1 → 64 hüceyrə bölünməsi | Biznes böyüdükcə sistem də böyüyür |
+| 03 İnteqrasiya | Hüceyrələr şəbəkədə siqnal ötürür | Sayt, tətbiq, e-menyu, CRM bir-birinə bağlıdır |
+| 04 3D və AR | Hüceyrələr qat-qat bina tikir, bina fırlanır | 3D satış sistemi, virtual tur, AR menyu |
+| 05 Marketinq | Hüceyrələrdən yüksələn satış qrafiki, artım xətti boyunca siqnallar | SMM, reklam, brendinq, analitika |
+| 06 Dəstək | Virus daxil olur, hüceyrələr onu mühasirəyə alıb zərərsizləşdirir | 24/7 monitorinq və texniki dəstək |
+| 07 Ekosistem | Hüceyrələr CYBCELL sözünü yazır | Hamısı birlikdə |
 
-“Adın mənası” bölməsinin arxasında seyrək, xırda ulduzlar görünür. Şriftlər saytın öz fayllarından yüklənir, Google Fonts sorğusu tələb olunmur.
+Giriş və hekayədə hər sürüşdürmə bir mərhələyə keçir (`src/stepper.ts`).
 
-Səhifə brauzerin təbii sürüşdürməsindən istifadə edir. Girişdən sonra sakit keçidlər və kartlarda incə hover reaksiyaları var; mobil cihazlarda effektlər yüngülləşir, azaldılmış hərəkət seçimi aktiv olduqda statik görünüş göstərilir.
-
-Giriş animasiyası tamamlandıqdan və səhnə keçidləri bitdikdən sonra Canvas yenidən çəkilmir; bu, mobil cihazlarda əlavə yükü azaldır.
+Kursoru hərəkət etdirəndə hüceyrələr sizə siqnal göndərir, ekrana toxunanda isə şok dalğası yaranır.
 
 ## İmkanlar
 
-- Öz yazdığımız Canvas 2D mühərriki: loqoya yığılan hüceyrələr və üç sakit hekayə səhnəsi. Heç bir kitabxanadan asılı deyil.
+- Öz yazdığımız Canvas 2D mühərriki: bölünmə, siqnal zəncirləri, immun reaksiyası, mətnə çevrilmə. Heç bir kitabxanadan asılı deyil.
 - İki dil: Azərbaycan (əsas) və ingilis dili. Seçim yadda saxlanılır.
-- Həllər bölməsində xidmət seçildikdə ulduz tozu üslubunda statik təsvir göstərilir: bloklardan yığılan sayt, bildiriş alan telefon, cavab verən süni intellekt şəbəkəsi, mərtəbəsi açılan 3D bina, satış hunisi, ödəniş qəbul edən kiosk və təhdidləri dayandıran qalxan (`src/specimen.ts`).
-- "Canlı dialoq" bölməsi: masaüstündə sakit aralıqlarla yenilənən terminal; mobil cihazlarda və azaldılmış hərəkət rejimində statik nümunə.
+- Həllər bölməsində hər xidmətin yanında ulduz tozu üslubunda canlı şəkil var: bloklardan yığılan sayt, bildiriş alan telefon, cavab verən süni intellekt şəbəkəsi, mərtəbəsi açılan 3D bina, satış hunisi, ödəniş qəbul edən kiosk və təhdidləri dayandıran qalxan (`src/specimen.ts`).
+- "Canlı dialoq" bölməsi: hüceyrələrin bir-biri ilə danışdığı canlı terminal.
 - "Adın mənası" lüğət maddəsi kimi, standartlar və həyat dövrü sakit, tipoqrafik bölmələr kimi qurulub.
 - Tam responsiv (telefon, planşet, masaüstü), `prefers-reduced-motion` dəstəyi, klaviatura ilə idarəetmə, SEO və sosial şəbəkə paylaşımı üçün önizləmə şəkli.
-- Heç bir runtime kitabxanasından asılı deyil.
+- JS ~15 kB (gzip), heç bir runtime asılılığı yoxdur.
 
 ## Başlamaq
 
@@ -38,15 +40,6 @@ npm run build      # dist/ qovluğuna istehsal versiyası
 npm run preview    # build-i yerli olaraq yoxlamaq
 npm run build:single   # artifact/cybcell.html: bütün CSS və JS daxilində olan tək fayl
 ```
-
-## Brauzer yoxlamaları
-
-```bash
-npx playwright install chromium  # ilk dəfə
-npm run test:e2e
-```
-
-Sistem Chromium-u varsa, `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` ilə onun yolunu göstərin. Testlər iki yerli dev server başladır və Formspree cavablarını simulyasiya edir; real mesaj göndərilmir. Mobil ölçülər, dil seçimi, təbii sürüşdürmə, animasiyanın dayanması və formanın uğur/xəta halları yoxlanılır.
 
 ## Saytı yayımlamaq (GitHub Pages)
 
@@ -59,23 +52,6 @@ Sistem Chromium-u varsa, `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` ilə onun yolunu 
 Sayt `https://lumeriaapp.github.io/Cybcell/` ünvanında açılacaq. Öz domeniniz (məsələn `cybcell.az`) varsa, onu elə həmin səhifədə **Custom domain** xanasına yazın.
 
 Build nisbi yollarla yığıldığı üçün `dist/` qovluğunu istənilən statik hostinqə (Netlify, Vercel, Cloudflare Pages) də olduğu kimi yükləmək olar.
-
-## Əlaqə formasını qoşmaq (Formspree)
-
-Forma mesajları HTTPS üzərindən Formspree-yə göndərir. Göndəriş yalnız xidmətin uğurlu cavabından sonra təsdiqlənir. Xəta və ya 15 saniyəlik gözləmə limiti zamanı yazılanlar saxlanılır; təkrar göndəriş və birbaşa e-poçtla əlaqə mümkündür. Endpoint təyin edilməyibsə, forma bunu açıq bildirir və e-poçt ünvanını göstərir.
-
-1. [Formspree](https://formspree.io/) hesabında yeni forma yaradın, mesajları qəbul edəcək e-poçt ünvanını təsdiqləyin və saytın domeninə aid məhdudiyyətləri yoxlayın.
-2. Yerli inkişaf üçün `.env.example` faylını `.env.local` adı ilə kopyalayın və açıq forma ünvanını daxil edin:
-
-   ```dotenv
-   VITE_CONTACT_ENDPOINT=https://formspree.io/f/FORM_ID
-   ```
-
-3. GitHub Pages üçün **Settings → Secrets and variables → Actions → Variables** bölməsində `VITE_CONTACT_ENDPOINT` adlı repository variable yaradın. Dəyər həmin açıq forma ünvanı olmalıdır. Deploy workflow bu dəyişəni build-ə ötürür.
-4. Dəyişiklikdən sonra dev serveri yenidən başladın və ya saytı yenidən build/deploy edin. `VITE_` dəyişənləri build zamanı daxil edilir; artıq yayımlanmış fayllar öz-özünə yenilənmir.
-5. Yayımlanmış saytdan sınaq mesajını göndərin, uğur bildirişini və Formspree panelində mesajın qəbulunu yoxlayın.
-
-`VITE_CONTACT_ENDPOINT` yalnız `https://formspree.io/f/…` ünvanı qəbul edir və yayımlanmış JavaScript-də görünür. Buraya gizli API açarı, hesab parolu və ya şəxsi token yazmayın. `.env.local` Git tərəfindən nəzərə alınmır. Forma istifadəçinin poçt proqramını avtomatik açmır; alternativ e-poçt keçidi yalnız kliklə açılır.
 
 ## Məzmunu dəyişmək
 
@@ -97,8 +73,7 @@ Forma mesajları HTTPS üzərindən Formspree-yə göndərir. Göndəriş yalnı
 
 ```
 index.html            səhifənin bütün bölmələri (AZ mətn)
-src/main.ts           scroll → səhnə, naviqasiya, HUD
-src/contact.ts        Formspree göndərişi, yoxlama, əlaqə vəziyyətləri
+src/main.ts           scroll → səhnə, naviqasiya, HUD, forma
 src/engine/cells.ts   hüceyrə mühərriki (Canvas 2D)
 src/specimen.ts       həllər bölməsindəki animasiyalı şəkillər
 src/i18n.ts           dil dəyişdirici və ingiliscə mətnlər

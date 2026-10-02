@@ -3,12 +3,6 @@ dist
 artifact
 *.log
 .DS_Store
-.env.local
-.env.*.local
 
 # video renders
 video/build
-
-# browser test outputs
-test-results/
-playwright-report/
