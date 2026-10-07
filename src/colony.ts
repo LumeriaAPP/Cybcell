@@ -2,7 +2,7 @@
  * Drives the living colony from the page: every [data-scene] element is a keyframe at its
  * centre, and the scroll position between two keyframes blends their scenes. The hero's
  * keyframe sits at the end of its pin, so the single cell holds while the altarpiece opens.
- * After the story the colony thins out behind the agency sections; on phones it sleeps there.
+ * After the story the colony fades out and sleeps; the agency sections sit on a plain page.
  *
  * Nothing here reads layout on scroll: anchors are measured on refresh, the rest is arithmetic.
  */
@@ -30,7 +30,6 @@ export function initColony(canvas: HTMLCanvasElement, onRefresh: (fn: () => void
   if (import.meta.env.DEV) Object.assign(window, { __engine: engine });
 
   let anchors: Anchor[] = [];
-  const phone = matchMedia('(max-width: 1080px)');
 
   const measure = () => {
     anchors = [];
@@ -62,18 +61,19 @@ export function initColony(canvas: HTMLCanvasElement, onRefresh: (fn: () => void
     return anchors[anchors.length - 1].scene;
   };
 
-  // Past the story the colony is only a texture: fainter on desktop, asleep on phones.
+  // The colony belongs to the story: once the agency sections begin it fades out and sleeps.
   let past = false;
+  let fade = 0;
   const sync = () => {
-    const sleep = past && phone.matches;
+    clearTimeout(fade);
     canvas.classList.toggle('is-ambient', past);
-    canvas.style.visibility = sleep ? 'hidden' : '';
-    if (sleep || document.hidden) engine.stop();
+    if (document.hidden) engine.stop();
+    else if (past) fade = window.setTimeout(() => engine.stop(), 900);
     else engine.start();
   };
   ScrollTrigger.create({
     trigger: '#services',
-    start: 'top 50%',
+    start: 'top 70%',
     end: 'max',
     onToggle: (st) => {
       past = st.isActive;

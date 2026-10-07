@@ -149,17 +149,21 @@ function steps() {
 }
 
 /* Leadership: two page-coloured doors slide apart over the portrait, like the prologue's
-   altarpiece, while the photo settles from a close-up. No pin (a held section feels like a jolt
-   when it lets go): the doors finish opening just as the portrait reaches the middle of the screen. */
+   altarpiece, while the photo settles from a close-up. It plays at its own pace once the
+   portrait reaches the middle of the screen (tying it to scroll speed made it finish too early),
+   and closes again when scrolled back above. Transforms and opacity only. */
 function lead() {
   const photo = $('.lead__photo');
   if (!photo) return;
   gsap
-    .timeline({ defaults: { ease: 'power2.inOut' }, scrollTrigger: { trigger: photo, start: 'top 95%', end: 'center 52%', scrub: 0.4 } })
-    .fromTo('.lead__door--l', { xPercent: 0 }, { xPercent: -101, duration: 1 }, 0)
-    .fromTo('.lead__door--r', { xPercent: 0 }, { xPercent: 101, duration: 1 }, 0)
-    .fromTo('.lead__photo img', { scale: 1.35 }, { scale: 1, ease: 'power2.out', duration: 1.2 }, 0)
-    .fromTo('.lead__shade', { opacity: 0.55 }, { opacity: 0, ease: 'power2.out', duration: 1.2 }, 0);
+    .timeline({
+      defaults: { ease: 'power3.inOut' },
+      scrollTrigger: { trigger: photo, start: 'center 62%', toggleActions: 'play none none reverse' },
+    })
+    .fromTo('.lead__door--l', { xPercent: 0 }, { xPercent: -101, duration: 1.4 }, 0)
+    .fromTo('.lead__door--r', { xPercent: 0 }, { xPercent: 101, duration: 1.4 }, 0)
+    .fromTo('.lead__photo img', { scale: 1.35 }, { scale: 1, ease: 'power2.out', duration: 1.8 }, 0.1)
+    .fromTo('.lead__shade', { opacity: 0.55 }, { opacity: 0, ease: 'power2.out', duration: 1.6 }, 0.1);
 }
 
 /* Every block arrives on its own, when it is actually in view (three quarters down the
