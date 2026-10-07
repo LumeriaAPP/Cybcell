@@ -2,9 +2,9 @@
  * "İşlədiyimiz Üzlər": the faces come from public/data/faces.json (the future admin writes
  * that file), so adding or removing a person never touches this code.
  *
- * Desktop: the portraits ride a large wheel from the bottom of the screen to the top while the
- * section is held; each one stands upright as it crosses the middle and its name shows beside it.
- * Phones and tablets: the same portraits simply follow one another.
+ * All faces are on screen at once, riding a tornado: a funnel-shaped spiral, wide at the top,
+ * narrow at the bottom, turning slowly by itself and faster as the page is scrolled. A tap on
+ * a face brings it out of the spin, large, with the name and handle beside it.
  */
 import './styles.css';
 import { gsap } from 'gsap';
@@ -24,8 +24,6 @@ interface Face {
 
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-/** Angle between neighbouring faces on the wheel, in radians. */
-const STEP = 0.6;
 
 initI18n();
 initMenu();
@@ -46,9 +44,176 @@ function meta(f: Face) {
   return parts.filter(Boolean).join(' · ') + (f.demo ? `<span class="demo-tag">${t('fc.demo')}</span>` : '');
 }
 
+/* ------------------------------------------------------------- zoom */
+
+function zoom(faces: Face[], onOpen: (open: boolean) => void) {
+  const box = $('[data-zoom]');
+  const photo = $<HTMLImageElement>('[data-zoom-photo]');
+  const name = $('[data-zoom-name]');
+  const info = $('[data-zoom-meta]');
+  const close = $<HTMLButtonElement>('[data-zoom-close]');
+  if (!box || !photo || !name || !info || !close) return { open: (_i: number, _c: HTMLElement) => {} };
+  let from: HTMLElement | null = null;
+  let current = -1;
+
+  const fill = (i: number) => {
+    const f = faces[i];
+    photo.src = `./${f.photo}`;
+    photo.alt = f.name;
+    name.textContent = f.name;
+    info.innerHTML = meta(f);
+  };
+
+  const hide = () => {
+    if (box.hidden) return;
+    gsap.to(box, {
+      autoAlpha: 0,
+      duration: 0.35,
+      ease: 'power2.in',
+      onComplete: () => {
+        box.hidden = true;
+        onOpen(false);
+        from?.focus();
+      },
+    });
+  };
+
+  const open = (i: number, card: HTMLElement) => {
+    from = card;
+    current = i;
+    fill(i);
+    box.hidden = false;
+    onOpen(true);
+    // grow out of the card that was tapped
+    const r = card.getBoundingClientRect();
+    const frame = $('.fzoom__photo', box)!;
+    const target = frame.getBoundingClientRect();
+    const dx = r.left + r.width / 2 - (target.left + target.width / 2);
+    const dy = r.top + r.height / 2 - (target.top + target.height / 2);
+    gsap.set(box, { autoAlpha: 1 });
+    gsap.fromTo('.fzoom__bg', { opacity: 0 }, { opacity: 1, duration: 0.4 });
+    gsap.fromTo(frame, { x: dx, y: dy, scale: r.width / target.width }, { x: 0, y: 0, scale: 1, duration: 0.7, ease: 'expo.out' });
+    gsap.fromTo('.fzoom__text > *', { y: 20, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.06, duration: 0.5, delay: 0.25, ease: 'power3.out' });
+    close.focus();
+  };
+
+  close.addEventListener('click', hide);
+  box.addEventListener('click', (e) => {
+    if (e.target === box || (e.target as HTMLElement).classList.contains('fzoom__bg')) hide();
+  });
+  addEventListener('keydown', (e) => e.key === 'Escape' && hide());
+  onLang(() => current >= 0 && !box.hidden && fill(current));
+  return { open };
+}
+
+/* ------------------------------------------------------------- tornado */
+
+function tornado(faces: Face[]) {
+  const section = $('[data-tornado]');
+  const stage = $('[data-tornado-stage]');
+  if (!section || !stage) return;
+
+  stage.innerHTML = faces
+    .map(
+      (f, i) => `<button class="tcard" type="button" data-i="${i}" aria-label="${esc(f.name)}">
+        <img src="./${esc(f.photo)}" alt="" width="400" height="500" decoding="async" />
+      </button>`,
+    )
+    .join('');
+  const cards = Array.from(stage.querySelectorAll<HTMLElement>('.tcard'));
+  const n = cards.length;
+  let paused = false;
+  const z = zoom(faces, (open) => (paused = open));
+  cards.forEach((c, i) => c.addEventListener('click', () => z.open(i, c)));
+
+  let spin = 0;
+  let boost = 0; // extra turn from scrolling, decays
+  let last = performance.now();
+  let running = false;
+  let visible = false;
+
+  const layout = () => {
+    const w = stage.clientWidth;
+    const h = stage.clientHeight;
+    const phone = w < 720;
+    const rTop = Math.min(w * (phone ? 0.36 : 0.32), 470);
+    const card = Math.min(w * (phone ? 0.27 : 0.13), 190);
+    return { w, h, rTop, rBottom: rTop * 0.18, card, top: h * 0.1, span: h * 0.78 };
+  };
+  // Card size changes layout, so it is set only when the stage resizes, never per frame.
+  const size = () => {
+    L = layout();
+    for (const c of cards) c.style.width = `${L.card}px`;
+  };
+  let L = layout();
+  size();
+  new ResizeObserver(size).observe(stage);
+
+  const place = () => {
+    for (let i = 0; i < n; i++) {
+      const k = n > 1 ? i / (n - 1) : 0.5;
+      const th = spin + k * Math.PI * 2 * 2.2; // a clean helix: 2.2 turns from top to bottom
+      const r = L.rTop + (L.rBottom - L.rTop) * k;
+      const depth = Math.cos(th); // 1 = front, -1 = back
+      const near = (depth + 1) / 2;
+      const scale = (0.58 + 0.42 * near) * (1 - 0.32 * k);
+      gsap.set(cards[i], {
+        x: L.w / 2 + r * Math.sin(th) - L.card / 2,
+        y: L.top + k * L.span - L.card * 0.625,
+        scale,
+        rotationY: -Math.sin(th) * 30,
+        opacity: 0.35 + 0.65 * near,
+        zIndex: 1000 + Math.round(depth * 100),
+      });
+    }
+  };
+
+  const frame = (now: number) => {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (!paused) {
+      spin += dt * (0.32 + boost);
+      boost *= Math.pow(0.04, dt); // a scroll kick fades within about a second
+      place();
+    }
+    if (visible) requestAnimationFrame(frame);
+    else running = false;
+  };
+  const wake = () => {
+    if (running || reduced) return;
+    running = true;
+    last = performance.now();
+    requestAnimationFrame(frame);
+  };
+  new IntersectionObserver(([e]) => {
+    visible = e.isIntersecting;
+    if (visible) wake();
+  }).observe(section);
+
+  place();
+  if (reduced) return;
+
+  // Scrolling through the section winds the tornado up.
+  let lastY = scrollY;
+  ScrollTrigger.create({
+    trigger: section,
+    start: 'top top',
+    end: () => '+=' + innerHeight * 1.1,
+    pin: true,
+    anticipatePin: 1,
+    onUpdate: () => {
+      boost = Math.min(4, boost + Math.abs(scrollY - lastY) * 0.004);
+      lastY = scrollY;
+    },
+  });
+}
+
+/* ------------------------------------------------------------- list (reduced motion) */
+
 function renderList(faces: Face[]) {
   const list = $('[data-faces-list]');
   if (!list) return;
+  list.hidden = false;
   list.innerHTML = faces
     .map(
       (f) => `<li class="face">
@@ -58,84 +223,6 @@ function renderList(faces: Face[]) {
       </li>`,
     )
     .join('');
-  if (reduced) return;
-  const items = list.querySelectorAll('.face');
-  gsap.set(items, { y: 50, autoAlpha: 0 });
-  ScrollTrigger.batch(items, {
-    start: 'top 85%',
-    onEnter: (els) => gsap.to(els, { y: 0, autoAlpha: 1, duration: 1, stagger: 0.12, ease: 'power3.out', overwrite: true }),
-    onLeaveBack: (els) => gsap.to(els, { y: 50, autoAlpha: 0, duration: 0.4, overwrite: true }),
-  });
-}
-
-function wheel(faces: Face[]) {
-  const section = $('[data-wheel]');
-  const holder = $('[data-wheel-cards]');
-  const count = $('[data-wheel-count]');
-  const name = $('[data-wheel-name]');
-  const info = $('[data-wheel-meta]');
-  if (!section || !holder || !count || !name || !info) return;
-
-  holder.innerHTML = faces
-    .map((f) => `<div class="wheel__card"><img src="./${esc(f.photo)}" alt="${esc(f.name)}" width="400" height="500" decoding="async" /></div>`)
-    .join('');
-  const cards = Array.from(holder.querySelectorAll<HTMLElement>('.wheel__card'));
-  section.querySelector('.wheel__ring')?.remove();
-  const ring = document.createElement('div');
-  ring.className = 'wheel__ring';
-  section.prepend(ring);
-
-  let active = -1;
-  const show = (k: number) => {
-    active = k;
-    const f = faces[k];
-    count.textContent = `${String(k + 1).padStart(2, '0')} / ${String(faces.length).padStart(2, '0')}`;
-    name.textContent = f.name;
-    info.innerHTML = meta(f);
-    gsap.fromTo([count, name, info], { y: 16, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.05, ease: 'power3.out', overwrite: true });
-  };
-
-  // a = which face sits in the middle (fractional while moving). Faces after it wait below.
-  const place = (a: number) => {
-    const R = innerHeight * 0.62;
-    const cx = innerWidth * 0.4;
-    const cy = innerHeight * 0.5;
-    cards.forEach((c, i) => {
-      const th = (i - a) * STEP;
-      const off = Math.abs(th);
-      gsap.set(c, {
-        x: cx - R + R * Math.cos(th),
-        y: cy + R * Math.sin(th),
-        rotation: (th * 180) / Math.PI,
-        scale: 1 - Math.min(off, 1.4) * 0.26,
-        autoAlpha: Math.max(0, 1.15 - off * 0.75),
-        zIndex: 100 - Math.round(off * 20),
-      });
-    });
-    gsap.set(ring, { width: R * 2, height: R * 2, x: cx - 2 * R, y: cy - R });
-    const k = Math.min(faces.length - 1, Math.max(0, Math.round(a)));
-    if (k !== active) show(k);
-  };
-
-  const state = { a: 0 };
-  place(0);
-  if (reduced) return;
-  gsap.to(state, {
-    a: faces.length - 1,
-    ease: 'none',
-    onUpdate: () => place(state.a),
-    scrollTrigger: {
-      trigger: section,
-      start: 'top top',
-      end: () => '+=' + (faces.length - 1) * innerHeight * 0.45,
-      pin: true,
-      scrub: 0.6,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-      onRefresh: () => place(state.a),
-    },
-  });
-  onLang(() => show(active));
 }
 
 async function start() {
@@ -145,13 +232,16 @@ async function start() {
     const data = (await res.json()) as { faces: Face[] };
     const faces = data.faces.filter((f) => f.name && f.photo);
     if (!faces.length) throw new Error('empty');
-    renderList(faces);
-    const mm = gsap.matchMedia();
-    mm.add('(min-width: 1081px)', () => wheel(faces));
-    onLang(() => renderList(faces));
+    if (reduced) {
+      $('[data-tornado]')?.remove();
+      renderList(faces);
+      onLang(() => renderList(faces));
+    } else {
+      tornado(faces);
+    }
     ScrollTrigger.refresh();
   } catch {
-    $('[data-wheel]')?.remove();
+    $('[data-tornado]')?.remove();
     if (status) {
       status.hidden = false;
       status.textContent = t('fc.error');

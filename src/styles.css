@@ -1619,76 +1619,142 @@ html:not(.motion) .lead__door {
   letter-spacing: -0.05em;
 }
 
-/* Desktop: the faces ride a large wheel from the bottom of the screen to the top; the one
-   crossing the middle stands upright. */
-.wheel {
+/* The tornado: cards placed every frame by src/faces.ts (transforms only). */
+.tornado {
   position: relative;
   height: 100svh;
   overflow: hidden;
 }
 
-.wheel__ring {
+.tornado__stage {
   position: absolute;
-  left: 0;
-  top: 0;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  pointer-events: none;
+  inset: var(--nav-h) 0 0;
+  perspective: 1200px;
 }
 
-.wheel__card {
+.tcard {
   position: absolute;
   left: 0;
   top: 0;
-  width: min(22vw, 300px);
   aspect-ratio: 4 / 5;
-  margin: calc(min(22vw, 300px) * -0.625) 0 0 calc(min(22vw, 300px) * -0.5);
-  border-radius: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
   overflow: hidden;
   background: #d9d8d3;
-  box-shadow: 0 30px 60px -30px rgba(14, 14, 12, 0.45);
+  box-shadow: 0 24px 50px -24px rgba(14, 14, 12, 0.5);
+  cursor: pointer;
   will-change: transform, opacity;
 }
 
-.wheel__card img,
-.face img {
+.tcard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease);
+}
+
+.tcard:hover img,
+.tcard:focus-visible img {
+  transform: scale(1.06);
+}
+
+.tornado__hint {
+  position: absolute;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--black-faint);
+  white-space: nowrap;
+}
+
+/* A face brought forward */
+.fzoom {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  grid-template-columns: auto minmax(0, 360px);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 4vw, 64px);
+  padding: calc(var(--nav-h) + 20px) var(--gutter) 40px;
+}
+
+.fzoom[hidden] {
+  display: none;
+}
+
+.fzoom__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgba(246, 245, 241, 0.96);
+}
+
+.fzoom__photo {
+  width: min(42vw, 440px, (100svh - var(--nav-h) - 80px) * 0.8);
+  aspect-ratio: 4 / 5;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #d9d8d3;
+  box-shadow: 0 40px 90px -40px rgba(14, 14, 12, 0.6);
+}
+
+.fzoom__photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.wheel__info {
-  position: absolute;
-  left: 60vw;
-  top: 50%;
-  width: min(30vw, 420px);
-  transform: translateY(-50%);
-}
-
-.wheel__count {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  font-feature-settings: 'tnum';
-  color: var(--black-faint);
-}
-
-.wheel__name {
-  margin-top: 14px;
+.fzoom__name {
   font-family: var(--f-display);
   font-weight: 500;
-  font-size: clamp(36px, 3.6vw, 64px);
+  font-size: clamp(34px, 3.6vw, 60px);
   line-height: 1;
   letter-spacing: -0.04em;
 }
 
-.wheel__meta {
+.fzoom__meta {
   margin-top: 12px;
   color: var(--black-dim);
 }
 
-.wheel__meta a {
+.fzoom__meta a {
   color: var(--black);
+}
+
+.fzoom__close {
+  position: absolute;
+  top: calc(var(--nav-h) + 12px);
+  right: var(--gutter);
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--white);
+  cursor: pointer;
+}
+
+.fzoom__close span {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 23px;
+  height: 1.5px;
+  background: var(--black);
+}
+
+.fzoom__close span:first-child {
+  transform: rotate(45deg);
+}
+
+.fzoom__close span:last-child {
+  transform: rotate(-45deg);
 }
 
 .demo-tag {
@@ -1706,7 +1772,7 @@ html:not(.motion) .lead__door {
 
 /* Phones and tablets: the faces simply come one after another. */
 .faces-list {
-  display: none;
+  display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 36px 20px;
   padding-bottom: 80px;
@@ -1748,12 +1814,15 @@ html:not(.motion) .lead__door {
 }
 
 @media (max-width: 1080px) {
-  .wheel {
-    display: none;
+  .fzoom {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    align-content: center;
+    text-align: center;
   }
 
-  .faces-list {
-    display: grid;
+  .fzoom__photo {
+    width: min(76vw, 360px, (100svh - var(--nav-h) - 220px) * 0.8);
   }
 }
 

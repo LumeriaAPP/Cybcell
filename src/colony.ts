@@ -73,7 +73,8 @@ export function initColony(canvas: HTMLCanvasElement, onRefresh: (fn: () => void
   };
   ScrollTrigger.create({
     trigger: '#services',
-    start: 'top 70%',
+    // only once the services fill the screen, so the CYBCELL word is seen everywhere
+    start: 'top 30%',
     end: 'max',
     onToggle: (st) => {
       past = st.isActive;

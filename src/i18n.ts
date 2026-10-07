@@ -22,7 +22,9 @@ const en: Record<string, string> = {
 
   'fc.eyebrow': 'Faces',
   'fc.title': 'Faces we work with.',
-  'fc.intro': 'People who tell brands’ stories and share a genuine bond with their audience. Scroll down and let each face take its place.',
+  'fc.intro': 'People who tell brands’ stories and share a genuine bond with their audience. Tap any of them to bring them forward.',
+  'fc.hint': 'Tap a face to bring it forward',
+  'fc.close': 'Close',
   'fc.cta.eyebrow': 'For brands',
   'fc.cta.title': 'Let’s choose the right face for your brand together.',
   'fc.cta.btn': 'Write to us',

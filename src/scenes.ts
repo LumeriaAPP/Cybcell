@@ -107,7 +107,8 @@ function light(onInk: (v: number) => void) {
   ScrollTrigger.create({
     trigger: '#partners',
     start: 'bottom 12%',
-    end: () => '+=' + innerHeight * 0.8,
+    // short on phones, so the page never lingers in a muddy grey
+    end: () => '+=' + innerHeight * (innerWidth <= 1080 ? 0.4 : 0.8),
     onUpdate: (st) => ((state.dawn = st.progress), apply()),
     onRefresh: (st) => ((state.dawn = st.progress), apply()),
   });

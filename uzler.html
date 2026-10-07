@@ -65,21 +65,17 @@
       <header class="wrap faces-hero">
         <p class="eyebrow" data-i18n="fc.eyebrow">Üzlər</p>
         <h1 data-i18n="fc.title">İşlədiyimiz üzlər.</h1>
-        <p class="intro" data-i18n="fc.intro">Brendlərin hekayəsini danışan, auditoriyası ilə səmimi bağı olan insanlar. Aşağı sürüşdürün, hər üz öz yerinə gəlsin.</p>
+        <p class="intro" data-i18n="fc.intro">Brendlərin hekayəsini danışan, auditoriyası ilə səmimi bağı olan insanlar. Hansına toxunsanız, o önə çıxacaq.</p>
       </header>
 
-      <!-- Desktop: the wheel. Filled from data/faces.json by src/faces.ts. -->
-      <section class="wheel" data-wheel aria-label="İşlədiyimiz üzlər" data-i18n-attr="aria-label:fc.title">
-        <div data-wheel-cards></div>
-        <div class="wheel__info" aria-live="polite">
-          <p class="wheel__count" data-wheel-count></p>
-          <p class="wheel__name" data-wheel-name></p>
-          <p class="wheel__meta" data-wheel-meta></p>
-        </div>
+      <!-- The tornado: every face at once, spinning; tap one to bring it forward. Filled from data/faces.json. -->
+      <section class="tornado" data-tornado aria-label="İşlədiyimiz üzlər" data-i18n-attr="aria-label:fc.title">
+        <div class="tornado__stage" data-tornado-stage></div>
+        <p class="tornado__hint" data-i18n="fc.hint">Üzə toxunun, böyüsün</p>
       </section>
 
-      <!-- Phones and tablets: the same faces, one after another. -->
-      <ol class="wrap faces-list" data-faces-list></ol>
+      <!-- Reduced motion: the same faces as a plain list. -->
+      <ol class="wrap faces-list" data-faces-list hidden></ol>
       <p class="wrap faces-status" data-faces-status hidden></p>
 
       <section class="wrap faces-cta">
@@ -88,6 +84,18 @@
         <a class="btn btn--dark" href="./index.html#contact" data-i18n="fc.cta.btn">Bizə yazın</a>
       </section>
     </main>
+
+    <div class="fzoom" data-zoom hidden role="dialog" aria-modal="true" aria-labelledby="fzoom-name">
+      <div class="fzoom__bg"></div>
+      <figure class="fzoom__photo"><img data-zoom-photo src="" alt="" width="400" height="500" /></figure>
+      <div class="fzoom__text">
+        <p class="fzoom__name" id="fzoom-name" data-zoom-name></p>
+        <p class="fzoom__meta" data-zoom-meta></p>
+      </div>
+      <button class="fzoom__close" type="button" data-zoom-close aria-label="Bağla" data-i18n-attr="aria-label:fc.close">
+        <span></span><span></span>
+      </button>
+    </div>
 
     <footer class="footer">
       <div class="wrap footer__bottom">
