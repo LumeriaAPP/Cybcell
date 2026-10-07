@@ -4,11 +4,10 @@
   "sourceCommit": "c1d95c78ec2fe47bc4d045aca5b502010ad21eac",
   "licenseEvidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md",
   "sourceDocumentation": "Photo-level CC BY 2.0 attributions recorded in the source repository README (photos downloaded there April 28, 2011).",
-  "processing": "Converted source 640×960 JPEG derivatives to locally hosted 640×800 WebP; top-aligned 4:5 crop, quality 85; no facial/identity alterations.",
+  "processing": "Six locally hosted 640×800 WebP derivatives and four untransformed 640×960 JPEG originals; displayed in 4:5 frames using CSS. Individual processing details are recorded per photo.",
   "verificationLimit": "Original Flickr pages and Creative Commons website were blocked by this environment network. Photo-level permission and original source links were verified against the pinned source README.",
   "photos": [
     {
-      "demo": "Demo üz 01",
       "asset": "demo-01.webp",
       "photoId": "2369151434",
       "credit": {
@@ -23,10 +22,11 @@
       "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_2369151434@2x.jpg",
       "sourceSha256": "daddafa50ce47f52dd4d19e376b9bbdb4cc74f7e868f7ecdbd3c0c349b300f6a",
       "sha256": "acb3530f4692247f900b3e8f063dc8c33f148457d0f58866680a201273dc27a4",
-      "bytes": 49936
+      "bytes": 49936,
+      "profileName": "Aysel Məmmədova",
+      "processing": "Converted to 640×800 WebP, top-aligned 4:5 crop, quality 85; no facial or identity alterations."
     },
     {
-      "demo": "Demo üz 02",
       "asset": "demo-02.webp",
       "photoId": "3156504080",
       "credit": {
@@ -41,10 +41,11 @@
       "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_3156504080@2x.jpg",
       "sourceSha256": "77397926989aacd0c52f16ffe8344947d114013b98832581a019fc5db68b69b7",
       "sha256": "61627decc9b73da4c52b4223912b16ab4a9426a44a58677a142d0c2a81638f31",
-      "bytes": 42372
+      "bytes": 42372,
+      "profileName": "Elvin Rzayev",
+      "processing": "Converted to 640×800 WebP, top-aligned 4:5 crop, quality 85; no facial or identity alterations."
     },
     {
-      "demo": "Demo üz 03",
       "asset": "demo-03.webp",
       "photoId": "4530910556",
       "credit": {
@@ -59,10 +60,11 @@
       "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_4530910556@2x.jpg",
       "sourceSha256": "d382f65e991e4cba3ec139a07eb0b5d2221610a5c8625e0e29148233dadd8c92",
       "sha256": "6f16d705da8be41253f603de5695f412f6b322332a92b499bdfae008bc201ebb",
-      "bytes": 63172
+      "bytes": 63172,
+      "profileName": "Nigar Həsənli",
+      "processing": "Converted to 640×800 WebP, top-aligned 4:5 crop, quality 85; no facial or identity alterations."
     },
     {
-      "demo": "Demo üz 04",
       "asset": "demo-04.webp",
       "photoId": "3679345595",
       "credit": {
@@ -77,28 +79,30 @@
       "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_3679345595@2x.jpg",
       "sourceSha256": "1066f3e5d5359b0044b91f42cd137dc5ae92a04ca1482abe77bf25b438238ebf",
       "sha256": "da27d0f25fd563a1cd03706f465817cc456f66654a10aa031fc9b12b9260b43b",
-      "bytes": 60504
+      "bytes": 60504,
+      "profileName": "Orxan Əliyev",
+      "processing": "Converted to 640×800 WebP, top-aligned 4:5 crop, quality 85; no facial or identity alterations."
     },
     {
-      "demo": "Demo üz 05",
-      "asset": "demo-05.webp",
-      "photoId": "4733974817",
+      "asset": "profile-05.jpg",
+      "photoId": "3788426000",
       "credit": {
-        "title": "pretty asian girl 1",
-        "author": "Chris Willis (tibchris) on Flickr",
-        "authorUrl": "https://www.flickr.com/people/8381313@N08",
-        "source": "https://www.flickr.com/photos/arcticpuppy/4733974817/",
+        "title": "MariageBlandineSeb-1003",
+        "author": "julien haler (Julien Haler) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/24576874@N00",
+        "source": "https://www.flickr.com/photos/titlap/3788426000/",
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
       },
-      "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_4733974817@2x.jpg",
-      "sourceSha256": "bcfac8f77290f8c2a16d515105ed196974dda050b0c828291eb10d9ed078d471",
-      "sha256": "746668b89c4ec87f80a3eb3dad7595f5b1f27d892855ee3e1a1ebe92ea59e654",
-      "bytes": 44300
+      "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_3788426000@2x.jpg",
+      "sourceSha256": "b8d3cbceda3fa5655dca03a6e3b5577461352c71aa6057b5ee8f184626d68087",
+      "sha256": "b8d3cbceda3fa5655dca03a6e3b5577461352c71aa6057b5ee8f184626d68087",
+      "bytes": 401309,
+      "profileName": "Leyla Quliyeva",
+      "processing": "Original JPEG, displayed with a CSS 4:5 crop; no image transformations."
     },
     {
-      "demo": "Demo üz 06",
       "asset": "demo-06.webp",
       "photoId": "3936883765",
       "credit": {
@@ -113,10 +117,11 @@
       "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_3936883765@2x.jpg",
       "sourceSha256": "ac89ec8361578769c0c8c67bb58c0228e4d730742443c6aed68a30de45ab48b7",
       "sha256": "5440b3dadf1f41674ceb9f9374861ded9aa8f5710c35ebf53a23ba53c40d00ca",
-      "bytes": 36718
+      "bytes": 36718,
+      "profileName": "Murad Abbasov",
+      "processing": "Converted to 640×800 WebP, top-aligned 4:5 crop, quality 85; no facial or identity alterations."
     },
     {
-      "demo": "Demo üz 07",
       "asset": "demo-07.webp",
       "photoId": "5172802343",
       "credit": {
@@ -131,61 +136,67 @@
       "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_5172802343@2x.jpg",
       "sourceSha256": "f242b3fe154cd707cf18f9a6c634393dfadf61f4ac40359b5766f338c95df406",
       "sha256": "372999376b137d1a0b193639e7e189da811edb25ce0471212ac5dcd4a1e34ae9",
-      "bytes": 25920
+      "bytes": 25920,
+      "profileName": "Günel İsmayılova",
+      "processing": "Converted to 640×800 WebP, top-aligned 4:5 crop, quality 85; no facial or identity alterations."
     },
     {
-      "demo": "Demo üz 08",
-      "asset": "demo-08.webp",
-      "photoId": "3937523554",
+      "asset": "profile-08.jpg",
+      "photoId": "3936813347",
       "credit": {
-        "title": "_MG_5309",
+        "title": "_MG_5348",
         "author": "julien haler (Julien Haler) on Flickr",
         "authorUrl": "https://www.flickr.com/people/24576874@N00",
-        "source": "https://www.flickr.com/photos/titlap/3937523554/",
+        "source": "https://www.flickr.com/photos/titlap/3936813347/",
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
       },
-      "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_3937523554@2x.jpg",
-      "sourceSha256": "c719342edd6741a3af1a2c47132b95ddeb5c9be51384a1186430782644ba480e",
-      "sha256": "ff5ad941e4c842830238b96f5dc01be26325bd6e6becc7a6997ba136e1ff117e",
-      "bytes": 60676
+      "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_3936813347@2x.jpg",
+      "sourceSha256": "8005119bd630399ae9717b9aa207e3ab24f30a71d23d5c63670c8ce0fd837710",
+      "sha256": "8005119bd630399ae9717b9aa207e3ab24f30a71d23d5c63670c8ce0fd837710",
+      "bytes": 432670,
+      "profileName": "Rauf Səfərov",
+      "processing": "Original JPEG, displayed with a CSS 4:5 crop; no image transformations."
     },
     {
-      "demo": "Demo üz 09",
-      "asset": "demo-09.webp",
-      "photoId": "3474008237",
+      "asset": "profile-09.jpg",
+      "photoId": "4994965909",
       "credit": {
-        "title": "ticked off",
-        "author": "Howie Le (Ha-Wee) on Flickr",
-        "authorUrl": "https://www.flickr.com/people/8707895@N06",
-        "source": "https://www.flickr.com/photos/hawee/3474008237/",
+        "title": "Orbis Ring Flash",
+        "author": "Paul Stevenson (Paul Stevenson) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/53496815@N00",
+        "source": "https://www.flickr.com/photos/pss/4994965909/",
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
       },
-      "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_3474008237@2x.jpg",
-      "sourceSha256": "296bccd89411c66a19f6ed96f67514645754cb6eefb1de699a200d0d5eccb87c",
-      "sha256": "e911949161d5437315299422c96ad52d86cd8e78cc914c465b674bb47b19403b",
-      "bytes": 30434
+      "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_4994965909@2x.jpg",
+      "sourceSha256": "19f054e2c2d03ce22fdc3c59cf20b832324749fc034fb04976be9566f5455cd0",
+      "sha256": "19f054e2c2d03ce22fdc3c59cf20b832324749fc034fb04976be9566f5455cd0",
+      "bytes": 589458,
+      "profileName": "Ləman Tağıyeva",
+      "processing": "Original JPEG, displayed with a CSS 4:5 crop; no image transformations."
     },
     {
-      "demo": "Demo üz 10",
-      "asset": "demo-10.webp",
-      "photoId": "3259370999",
+      "asset": "profile-10.jpg",
+      "photoId": "4476799140",
       "credit": {
-        "title": "Portrait - Alex",
-        "author": "Charlie Nguyen (brainchildvn) on Flickr",
-        "authorUrl": "https://www.flickr.com/people/7453283@N02",
-        "source": "https://www.flickr.com/photos/brainchildvn/3259370999/",
+        "title": "Automatic Redial 2010 Promo (32)",
+        "author": "Robert Bejil (Robert Bejil Photography) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/28618109@N05",
+        "source": "https://www.flickr.com/photos/robnas/4476799140/",
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
       },
-      "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_3259370999@2x.jpg",
-      "sourceSha256": "3c21b099a9fcd768d135171eaed130162694a9598e113f0a3c1f40442e865cbb",
-      "sha256": "b1eb919f0ebfae757067f38aea229f5b1cf2464019aadbf72e953fd126b58e06",
-      "bytes": 81876
+      "downloadUrl": "https://raw.githubusercontent.com/acani/fake_profile_pictures/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/lib/fake_profile_pictures/photos/large_4476799140@2x.jpg",
+      "sourceSha256": "410108f0357ac3c5d8817dbf282b1b80f04ce3ecaaccc89129b66f6b76c71869",
+      "sha256": "410108f0357ac3c5d8817dbf282b1b80f04ce3ecaaccc89129b66f6b76c71869",
+      "bytes": 550483,
+      "profileName": "Tural Əhmədov",
+      "processing": "Original JPEG, displayed with a CSS 4:5 crop; no image transformations."
     }
-  ]
+  ],
+  "profileDisclosure": "Display names and biographies are fictional presentation text; they do not identify the real people photographed, attribute nationality, or claim any endorsement or working relationship."
 }

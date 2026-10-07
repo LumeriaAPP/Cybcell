@@ -9,7 +9,7 @@
 import './styles.css';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { initI18n, onLang, t } from './i18n';
+import { initI18n, lang, onLang, t } from './i18n';
 import { initSmooth } from './scenes';
 import { initMenu } from './menu';
 
@@ -19,7 +19,7 @@ interface Face {
   handle?: string;
   instagram?: string;
   photo: string;
-  demo?: boolean;
+  description?: { az: string; en: string };
 }
 
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
@@ -41,8 +41,11 @@ function meta(f: Face) {
   if (f.handle) {
     parts.push(f.instagram ? `<a href="${esc(f.instagram)}" target="_blank" rel="noopener">${esc(f.handle)}</a>` : esc(f.handle));
   }
-  return parts.filter(Boolean).join(' · ') + (f.demo ? `<span class="demo-tag">${t('fc.demo')}</span>` : '');
+  return parts.filter(Boolean).join(' · ');
 }
+
+const description = (f: Face) => f.description?.[lang()] ?? '';
+const label = (f: Face) => `${f.name}. ${t('fc.open')}`;
 
 /* ------------------------------------------------------------- zoom */
 
@@ -51,8 +54,9 @@ function zoom(faces: Face[], onOpen: (open: boolean) => void) {
   const photo = $<HTMLImageElement>('[data-zoom-photo]');
   const name = $('[data-zoom-name]');
   const info = $('[data-zoom-meta]');
+  const bio = $('[data-zoom-description]');
   const close = $<HTMLButtonElement>('[data-zoom-close]');
-  if (!box || !photo || !name || !info || !close) return { open: (_i: number, _c: HTMLElement) => {} };
+  if (!box || !photo || !name || !info || !bio || !close) return { open: (_i: number, _c: HTMLElement) => {} };
   let from: HTMLElement | null = null;
   let current = -1;
 
@@ -62,6 +66,9 @@ function zoom(faces: Face[], onOpen: (open: boolean) => void) {
     photo.alt = f.name;
     name.textContent = f.name;
     info.innerHTML = meta(f);
+    info.hidden = !info.innerHTML;
+    bio.textContent = description(f);
+    bio.hidden = !bio.textContent;
   };
 
   const hide = () => {
@@ -115,9 +122,8 @@ function tornado(faces: Face[]) {
 
   stage.innerHTML = faces
     .map(
-      (f, i) => `<button class="tcard" type="button" data-i="${i}" aria-label="${esc(f.name)}">
+      (f, i) => `<button class="tcard" type="button" data-i="${i}" aria-label="${esc(label(f))}">
         <img src="./${esc(f.photo)}" alt="" width="400" height="500" decoding="async" />
-        ${f.demo ? `<span class="tcard__demo">${t('fc.demo')}</span>` : ''}
       </button>`,
     )
     .join('');
@@ -126,6 +132,7 @@ function tornado(faces: Face[]) {
   let paused = false;
   const z = zoom(faces, (open) => (paused = open));
   cards.forEach((c, i) => c.addEventListener('click', () => z.open(i, c)));
+  onLang(() => cards.forEach((c, i) => c.setAttribute('aria-label', label(faces[i]))));
 
   let spin = 0;
   let boost = 0; // extra turn from scrolling, decays
@@ -220,7 +227,8 @@ function renderList(faces: Face[]) {
       (f) => `<li class="face">
         <div class="face__photo"><img src="./${esc(f.photo)}" alt="${esc(f.name)}" width="400" height="500" loading="lazy" decoding="async" /></div>
         <p class="face__name">${esc(f.name)}</p>
-        <p class="face__meta">${meta(f)}</p>
+        ${meta(f) ? `<p class="face__meta">${meta(f)}</p>` : ''}
+        ${description(f) ? `<p class="face__description">${esc(description(f))}</p>` : ''}
       </li>`,
     )
     .join('');

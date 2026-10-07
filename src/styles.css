@@ -1798,21 +1798,6 @@ html:not(.motion) .lead__door {
   transition: transform 0.5s var(--ease);
 }
 
-.tcard__demo {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  padding: 3px 7px;
-  border-radius: 999px;
-  background: rgba(14, 14, 12, 0.72);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: 0.04em;
-  pointer-events: none;
-}
-
 .tcard:hover img,
 .tcard:focus-visible img {
   transform: scale(1.06);
@@ -1887,6 +1872,13 @@ html:not(.motion) .lead__door {
   color: var(--black);
 }
 
+.fzoom__description {
+  margin-top: 16px;
+  color: var(--black-dim);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
 .fzoom__close {
   position: absolute;
   top: calc(var(--nav-h) + 12px);
@@ -1914,19 +1906,6 @@ html:not(.motion) .lead__door {
 
 .fzoom__close span:last-child {
   transform: rotate(-45deg);
-}
-
-.demo-tag {
-  display: inline-block;
-  margin-left: 10px;
-  padding: 2px 9px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  vertical-align: middle;
-  color: var(--black-faint);
 }
 
 /* Phones and tablets: the faces simply come one after another. */
@@ -1958,6 +1937,13 @@ html:not(.motion) .lead__door {
   font-size: 15px;
 }
 
+.face__description {
+  margin-top: 10px;
+  color: var(--black-dim);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
 .faces-cta {
   padding: clamp(64px, 8vw, 120px) 0;
   border-top: 1px solid var(--line);
@@ -1981,7 +1967,11 @@ html:not(.motion) .lead__door {
   }
 
   .fzoom__photo {
-    width: min(76vw, 360px, (100svh - var(--nav-h) - 220px) * 0.8);
+    width: min(76vw, 360px, (100svh - var(--nav-h) - 300px) * 0.8);
+  }
+
+  .fzoom__text {
+    max-width: 360px;
   }
 }
 

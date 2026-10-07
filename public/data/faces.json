@@ -1,13 +1,10 @@
 {
-  "_note": "Demo profillər: şəkillərin müəllifi, orijinal mənbəyi və CC BY 2.0 lisenziyası hər üzün credit sahəsindədir. Tam istinadlar faces/credits.html səhifəsindədir. Real profil əlavə edilərkən demo və mənbə məlumatlarını uyğun yeniləyin.",
+  "_note": "Profil adları və təsvirləri təqdimat üçün hazırlanıb; fotodakı şəxslərin kimliyini, milliyyətini və CybCell ilə əməkdaşlığını ifadə etmir. Müəlliflər, orijinal mənbələr və CC BY 2.0 lisenziyaları credit sahələrində və faces/credits.html səhifəsindədir.",
   "faces": [
     {
-      "name": "Demo üz 01",
+      "name": "Aysel Məmmədova",
       "category": "Lifestyle",
-      "handle": "@demo01",
-      "instagram": "",
       "photo": "faces/demo-01.webp",
-      "demo": true,
       "credit": {
         "title": "beautiful woman",
         "author": "Lin Fuchshuber (River Beach) on Flickr",
@@ -16,15 +13,17 @@
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
-      }
+      },
+      "description": {
+        "az": "Gündəlik həyat, şəhər ritmi və zövqlü məkanlar haqqında vizual hekayələr. Səmimi üslub və təbii təqdimat.",
+        "en": "Visual stories about everyday life, the rhythm of the city and inspiring places. A warm style and a natural presentation."
+      },
+      "illustrative": true
     },
     {
-      "name": "Demo üz 02",
+      "name": "Elvin Rzayev",
       "category": "Moda",
-      "handle": "@demo02",
-      "instagram": "",
       "photo": "faces/demo-02.webp",
-      "demo": true,
       "credit": {
         "title": "Every now and then I get a little bit terrified but then I see the look in your eyes",
         "author": "David Goehring (CarbonNYC) on Flickr",
@@ -33,15 +32,17 @@
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
-      }
+      },
+      "description": {
+        "az": "Şəhər dəbi, rahat kombinlər və şəxsi üslub. Geyim və aksesuarları sadə, diqqətçəkən kadrlarla təqdim edən profil.",
+        "en": "Urban fashion, everyday outfits and personal style. A profile that presents clothing and accessories through simple, striking visuals."
+      },
+      "illustrative": true
     },
     {
-      "name": "Demo üz 03",
+      "name": "Nigar Həsənli",
       "category": "Gözəllik",
-      "handle": "@demo03",
-      "instagram": "",
       "photo": "faces/demo-03.webp",
-      "demo": true,
       "credit": {
         "title": "Indian princess - Sunni Balcony shoot",
         "author": "David Long (TriggerHappyDave) on Flickr",
@@ -50,15 +51,17 @@
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
-      }
+      },
+      "description": {
+        "az": "Gözəllik, gündəlik qulluq və incə detallar. Məhsulun teksturasını və istifadə təcrübəsini önə çıxaran estetik məzmun.",
+        "en": "Beauty, everyday care and thoughtful details. Aesthetic content that highlights a product’s texture and the experience of using it."
+      },
+      "illustrative": true
     },
     {
-      "name": "Demo üz 04",
+      "name": "Orxan Əliyev",
       "category": "Qida",
-      "handle": "@demo04",
-      "instagram": "",
       "photo": "faces/demo-04.webp",
-      "demo": true,
       "credit": {
         "title": "Solidays2009_-42",
         "author": "julien haler (Julien Haler) on Flickr",
@@ -67,32 +70,36 @@
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
-      }
+      },
+      "description": {
+        "az": "Yeni dadlar, kafe mədəniyyəti və yemək hekayələri. Menyunu, məkanı və atmosferi bir araya gətirən təqdimatlar.",
+        "en": "New flavours, café culture and food stories. Presentations that bring the menu, the setting and the atmosphere together."
+      },
+      "illustrative": true
     },
     {
-      "name": "Demo üz 05",
+      "name": "Leyla Quliyeva",
       "category": "Səyahət",
-      "handle": "@demo05",
-      "instagram": "",
-      "photo": "faces/demo-05.webp",
-      "demo": true,
+      "photo": "faces/profile-05.jpg",
       "credit": {
-        "title": "pretty asian girl 1",
-        "author": "Chris Willis (tibchris) on Flickr",
-        "authorUrl": "https://www.flickr.com/people/8381313@N08",
-        "source": "https://www.flickr.com/photos/arcticpuppy/4733974817/",
+        "title": "MariageBlandineSeb-1003",
+        "author": "julien haler (Julien Haler) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/24576874@N00",
+        "source": "https://www.flickr.com/photos/titlap/3788426000/",
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
-      }
+      },
+      "description": {
+        "az": "Səyahət marşrutları, həftəsonu planları və kəşf ediləcək məkanlar. İlham verən fotolar və faydalı səyahət ideyaları.",
+        "en": "Travel routes, weekend plans and places to discover. Inspiring photographs and useful ideas for the next trip."
+      },
+      "illustrative": true
     },
     {
-      "name": "Demo üz 06",
+      "name": "Murad Abbasov",
       "category": "İdman",
-      "handle": "@demo06",
-      "instagram": "",
       "photo": "faces/demo-06.webp",
-      "demo": true,
       "credit": {
         "title": "Two distinct sides on his face",
         "author": "julien haler (Julien Haler) on Flickr",
@@ -101,15 +108,17 @@
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
-      }
+      },
+      "description": {
+        "az": "Aktiv həyat, məşq və gündəlik motivasiya. İdman məhsulları və sağlam vərdişlər üçün dinamik məzmun üslubu.",
+        "en": "An active lifestyle, training and daily motivation. A dynamic content style for sports products and healthy habits."
+      },
+      "illustrative": true
     },
     {
-      "name": "Demo üz 07",
+      "name": "Günel İsmayılova",
       "category": "Texnologiya",
-      "handle": "@demo07",
-      "instagram": "",
       "photo": "faces/demo-07.webp",
-      "demo": true,
       "credit": {
         "title": "Pretty redhead girl with amazing eyes",
         "author": "Chris Willis (tibchris) on Flickr",
@@ -118,58 +127,69 @@
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
-      }
+      },
+      "description": {
+        "az": "Texnologiya, yeni tətbiqlər və gündəlik rəqəmsal həllər. Mürəkkəb mövzuları sadə dildə təqdim edən yaradıcı profil.",
+        "en": "Technology, new apps and everyday digital solutions. A creative profile that explains complex topics in simple terms."
+      },
+      "illustrative": true
     },
     {
-      "name": "Demo üz 08",
+      "name": "Rauf Səfərov",
       "category": "Avtomobil",
-      "handle": "@demo08",
-      "instagram": "",
-      "photo": "faces/demo-08.webp",
-      "demo": true,
+      "photo": "faces/profile-08.jpg",
       "credit": {
-        "title": "_MG_5309",
+        "title": "_MG_5348",
         "author": "julien haler (Julien Haler) on Flickr",
         "authorUrl": "https://www.flickr.com/people/24576874@N00",
-        "source": "https://www.flickr.com/photos/titlap/3937523554/",
+        "source": "https://www.flickr.com/photos/titlap/3936813347/",
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
-      }
+      },
+      "description": {
+        "az": "Avtomobillər, dizayn detalları və yol hekayələri. Sürüş təcrübəsini və məhsulun xarakterini göstərən vizual məzmun.",
+        "en": "Cars, design details and stories from the road. Visual content that captures the driving experience and a product’s character."
+      },
+      "illustrative": true
     },
     {
-      "name": "Demo üz 09",
+      "name": "Ləman Tağıyeva",
       "category": "Musiqi",
-      "handle": "@demo09",
-      "instagram": "",
-      "photo": "faces/demo-09.webp",
-      "demo": true,
+      "photo": "faces/profile-09.jpg",
       "credit": {
-        "title": "ticked off",
-        "author": "Howie Le (Ha-Wee) on Flickr",
-        "authorUrl": "https://www.flickr.com/people/8707895@N06",
-        "source": "https://www.flickr.com/photos/hawee/3474008237/",
+        "title": "Orbis Ring Flash",
+        "author": "Paul Stevenson (Paul Stevenson) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/53496815@N00",
+        "source": "https://www.flickr.com/photos/pss/4994965909/",
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
-      }
+      },
+      "description": {
+        "az": "Musiqi, canlı tədbirlər və şəhərin yaradıcı həyatı. Ritm, atmosfer və səhnə enerjisini birləşdirən hekayələr.",
+        "en": "Music, live events and the city’s creative life. Stories that combine rhythm, atmosphere and the energy of the stage."
+      },
+      "illustrative": true
     },
     {
-      "name": "Demo üz 10",
+      "name": "Tural Əhmədov",
       "category": "Biznes",
-      "handle": "@demo10",
-      "instagram": "",
-      "photo": "faces/demo-10.webp",
-      "demo": true,
+      "photo": "faces/profile-10.jpg",
       "credit": {
-        "title": "Portrait - Alex",
-        "author": "Charlie Nguyen (brainchildvn) on Flickr",
-        "authorUrl": "https://www.flickr.com/people/7453283@N02",
-        "source": "https://www.flickr.com/photos/brainchildvn/3259370999/",
+        "title": "Automatic Redial 2010 Promo (32)",
+        "author": "Robert Bejil (Robert Bejil Photography) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/28618109@N05",
+        "source": "https://www.flickr.com/photos/robnas/4476799140/",
         "license": "CC BY 2.0",
         "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
         "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
-      }
+      },
+      "description": {
+        "az": "Biznes, şəxsi inkişaf və yeni ideyalar. Brendlərin dəyərini aydın, səliqəli və məqsədyönlü təqdim edən məzmun.",
+        "en": "Business, personal growth and fresh ideas. Clear, considered content that communicates a brand’s value with purpose."
+      },
+      "illustrative": true
     }
   ]
 }
