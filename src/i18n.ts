@@ -139,6 +139,7 @@ const en: Record<string, string> = {
   'ct.title': 'Let’s get acquainted.',
   'ct.intro': 'Write a few sentences about your business and your goal. We will get back to you and plan the first step together.',
   'ct.mail': 'Email',
+  'ct.phone': 'Phone',
   'ct.copy': 'Copy',
   'ct.f.name': 'Your name',
   'ct.f.email': 'Email',
