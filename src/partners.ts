@@ -1,90 +1,77 @@
-/**
- * Partners, right after the prologue: three cards. Every couple of seconds one card tips over
- * backwards and shows a partner that is not on screen yet; a tap opens that partner's site.
- * Runs only while the cards are visible.
- */
-import { gsap } from 'gsap';
+/** Monochrome partner wordmarks in quiet, continuously moving columns. */
 import { lang, onLang, type Lang } from './i18n';
 
 interface Partner {
   name: string;
+  mark: string;
+  style: string;
   url?: string;
   about: Record<Lang, string>;
 }
 
 const PARTNERS: Partner[] = [
-  { name: 'Dream Moto', url: 'https://dreammoto.az', about: { az: 'Motosiklet marketplace-i', en: 'Motorcycle marketplace' } },
-  { name: 'Nova Residence', url: 'https://nova-residence-peach.vercel.app', about: { az: 'Premium yaşayış kompleksi', en: 'Premium residential complex' } },
-  { name: 'Clock & Coffee', url: 'https://clockcoffee.vercel.app', about: { az: 'Taymer konseptli kofe məkanı', en: 'Timer-concept coffee house' } },
-  { name: 'ZİP Academy', url: 'https://zipacademy.co', about: { az: 'eBay dropshipping təlimi', en: 'eBay dropshipping training' } },
-  { name: 'O Dönər', about: { az: 'Dönər məkanı, Ağ şəhər', en: 'Döner house, White City' } },
+  { name: 'Dream Moto', mark: 'Dream<span>MOTO</span>', style: 'dream', url: 'https://dreammoto.az', about: { az: 'Motosiklet marketplace-i', en: 'Motorcycle marketplace' } },
+  { name: 'Nova Residence', mark: 'NOVA<span>RESIDENCE</span>', style: 'nova', url: 'https://nova-residence-peach.vercel.app', about: { az: 'Premium yaşayış kompleksi', en: 'Premium residential complex' } },
+  { name: 'Clock & Coffee', mark: 'Clock <em>&</em> Coffee', style: 'clock', url: 'https://clockcoffee.vercel.app', about: { az: 'Taymer konseptli kofe məkanı', en: 'Timer-concept coffee house' } },
+  { name: 'ZİP Academy', mark: 'ZİP<span>ACADEMY</span>', style: 'zip', url: 'https://zipacademy.co', about: { az: 'eBay dropshipping təlimi', en: 'eBay dropshipping training' } },
+  { name: 'O Dönər', mark: 'O Dönər', style: 'doner', about: { az: 'Dönər məkanı, Ağ şəhər', en: 'Döner house, White City' } },
 ];
 
-const HOLD = 2200;
-
-function fill(face: HTMLElement, i: number) {
-  const p = PARTNERS[i];
-  const host = p.url ? new URL(p.url).host : '';
-  const inner = `<span class="pcard__no">${String(i + 1).padStart(2, '0')}</span>
-    <span class="pcard__name">${p.name}</span>
-    <span class="pcard__about">${p.about[lang()]}</span>
-    <span class="pcard__host">${host ? `${host} <span aria-hidden="true">↗</span>` : ''}</span>`;
-  face.innerHTML = p.url ? `<a href="${p.url}" target="_blank" rel="noopener">${inner}</a>` : `<span>${inner}</span>`;
-}
-
-interface Tile {
-  card: HTMLElement;
-  faces: HTMLElement[];
-  shows: number;
-  turns: number;
+function card(partner: Partner, duplicate: boolean) {
+  const item = document.createElement('div');
+  item.className = 'pcard';
+  if (duplicate) item.setAttribute('aria-hidden', 'true');
+  const mark = document.createElement(partner.url ? 'a' : 'span');
+  mark.className = `pcard__mark pcard__mark--${partner.style}`;
+  mark.innerHTML = partner.mark;
+  mark.setAttribute('aria-label', `${partner.name}, ${partner.about[lang()]}`);
+  mark.title = partner.name;
+  if (mark instanceof HTMLAnchorElement && partner.url) {
+    mark.href = partner.url;
+    mark.target = '_blank';
+    mark.rel = 'noopener noreferrer';
+    if (duplicate) mark.tabIndex = -1;
+  }
+  item.append(mark);
+  return item;
 }
 
 export function initPartners(root: HTMLElement, reduced: boolean) {
-  const tiles: Tile[] = Array.from(root.querySelectorAll<HTMLElement>('.pcard')).map((t, k) => ({
-    card: t.querySelector<HTMLElement>('.pcard__inner')!,
-    faces: Array.from(t.querySelectorAll<HTMLElement>('.pcard__face')),
-    shows: k,
-    turns: 0,
-  }));
-  if (!tiles.length) return;
-
-  // Only the cards that are actually displayed (phones hide the last one) take part.
-  const shown = () => tiles.filter((t) => t.card.offsetParent !== null);
-  tiles.forEach((t) => fill(t.faces[0], t.shows));
-
-  let next = tiles.length % PARTNERS.length;
-  let turn = 0;
-  let timer = 0;
-  let visible = false;
-
-  const step = () => {
-    const row = shown();
-    if (!row.length) return;
-    const t = row[turn % row.length];
-    turn++;
-    // skip partners already on another tile
-    for (let guard = 0; guard < PARTNERS.length && row.some((o) => o.shows === next); guard++) next = (next + 1) % PARTNERS.length;
-    t.shows = next;
-    next = (next + 1) % PARTNERS.length;
-    t.turns++;
-    fill(t.faces[t.turns % 2], t.shows);
-    t.faces[t.turns % 2].removeAttribute('aria-hidden');
-    t.faces[(t.turns + 1) % 2].setAttribute('aria-hidden', 'true');
-    gsap.to(t.card, { rotationX: -180 * t.turns, duration: 1.1, ease: 'power3.inOut' });
+  const grid = root.querySelector<HTMLElement>('[data-partner-columns]');
+  if (!grid) return;
+  const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+  const build = () => {
+    const columns = Array.from({ length: 4 }, (_, index) => {
+      const column = document.createElement('div');
+      column.className = 'pcolumn';
+      const track = document.createElement('div');
+      track.className = 'pcolumn__track';
+      const order = PARTNERS.map((_, i) => PARTNERS[(i + index * 2) % PARTNERS.length]);
+      for (let copy = 0; copy < 2; copy++) {
+        const group = document.createElement('div');
+        group.className = 'pcolumn__group';
+        order.forEach(partner => group.append(card(partner, copy > 0 || index > 0)));
+        track.append(group);
+      }
+      column.append(track);
+      return column;
+    });
+    grid.replaceChildren(...columns);
   };
-
-  const schedule = () => {
-    clearTimeout(timer);
-    if (!visible || reduced) return;
-    timer = window.setTimeout(() => {
-      step();
-      schedule();
-    }, HOLD);
+  let inView = false;
+  const sync = () => {
+    root.toggleAttribute('data-partners-moving', inView && !document.hidden && !motionPreference.matches);
   };
-
-  new IntersectionObserver(([e]) => {
-    visible = e.isIntersecting;
-    schedule();
+  root.toggleAttribute('data-partners-reduced', reduced);
+  build();
+  new IntersectionObserver(([entry]) => {
+    inView = entry.isIntersecting;
+    sync();
   }).observe(root);
-  onLang(() => tiles.forEach((t) => fill(t.faces[t.turns % 2], t.shows)));
+  document.addEventListener('visibilitychange', sync);
+  motionPreference.addEventListener('change', () => {
+    root.toggleAttribute('data-partners-reduced', motionPreference.matches);
+    sync();
+  });
+  onLang(build);
 }

@@ -1,85 +1,175 @@
 {
-  "_note": "Hər üz: name, category, handle, instagram (tam link, boş ola bilər), photo (public/ qovluğuna nisbətən yol). Admin paneldən bu fayl yenilənəcək.",
+  "_note": "Demo profillər: şəkillərin müəllifi, orijinal mənbəyi və CC BY 2.0 lisenziyası hər üzün credit sahəsindədir. Tam istinadlar faces/credits.html səhifəsindədir. Real profil əlavə edilərkən demo və mənbə məlumatlarını uyğun yeniləyin.",
   "faces": [
     {
       "name": "Demo üz 01",
       "category": "Lifestyle",
       "handle": "@demo01",
       "instagram": "",
-      "photo": "faces/demo-01.svg",
-      "demo": true
+      "photo": "faces/demo-01.webp",
+      "demo": true,
+      "credit": {
+        "title": "beautiful woman",
+        "author": "Lin Fuchshuber (River Beach) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/7273800@N02",
+        "source": "https://www.flickr.com/photos/webagentur24/2369151434/",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
+      }
     },
     {
       "name": "Demo üz 02",
       "category": "Moda",
       "handle": "@demo02",
       "instagram": "",
-      "photo": "faces/demo-02.svg",
-      "demo": true
+      "photo": "faces/demo-02.webp",
+      "demo": true,
+      "credit": {
+        "title": "Every now and then I get a little bit terrified but then I see the look in your eyes",
+        "author": "David Goehring (CarbonNYC) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/15923063@N00",
+        "source": "https://www.flickr.com/photos/carbonnyc/3156504080/",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
+      }
     },
     {
       "name": "Demo üz 03",
       "category": "Gözəllik",
       "handle": "@demo03",
       "instagram": "",
-      "photo": "faces/demo-03.svg",
-      "demo": true
+      "photo": "faces/demo-03.webp",
+      "demo": true,
+      "credit": {
+        "title": "Indian princess - Sunni Balcony shoot",
+        "author": "David Long (TriggerHappyDave) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/41018892@N00",
+        "source": "https://www.flickr.com/photos/fromthefrontend/4530910556/",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
+      }
     },
     {
       "name": "Demo üz 04",
       "category": "Qida",
       "handle": "@demo04",
       "instagram": "",
-      "photo": "faces/demo-04.svg",
-      "demo": true
+      "photo": "faces/demo-04.webp",
+      "demo": true,
+      "credit": {
+        "title": "Solidays2009_-42",
+        "author": "julien haler (Julien Haler) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/24576874@N00",
+        "source": "https://www.flickr.com/photos/titlap/3679345595/",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
+      }
     },
     {
       "name": "Demo üz 05",
       "category": "Səyahət",
       "handle": "@demo05",
       "instagram": "",
-      "photo": "faces/demo-05.svg",
-      "demo": true
+      "photo": "faces/demo-05.webp",
+      "demo": true,
+      "credit": {
+        "title": "pretty asian girl 1",
+        "author": "Chris Willis (tibchris) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/8381313@N08",
+        "source": "https://www.flickr.com/photos/arcticpuppy/4733974817/",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
+      }
     },
     {
       "name": "Demo üz 06",
       "category": "İdman",
       "handle": "@demo06",
       "instagram": "",
-      "photo": "faces/demo-06.svg",
-      "demo": true
+      "photo": "faces/demo-06.webp",
+      "demo": true,
+      "credit": {
+        "title": "Two distinct sides on his face",
+        "author": "julien haler (Julien Haler) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/24576874@N00",
+        "source": "https://www.flickr.com/photos/titlap/3936883765/",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
+      }
     },
     {
       "name": "Demo üz 07",
       "category": "Texnologiya",
       "handle": "@demo07",
       "instagram": "",
-      "photo": "faces/demo-07.svg",
-      "demo": true
+      "photo": "faces/demo-07.webp",
+      "demo": true,
+      "credit": {
+        "title": "Pretty redhead girl with amazing eyes",
+        "author": "Chris Willis (tibchris) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/8381313@N08",
+        "source": "https://www.flickr.com/photos/arcticpuppy/5172802343/",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
+      }
     },
     {
       "name": "Demo üz 08",
       "category": "Avtomobil",
       "handle": "@demo08",
       "instagram": "",
-      "photo": "faces/demo-08.svg",
-      "demo": true
+      "photo": "faces/demo-08.webp",
+      "demo": true,
+      "credit": {
+        "title": "_MG_5309",
+        "author": "julien haler (Julien Haler) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/24576874@N00",
+        "source": "https://www.flickr.com/photos/titlap/3937523554/",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
+      }
     },
     {
       "name": "Demo üz 09",
       "category": "Musiqi",
       "handle": "@demo09",
       "instagram": "",
-      "photo": "faces/demo-09.svg",
-      "demo": true
+      "photo": "faces/demo-09.webp",
+      "demo": true,
+      "credit": {
+        "title": "ticked off",
+        "author": "Howie Le (Ha-Wee) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/8707895@N06",
+        "source": "https://www.flickr.com/photos/hawee/3474008237/",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
+      }
     },
     {
       "name": "Demo üz 10",
       "category": "Biznes",
       "handle": "@demo10",
       "instagram": "",
-      "photo": "faces/demo-10.svg",
-      "demo": true
+      "photo": "faces/demo-10.webp",
+      "demo": true,
+      "credit": {
+        "title": "Portrait - Alex",
+        "author": "Charlie Nguyen (brainchildvn) on Flickr",
+        "authorUrl": "https://www.flickr.com/people/7453283@N02",
+        "source": "https://www.flickr.com/photos/brainchildvn/3259370999/",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "evidence": "https://github.com/acani/fake_profile_pictures/blob/c1d95c78ec2fe47bc4d045aca5b502010ad21eac/README.md"
+      }
     }
   ]
 }

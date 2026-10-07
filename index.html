@@ -127,18 +127,14 @@
         </div>
       </section>
 
-      <!-- Partners: right after the prologue, three cards that tip over to the next partner. -->
+      <!-- Partners: monochrome wordmarks in slowly moving dark columns. -->
       <section class="partners" id="partners" data-partners aria-labelledby="partners-title">
         <div class="wrap">
           <header class="partners__head">
             <p class="eyebrow eyebrow--gold" data-i18n="pt.eyebrow">Tərəfdaşlarımız</p>
             <h2 class="h2" id="partners-title" data-i18n="pt.title">Birlikdə işlədiyimiz brendlər.</h2>
           </header>
-          <div class="pcards">
-            <div class="pcard"><div class="pcard__inner"><div class="pcard__face"></div><div class="pcard__face pcard__face--back" aria-hidden="true"></div></div></div>
-            <div class="pcard"><div class="pcard__inner"><div class="pcard__face"></div><div class="pcard__face pcard__face--back" aria-hidden="true"></div></div></div>
-            <div class="pcard"><div class="pcard__inner"><div class="pcard__face"></div><div class="pcard__face pcard__face--back" aria-hidden="true"></div></div></div>
-          </div>
+          <div class="pcards" data-partner-columns></div>
         </div>
       </section>
 
@@ -328,6 +324,34 @@
             <dd class="stat__text" data-i18n="vit.4.text">Bütün rəqəmsal işiniz bir yerdə.</dd>
           </div>
         </dl>
+      </section>
+
+      <!-- About -->
+      <section class="about light-flow dark-flow" id="about" aria-labelledby="about-title">
+        <div class="wrap about__inner">
+          <div class="about__stage">
+            <h2 class="about__title" id="about-title">
+              <span data-i18n="about.title.first">Biz</span>
+              <span data-i18n="about.title.last">Kimik</span>
+            </h2>
+            <video
+              class="about__flag"
+              data-about-flag
+              width="1280"
+              height="720"
+              muted
+              loop
+              playsinline
+              preload="none"
+              poster="./media/azerbaijan-flag.webp"
+              aria-hidden="true"
+            >
+              <source src="./media/azerbaijan-flag.mov" type="video/quicktime" />
+              <source src="./media/azerbaijan-flag.webm" type="video/webm" />
+            </video>
+          </div>
+          <p class="intro about__intro" data-i18n="about.intro">2025-ci ildən Azərbaycanda fəaliyyət göstərən peşəkar komandayıq. Texnologiya, dizayn və marketinqi birləşdirərək bizneslər üçün rəqəmsal həllər yaradırıq.</p>
+        </div>
       </section>
 
       <!-- Leadership -->

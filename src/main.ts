@@ -45,6 +45,27 @@ const menu = initMenu();
 const partners = $('[data-partners]');
 if (partners) initPartners(partners, reduced);
 
+/* ------------------------------------------------------------- about flag */
+
+const aboutFlag = $<HTMLVideoElement>('[data-about-flag]');
+if (aboutFlag) {
+  const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+  let inView = false;
+  const syncFlag = () => {
+    if (inView && !document.hidden && !motionPreference.matches) {
+      void aboutFlag.play().catch(() => { /* Keep the poster if autoplay is unavailable. */ });
+    } else {
+      aboutFlag.pause();
+    }
+  };
+  new IntersectionObserver(([entry]) => {
+    inView = entry.isIntersecting;
+    syncFlag();
+  }, { threshold: 0.05 }).observe(aboutFlag);
+  document.addEventListener('visibilitychange', syncFlag);
+  motionPreference.addEventListener('change', syncFlag);
+}
+
 /* ------------------------------------------------------------- in-page links */
 
 for (const a of $$<HTMLAnchorElement>('a[href^="#"]')) {

@@ -117,6 +117,7 @@ function tornado(faces: Face[]) {
     .map(
       (f, i) => `<button class="tcard" type="button" data-i="${i}" aria-label="${esc(f.name)}">
         <img src="./${esc(f.photo)}" alt="" width="400" height="500" decoding="async" />
+        ${f.demo ? `<span class="tcard__demo">${t('fc.demo')}</span>` : ''}
       </button>`,
     )
     .join('');

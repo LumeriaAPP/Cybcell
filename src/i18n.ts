@@ -28,6 +28,7 @@ const en: Record<string, string> = {
   'fc.cta.eyebrow': 'For brands',
   'fc.cta.title': 'Let’s choose the right face for your brand together.',
   'fc.cta.btn': 'Write to us',
+  'fc.credits': 'Demo photo credits',
 
   'hero.eyebrow': 'Digital agency · Baku',
   'hero.lede': 'A digital ecosystem for your business.',
@@ -123,6 +124,10 @@ const en: Record<string, string> = {
   'vit.4.label': 'Partner',
   'vit.4.text': 'Your entire digital side in one place.',
   'vit.sec': 's',
+
+  'about.title.first': 'Who',
+  'about.title.last': 'We Are',
+  'about.intro': 'We are a professional team working in Azerbaijan since 2025. We bring technology, design and marketing together to create digital solutions for businesses.',
 
   'lead.eyebrow': 'Leadership',
   'lead.role': 'CEO of CybCell',
