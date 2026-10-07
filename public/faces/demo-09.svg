@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500">
+  <defs>
+    <radialGradient id="bg" cx="0.25" cy="0.3" r="0.95">
+      <stop offset="0" stop-color="#b5b3b0"/><stop offset="1" stop-color="#82817e"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0.25" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#3a3936"/><stop offset=".55" stop-color="#1d1c1a"/><stop offset="1" stop-color="#121210"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="14"/></filter>
+  </defs>
+  <rect width="400" height="500" fill="url(#bg)"/>
+  <ellipse cx="214" cy="405" rx="170" ry="120" fill="#000" opacity=".18" filter="url(#soft)"/>
+  <g fill="url(#body)">
+    <path d="M46 500 C52 385 126 337 170 321 L222 321 C266 337 340 385 346 500Z"/>
+    <path d="M170 255 L222 255 L226 327 Q196 343 166 327Z"/>
+    <ellipse cx="196" cy="215" rx="52" ry="64"/>
+    <path d="M140 201 C156 135 266 145 256 219 C226 175 176 185 140 201Z"/>
+  </g>
+  <text x="28" y="54" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="600" fill="#fff" fill-opacity=".92">09</text>
+  <text x="372" y="50" text-anchor="end" font-family="Inter, Arial, sans-serif" font-size="12" letter-spacing="3" fill="#fff" fill-opacity=".8">DEMO</text>
+</svg>

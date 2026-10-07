@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="az">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>İşlədiyimiz Üzlər · CybCell</title>
+    <meta name="description" content="CybCell-in kampaniyalarında birlikdə işlədiyi influenserlər və brend üzləri." />
+    <meta name="theme-color" content="#f6f5f1" />
+    <link rel="icon" href="./favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="İşlədiyimiz Üzlər · CybCell" />
+    <meta property="og:image" content="https://cybcell.com/og.jpg" />
+    <meta property="og:url" content="https://cybcell.com/uzler.html" />
+    <link rel="canonical" href="https://cybcell.com/uzler.html" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500&display=swap" />
+  </head>
+  <body class="page-faces">
+    <a class="skip" href="#main" data-i18n="skip">Əsas məzmuna keç</a>
+
+    <header class="nav" data-nav data-theme="light">
+      <a class="brand" href="./index.html" aria-label="CybCell, ana səhifə" data-i18n-attr="aria-label:nav.homepage">
+        <img class="brand__mark" src="./brand/cybcell-mark.png" width="301" height="160" alt="" />
+        <span class="brand__word">CybCell</span>
+      </a>
+      <nav class="nav__links" aria-label="Əsas naviqasiya" data-i18n-attr="aria-label:nav.label">
+        <a href="./index.html#agency" data-i18n="nav.agency">Agentlik</a>
+        <a href="./index.html#services" data-i18n="nav.services">Xidmətlər</a>
+        <a href="./index.html#process" data-i18n="nav.process">Necə işləyirik</a>
+        <a class="nav__faces" href="./uzler.html" aria-current="page" data-i18n="nav.faces">İşlədiyimiz Üzlər</a>
+      </nav>
+      <div class="nav__end">
+        <button class="lang" type="button" data-lang-toggle aria-label="Switch to English">
+          <span data-l="az">AZ</span><span data-l="en">EN</span>
+        </button>
+        <a class="btn btn--small nav__cta" href="./index.html#contact" data-i18n="nav.contact">Əlaqə</a>
+        <button class="burger" type="button" data-menu-open aria-expanded="false" aria-controls="menu" aria-label="Menyunu aç" data-i18n-attr="aria-label:nav.menu">
+          <span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <div class="menu" id="menu" data-menu hidden>
+      <nav class="menu__links" aria-label="Mobil naviqasiya" data-i18n-attr="aria-label:nav.label">
+        <a href="./index.html#agency" data-i18n="nav.agency">Agentlik</a>
+        <a href="./index.html#services" data-i18n="nav.services">Xidmətlər</a>
+        <a href="./index.html#process" data-i18n="nav.process">Necə işləyirik</a>
+        <a href="./uzler.html" aria-current="page" data-i18n="nav.faces">İşlədiyimiz Üzlər</a>
+        <a href="./index.html#contact" data-i18n="nav.contact">Əlaqə</a>
+      </nav>
+      <div class="menu__foot">
+        <a class="btn btn--block" href="./index.html#contact" data-i18n="hero.cta">Layihəni başlat</a>
+        <a class="social" href="https://www.instagram.com/cybcell.az/" target="_blank" rel="noopener">
+          <svg class="social__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5" /><circle cx="12" cy="12" r="4.3" /><circle class="social__dot" cx="17.6" cy="6.4" r="1.15" /></svg>
+          <span>@cybcell.az</span>
+        </a>
+      </div>
+    </div>
+
+    <main id="main">
+      <header class="wrap faces-hero">
+        <p class="eyebrow" data-i18n="fc.eyebrow">Üzlər</p>
+        <h1 data-i18n="fc.title">İşlədiyimiz üzlər.</h1>
+        <p class="intro" data-i18n="fc.intro">Brendlərin hekayəsini danışan, auditoriyası ilə səmimi bağı olan insanlar. Aşağı sürüşdürün, hər üz öz yerinə gəlsin.</p>
+      </header>
+
+      <!-- Desktop: the wheel. Filled from data/faces.json by src/faces.ts. -->
+      <section class="wheel" data-wheel aria-label="İşlədiyimiz üzlər" data-i18n-attr="aria-label:fc.title">
+        <div data-wheel-cards></div>
+        <div class="wheel__info" aria-live="polite">
+          <p class="wheel__count" data-wheel-count></p>
+          <p class="wheel__name" data-wheel-name></p>
+          <p class="wheel__meta" data-wheel-meta></p>
+        </div>
+      </section>
+
+      <!-- Phones and tablets: the same faces, one after another. -->
+      <ol class="wrap faces-list" data-faces-list></ol>
+      <p class="wrap faces-status" data-faces-status hidden></p>
+
+      <section class="wrap faces-cta">
+        <p class="eyebrow" data-i18n="fc.cta.eyebrow">Brendlər üçün</p>
+        <h2 class="h2" data-i18n="fc.cta.title">Brendiniz üçün doğru üzü birlikdə seçək.</h2>
+        <a class="btn btn--dark" href="./index.html#contact" data-i18n="fc.cta.btn">Bizə yazın</a>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__bottom">
+        <p>© <span data-year>2026</span> CybCell. <span data-i18n="ft.rights">Bütün hüquqlar qorunur.</span></p>
+        <a class="social" href="https://www.instagram.com/cybcell.az/" target="_blank" rel="noopener">
+          <svg class="social__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5" /><circle cx="12" cy="12" r="4.3" /><circle class="social__dot" cx="17.6" cy="6.4" r="1.15" /></svg>
+          <span>@cybcell.az</span>
+        </a>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/faces.ts"></script>
+  </body>
+</html>

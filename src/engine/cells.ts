@@ -22,10 +22,16 @@ export const SCENES = [
 export type SceneId = (typeof SCENES)[number];
 
 type RGB = readonly [number, number, number];
-// Monochrome: cells in soft white, highlights in pure white, red only for a threat.
-const PEARL: RGB = [228, 228, 228];
-const AMBER: RGB = [255, 255, 255];
+// Cells in warm pearl, signals in leaf gold, red only for a threat. On the white page the
+// engine blends to the ink palette itself (a CSS filter on a full-screen canvas is costly on phones).
+const PEARL: RGB = [236, 230, 216];
+const AMBER: RGB = [241, 216, 145];
 const ALARM: RGB = [229, 72, 77];
+const WHITE: RGB = [255, 255, 255];
+const PEARL_INK: RGB = [30, 28, 24];
+const AMBER_INK: RGB = [128, 96, 36];
+const ALARM_INK: RGB = [196, 44, 52];
+const WHITE_INK: RGB = [14, 14, 12];
 
 const TAU = Math.PI * 2;
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
@@ -144,7 +150,16 @@ export class CellEngine {
     if (!ctx) throw new Error('Canvas 2D is not available');
     this.ctx = ctx;
     this.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    this.sprites = { p: makeSprite(PEARL), s: makeSprite(AMBER), a: makeSprite(ALARM) };
+    this.spritesLight = { p: makeSprite(PEARL), s: makeSprite(AMBER), a: makeSprite(ALARM) };
+    this.spritesInk = { p: makeSprite(PEARL_INK), s: makeSprite(AMBER_INK), a: makeSprite(ALARM_INK) };
+    this.sprites = this.spritesLight;
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const weak = (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 3;
+    const touch = matchMedia('(pointer: coarse)').matches;
+    this.q = weak ? 0.5 : touch ? 0.75 : 1;
+    this.dprMax = weak ? 1 : touch ? 1.5 : 2;
+    // Weak devices animate the colony at an even 30 fps rather than a ragged 40-60.
+    this.halfRate = weak;
     this.scenes = this.buildScenes();
     this.resize();
     this.bindEvents();
@@ -157,6 +172,71 @@ export class CellEngine {
     this.sTarget = clamp(s, 0, SCENES.length - 1);
   }
 
+  /** 0 = light cells on the dark prologue, 1 = ink cells on the white page. */
+  private ink = 0;
+  private cPearl: RGB = PEARL;
+  private cAmber: RGB = AMBER;
+  private cAlarm: RGB = ALARM;
+  private cHi: RGB = WHITE;
+  private hi = '#fff';
+  private add: GlobalCompositeOperation = 'lighter';
+  private spritesLight!: Record<'p' | 's' | 'a', HTMLCanvasElement>;
+  private spritesInk!: Record<'p' | 's' | 'a', HTMLCanvasElement>;
+
+  setInk(v: number) {
+    v = clamp(v);
+    if (v === this.ink) return;
+    this.ink = v;
+    this.cPearl = mix(PEARL, PEARL_INK, v);
+    this.cAmber = mix(AMBER, AMBER_INK, v);
+    this.cAlarm = mix(ALARM, ALARM_INK, v);
+    this.cHi = mix(WHITE, WHITE_INK, v);
+    this.hi = rgba(this.cHi, 1);
+    // Light adds up on black; ink simply lays over white.
+    const dark = v >= 0.5;
+    this.add = dark ? 'source-over' : 'lighter';
+    this.sprites = dark ? this.spritesInk : this.spritesLight;
+  }
+
+  /* Rendering budget. q = 1 draws every particle; phones start lower, and if frames run slow
+     the engine first drops to 1x pixels, then thins the particles further. */
+  private q = 1;
+  private dprMax = 2;
+  private halfRate = false;
+  private skipFrame = false;
+  private frameMs = 16;
+  private slowFrames = 0;
+
+  private watch(ms: number) {
+    if (ms > 250) return; // a tab switch or a hitch, not a trend
+    this.frameMs += (ms - this.frameMs) * 0.05;
+    if (this.frameMs < (this.halfRate ? 45 : 24)) {
+      this.slowFrames = 0;
+      return;
+    }
+    if (++this.slowFrames < 45) return;
+    this.slowFrames = 0;
+    this.frameMs = 16;
+    if (this.dpr > 1) {
+      // Only the backing store changes; geometry is in CSS pixels, so nothing is re-sampled.
+      this.dprMax = this.dpr = 1;
+      this.canvas.width = Math.round(this.w);
+      this.canvas.height = Math.round(this.h);
+    } else {
+      this.q = Math.max(0.3, this.q * 0.7);
+    }
+  }
+
+  /** Every n-th point of the big point clouds, from the budget. */
+  private get stride() {
+    return Math.max(1, Math.round(1 / this.q));
+  }
+
+  /** Go to a scene without the morph (first paint). */
+  jump(s: number) {
+    this.s = this.sTarget = clamp(s, 0, SCENES.length - 1);
+  }
+
   /** Current weight (0..1) of a given scene in the blend. */
   private dust: { u: number; arm: number; j: number; rj: number; s: number; a: number }[] = [];
 
@@ -167,8 +247,8 @@ export class CellEngine {
     if (weight < 0.01 || !this.wordDust.length) return;
     const ctx = this.ctx;
     const tw = this.reduced ? 0 : this.time;
-    ctx.fillStyle = '#fff';
-    for (let k = 0; k < this.wordDust.length; k++) {
+    ctx.fillStyle = this.hi;
+    for (let k = 0; k < this.wordDust.length; k += this.stride) {
       const d = this.wordDust[k];
       const g = clamp((weight - d.delay) / (1 - d.delay));
       const e = 1 - Math.pow(1 - g, 3);
@@ -196,7 +276,7 @@ export class CellEngine {
     const g = off.getContext('2d', { willReadFrequently: true });
     if (!g) return;
     const maxW = this.mobile ? this.w * 0.84 : Math.min(this.w * 0.62, 980);
-    const font = (px: number) => `600 ${px}px Geist, "Helvetica Neue", Arial, sans-serif`;
+    const font = (px: number) => `600 ${px}px "Cormorant Garamond", Georgia, serif`;
     g.font = font(100);
     const fs = (100 * maxW) / g.measureText('CybCell').width;
     const W = Math.ceil(maxW);
@@ -337,8 +417,9 @@ export class CellEngine {
     const ctx = this.ctx;
     const fr = this.towerFrame();
     const built = this.towerBuilt(q);
-    ctx.fillStyle = '#fff';
-    for (let i = 0; i < this.tower.length; i++) {
+    ctx.fillStyle = this.hi;
+    const st = this.stride;
+    for (let i = 0; i < this.tower.length; i += st) {
       const p = this.tower[i];
       const g = clamp(built - p.f);
       if (g <= 0) continue;
@@ -403,8 +484,9 @@ export class CellEngine {
     if (weight < 0.01 || !this.chart.length) return;
     const ctx = this.ctx;
     const tw = this.reduced ? 0 : this.time;
-    ctx.fillStyle = '#fff';
-    for (let i = 0; i < this.chart.length; i++) {
+    ctx.fillStyle = this.hi;
+    const st = this.stride;
+    for (let i = 0; i < this.chart.length; i += st) {
       const p = this.chart[i];
       let a: number;
       if (p.bar === -1) a = 0.5 * clamp(q * 4);
@@ -493,8 +575,8 @@ export class CellEngine {
         }
       }
     }
-    ctx.fillStyle = '#fff';
-    for (let k = 0; k < this.dust.length; k++) {
+    ctx.fillStyle = this.hi;
+    for (let k = 0; k < this.dust.length; k += this.stride) {
       const d = this.dust[k];
       const th = d.arm * Math.PI + d.u * Math.PI * 3.1 + sp + d.j;
       const rr = R * (0.02 + 0.98 * d.u) * (1 + d.rj);
@@ -529,6 +611,11 @@ export class CellEngine {
     this.last = performance.now();
     const loop = (now: number) => {
       if (!this.running) return;
+      if (this.halfRate && (this.skipFrame = !this.skipFrame)) {
+        this.raf = requestAnimationFrame(loop);
+        return;
+      }
+      this.watch(now - this.last);
       const dt = Math.min((now - this.last) / 1000, 1 / 20);
       this.last = now;
       this.tick(dt);
@@ -552,8 +639,8 @@ export class CellEngine {
   resize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    this.mobile = w < 820;
-    this.dpr = Math.min(window.devicePixelRatio || 1, this.mobile ? 1.75 : 2);
+    this.mobile = w <= 1080; // matches the stacked CSS layout
+    this.dpr = Math.min(window.devicePixelRatio || 1, this.dprMax);
     this.canvas.width = Math.round(w * this.dpr);
     this.canvas.height = Math.round(h * this.dpr);
     this.canvas.style.width = w + 'px';
@@ -661,7 +748,7 @@ export class CellEngine {
     const off = document.createElement('canvas');
     const g = off.getContext('2d', { willReadFrequently: true });
     if (!g) return;
-    const font = (px: number) => `600 ${px}px Geist, "Helvetica Neue", Arial, sans-serif`;
+    const font = (px: number) => `600 ${px}px "Cormorant Garamond", Georgia, serif`;
     g.font = font(100);
     const widest = Math.max(...lines.map((l) => g.measureText(l).width));
     const fs = (100 * maxW) / widest;
@@ -1192,7 +1279,7 @@ export class CellEngine {
     // Cells near the pointer occasionally "talk" to it.
     const P = this.pointer;
     const ctx = this.ctx;
-    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalCompositeOperation = this.add;
     ctx.lineCap = 'round';
     const next: Signal[] = [];
     for (const s of this.signals) {
@@ -1226,7 +1313,7 @@ export class CellEngine {
       const tb = Math.max(0, e - 0.22);
       const x0 = lerp(A.x, B.x, tb);
       const y0 = lerp(A.y, B.y, tb);
-      const col = s.kind === 2 ? ALARM : s.kind === 1 ? AMBER : PEARL;
+      const col = s.kind === 2 ? this.cAlarm : s.kind === 1 ? this.cAmber : this.cPearl;
       const alpha = Math.min(A.a, s.to >= 0 ? (B as Cell).a : 1);
       const grad = ctx.createLinearGradient(x0, y0, x, y);
       grad.addColorStop(0, rgba(col, 0));
@@ -1241,7 +1328,7 @@ export class CellEngine {
       ctx.globalAlpha = alpha * 0.5;
       ctx.drawImage(spr, x - 6, y - 6, 12, 12);
       ctx.globalAlpha = 1;
-      ctx.fillStyle = rgba([255, 255, 255], alpha);
+      ctx.fillStyle = rgba(this.cHi, alpha);
       ctx.beginPath();
       ctx.arc(x, y, 1.1, 0, TAU);
       ctx.fill();
@@ -1294,14 +1381,14 @@ export class CellEngine {
           links++;
         }
       }
-      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalCompositeOperation = this.add;
       ctx.lineWidth = 1;
       for (let k = 0; k < BUCKETS; k++) {
-        ctx.strokeStyle = rgba(PEARL, ((k + 0.5) / BUCKETS) * 0.32);
+        ctx.strokeStyle = rgba(this.cPearl, ((k + 0.5) / BUCKETS) * 0.32);
         ctx.stroke(paths[k]);
       }
       ctx.lineWidth = 0.7;
-      ctx.strokeStyle = rgba(ALARM, 0.22 * this.alarm);
+      ctx.strokeStyle = rgba(this.cAlarm, 0.22 * this.alarm);
       ctx.stroke(hot);
     }
 
@@ -1311,7 +1398,8 @@ export class CellEngine {
       if (c.a < 0.01 || c.r < 0.2) continue;
       visible++;
       const g = c.r * 5.5 + 8 + c.flash * c.r * 3;
-      ctx.globalAlpha = clamp(c.a * (0.1 + c.flash * 0.3) * (c.r > 30 ? 0.5 : 1));
+      const glow = 1 - 0.85 * this.ink;
+      ctx.globalAlpha = clamp(c.a * (0.1 + c.flash * 0.3) * (c.r > 30 ? 0.5 : 1) * glow);
       ctx.drawImage(this.sprites[c.tint ? 's' : 'p'], c.x - g / 2, c.y - g / 2, g, g);
       if (c.heat > 0.02) {
         ctx.globalAlpha = clamp(c.a * c.heat * 0.3);
@@ -1325,11 +1413,11 @@ export class CellEngine {
     for (let i = 0; i < cells.length; i++) {
       const c = cells[i];
       if (c.a < 0.01 || c.r < 0.2) continue;
-      const col = mix(c.tint ? AMBER : PEARL, ALARM, c.heat);
+      const col = mix(c.tint ? this.cAmber : this.cPearl, this.cAlarm, c.heat);
       if (c.r >= 5.5) this.drawMembrane(c, col);
       if (c.r >= 5.5) continue; // particle cells carry their own nucleus
       const core = c.r >= 5.5 ? Math.max(1.2, c.r * 0.16) : Math.max(0.9, c.r * 0.5);
-      ctx.fillStyle = rgba(mix(col, [255, 255, 255], 0.5 + c.flash * 0.5), c.a);
+      ctx.fillStyle = rgba(mix(col, this.cHi, 0.5 + c.flash * 0.5), c.a);
       ctx.beginPath();
       ctx.arc(c.x, c.y, core, 0, TAU);
       ctx.fill();
@@ -1343,7 +1431,7 @@ export class CellEngine {
       wv.t += 1 / 60;
       if (wv.t > 1) continue;
       next.push(wv);
-      ctx.strokeStyle = rgba(PEARL, (1 - wv.t) * 0.3);
+      ctx.strokeStyle = rgba(this.cPearl, (1 - wv.t) * 0.3);
       ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.arc(wv.x, wv.y, 10 + wv.t * 240, 0, TAU);
@@ -1394,7 +1482,7 @@ export class CellEngine {
     const breathe = 1 + 0.02 * Math.sin(t * 1.1 + c.seed * 7) + c.flash * 0.05;
     const R = c.r * breathe;
     // Fewer points for smaller cells keeps density even and draws cheap.
-    const step = Math.max(1, Math.floor(this.sphere.length / Math.max(60, c.r * 16)));
+    const step = Math.max(1, Math.floor(this.sphere.length / Math.max(60, c.r * 16) / this.q));
     const dot = c.r < 14 ? 0.8 : 1;
     ctx.fillStyle = rgba(col, 1);
     for (let i = 0; i < this.sphere.length; i += step) {
@@ -1410,7 +1498,7 @@ export class CellEngine {
     }
     ctx.globalAlpha = 1;
     // A soft light at the nucleus.
-    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalCompositeOperation = this.add;
     ctx.globalAlpha = clamp(c.a * 0.35);
     const g = R * 0.9;
     ctx.drawImage(this.sprites[c.tint ? 's' : 'p'], c.x - g / 2, c.y - g / 2, g, g);
@@ -1464,12 +1552,14 @@ export class CellEngine {
     const cxx = Math.cos(ax);
     const sxx = Math.sin(ax);
     const g = R * 5;
-    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalCompositeOperation = this.add;
     ctx.globalAlpha = I.alpha * 0.25;
     ctx.drawImage(this.sprites.a, I.x - g / 2, I.y - g / 2, g, g);
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = rgba(ALARM, 1);
-    for (const p of this.virus) {
+    ctx.fillStyle = rgba(this.cAlarm, 1);
+    const st = this.stride;
+    for (let i = 0; i < this.virus.length; i += st) {
+      const p = this.virus[i];
       const x1 = p.x * cyy - p.z * syy;
       const z1 = p.x * syy + p.z * cyy;
       const y2 = p.y * cxx - z1 * sxx;

@@ -2,34 +2,16 @@
 
 **Biznesiniz üçün rəqəmsal ekosistem.**
 
-CybCell-in rəsmi saytı. Sayt şirkətin adını hekayə kimi danışır: **CYB** (kibernetika, idarəetmə və əlaqə elmi) + **CELL** (hüceyrə, həyatın ən kiçik vahidi).
+CybCell rəqəmsal agentliyinin rəsmi saytı.
 
-Səhifənin arxasında canlı bir hüceyrə koloniyası yaşayır. Aşağı sürüşdürdükcə koloniya dəyişir:
+## Sayt necə qurulub
 
-| Səhnə | Nə baş verir | Mənası |
-| --- | --- | --- |
-| Giriş | "CybCell" ulduz tozundan yazılır, sürüşdürəndə spiral qalaktikaya çevrilir | Rəqəmsal ekosistem |
-| 01 Hüceyrə | Hər şey bir hüceyrəyə yığılır | Hər həll bir hüceyrədir |
-| 02 Böyümə | 1 → 64 hüceyrə bölünməsi | Biznes böyüdükcə sistem də böyüyür |
-| 03 İnteqrasiya | Hüceyrələr şəbəkədə siqnal ötürür | Sayt, tətbiq, e-menyu, CRM bir-birinə bağlıdır |
-| 04 3D və AR | Hüceyrələr qat-qat bina tikir, bina fırlanır | 3D satış sistemi, virtual tur, AR menyu |
-| 05 Marketinq | Hüceyrələrdən yüksələn satış qrafiki, artım xətti boyunca siqnallar | SMM, reklam, brendinq, analitika |
-| 06 Dəstək | Virus daxil olur, hüceyrələr onu mühasirəyə alıb zərərsizləşdirir | 24/7 monitorinq və texniki dəstək |
-| 07 Ekosistem | Hüceyrələr CYBCELL sözünü yazır | Hamısı birlikdə |
+Sayt iki hissədən ibarətdir:
 
-Giriş və hekayədə hər sürüşdürmə bir mərhələyə keçir (`src/stepper.ts`).
+1. **Qaranlıq giriş.** Hieronim Bosxun «Dünyanın yaradılışı» triptixinin bağlı qanadları (Prado, ictimai mülkiyyət) dərinlik parallaksı ilə canlanır. Aşağı sürüşdürəndə qapılar açılır və şüşə kürənin yerində canlı bir hüceyrə görünür: *In principio erat cella.*
+2. **Agentlik.** Hüceyrə bölünüb çoxalanda səhifə qaradan ağa keçir. Bundan sonra sayt müasir və minimalistdir: ağ fon, qara mətn, ağ fonda qara hüceyrələr. Hüceyrə koloniyası hekayəni danışır: bölünmə (1→64), inteqrasiya şəbəkəsi, tikilən bina, artım qrafiki, təhdidə qarşı qoruma və hüceyrələrdən yığılan CYBCELL sözü. Ardınca xidmətlər, sahələr, iş prosesi, standartlar, əlaqə forması və Instagram gəlir.
 
-Kursoru hərəkət etdirəndə hüceyrələr sizə siqnal göndərir, ekrana toxunanda isə şok dalğası yaranır.
-
-## İmkanlar
-
-- Öz yazdığımız Canvas 2D mühərriki: bölünmə, siqnal zəncirləri, immun reaksiyası, mətnə çevrilmə. Heç bir kitabxanadan asılı deyil.
-- İki dil: Azərbaycan (əsas) və ingilis dili. Seçim yadda saxlanılır.
-- Həllər bölməsində hər xidmətin yanında ulduz tozu üslubunda canlı şəkil var: bloklardan yığılan sayt, bildiriş alan telefon, cavab verən süni intellekt şəbəkəsi, mərtəbəsi açılan 3D bina, satış hunisi, ödəniş qəbul edən kiosk və təhdidləri dayandıran qalxan (`src/specimen.ts`).
-- "Canlı dialoq" bölməsi: hüceyrələrin bir-biri ilə danışdığı canlı terminal.
-- "Adın mənası" lüğət maddəsi kimi, standartlar və həyat dövrü sakit, tipoqrafik bölmələr kimi qurulub.
-- Tam responsiv (telefon, planşet, masaüstü), `prefers-reduced-motion` dəstəyi, klaviatura ilə idarəetmə, SEO və sosial şəbəkə paylaşımı üçün önizləmə şəkli.
-- JS ~15 kB (gzip), heç bir runtime asılılığı yoxdur.
+Bütün animasiyalar scroll ilə idarə olunur. GSAP ScrollTrigger səhnələri, Lenis isə yumşaq sürüşməni idarə edir. `prefers-reduced-motion` açıq olanda animasiya olmur: giriş qaranlıq, qalan hissə ağ qalır.
 
 ## Başlamaq
 
@@ -38,20 +20,11 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build      # dist/ qovluğuna istehsal versiyası
 npm run preview    # build-i yerli olaraq yoxlamaq
-npm run build:single   # artifact/cybcell.html: bütün CSS və JS daxilində olan tək fayl
 ```
 
 ## Saytı yayımlamaq (GitHub Pages)
 
-`main` budağına hər push-da `.github/workflows/deploy.yml` saytı avtomatik yığıb GitHub Pages-ə göndərir. Yalnız bir dəfə aktivləşdirmək lazımdır:
-
-1. Repozitoriyada **Settings → Pages** bölməsinə keçin.
-2. **Source** üçün **GitHub Actions** seçin.
-3. **Actions** bölməsində "Deploy to GitHub Pages" işini yenidən işə salın.
-
-Sayt `https://lumeriaapp.github.io/Cybcell/` ünvanında açılacaq. Öz domeniniz (məsələn `cybcell.az`) varsa, onu elə həmin səhifədə **Custom domain** xanasına yazın.
-
-Build nisbi yollarla yığıldığı üçün `dist/` qovluğunu istənilən statik hostinqə (Netlify, Vercel, Cloudflare Pages) də olduğu kimi yükləmək olar.
+`main` budağına hər push-da `.github/workflows/deploy.yml` saytı yığıb GitHub Pages-ə göndərir (Settings → Pages → Source: GitHub Actions). Build nisbi yollarla yığılır, ona görə `dist/` qovluğunu istənilən statik hostinqə də yükləmək olar.
 
 ## Məzmunu dəyişmək
 
@@ -59,25 +32,27 @@ Build nisbi yollarla yığıldığı üçün `dist/` qovluğunu istənilən stat
 | --- | --- |
 | Azərbaycanca mətnlər | `index.html` |
 | İngiliscə mətnlər | `src/i18n.ts` (açarlar `data-i18n` atributları ilə eynidir) |
-| Canlı dialoqun mesajları | `src/dialogue.ts` |
-| Nümunə layihələr (3D satış sistemi, AR menyu, canlı menyulu sayt) | `index.html`, `#work` bölməsi |
-| E-poçt ünvanı | `index.html`, `data-email` elementi (hazırda `hello@cybcell.az`) |
-| Rənglər, şriftlər (Geist, Geist Mono; qara-ağ palitra) | `src/styles.css`, ən yuxarıdakı `:root` bloku |
-| Hüceyrə mühərriki və səhnələr | `src/engine/cells.ts` |
-| Həllər bölməsindəki animasiyalı şəkillər | `src/specimen.ts` |
-| Sosial önizləmə şəkli | `public/og.png` (1200×630) |
+| E-poçt və Instagram | `index.html` (`hello@cybcell.az`, `instagram.com/cybcell.az`), `src/main.ts` (`EMAIL`) |
+| Rənglər və şriftlər | `src/styles.css`, `:root` bloku (giriş: Texturina və qızılı; sayt: Inter Tight, Inter, ağ-qara) |
+| Qaradan ağa keçid | `src/scenes.ts`, `dawn()` |
+| Hüceyrə mühərriki və səhnələr | `src/engine/cells.ts`, scroll bağlantısı: `src/colony.ts` |
+| Giriş rəsmi və dərinlik xəritəsi | `public/art/bosch_*`; yenidən yaratmaq: `tools/fetch_art.py`, sonra `tools/make_art.py` |
+| Logo, favicon və tətbiq ikonları | orijinal: `brand/cybcell-logo-source.png`; yenidən yaratmaq: `python tools/make_brand.py` → `public/brand/cybcell-mark.png`, `public/favicon.ico`, `favicon-32.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png` |
+| Sosial önizləmə şəkli | `public/og.jpg` (1200×630) |
 
-> Göstəricilər (24/7, <2 s, 99.9%) və e-poçt ünvanı nümunə kimi yazılıb. Onları şirkətin real məlumatları ilə yeniləyin.
+> Göstəricilər (24/7, <2 s, 99,9%) hədəf kimi yazılıb. Onları şirkətin real məlumatları ilə yoxlayın.
 
 ## Struktur
 
 ```
 index.html            səhifənin bütün bölmələri (AZ mətn)
-src/main.ts           scroll → səhnə, naviqasiya, HUD, forma
+src/main.ts           başlanğıc, mobil menyu, keçidlər, əlaqə forması
+src/scenes.ts         GSAP səhnələri: qapıların açılması, qaradan ağa keçid, parallax, görünmə
+src/colony.ts         scroll mövqeyini hüceyrə səhnələrinə çevirir
 src/engine/cells.ts   hüceyrə mühərriki (Canvas 2D)
-src/specimen.ts       həllər bölməsindəki animasiyalı şəkillər
+src/painting.ts       dərinlik xəritəli WebGL rəsm (triptixin qanadları)
+src/dust.ts           girişdəki qızılı toz
 src/i18n.ts           dil dəyişdirici və ingiliscə mətnlər
-src/dialogue.ts       canlı dialoq terminalı
-src/styles.css        dizayn sistemi və layout
-public/               favicon, og.png, robots.txt
+src/styles.css        bütün stillər
+tools/                rəsmi yükləmək və dərinlik xəritəsi çıxarmaq üçün Python skriptləri
 ```

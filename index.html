@@ -3,462 +3,450 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>CybCell</title>
-    <meta name="description" content="CybCell biznesləri rəqəmsallaşdırır: veb saytlar, mobil tətbiqlər, süni intellekt inteqrasiyası, 3D və AR həllər, marketinq, rəqəmsal avadanlıqların quraşdırılması və dəstək. Hər həll bir hüceyrədir, birlikdə ekosistem." />
-    <meta name="theme-color" content="#000000" />
-    <meta name="color-scheme" content="dark" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>CybCell · Rəqəmsal agentlik</title>
+    <meta name="description" content="CybCell tam xidmət göstərən rəqəmsal agentlikdir: strategiya və brendinq, veb saytlar, mobil tətbiqlər, süni intellekt, marketinq, kontent, 3D və AR, rəqəmsal avadanlıq və dəstək. Hamısı bir komandada." />
+    <meta name="theme-color" content="#0a0907" />
+    <link rel="icon" href="./favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./site.webmanifest" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="CybCell · Biznesiniz üçün rəqəmsal ekosistem" />
-    <meta property="og:description" content="Biznesiniz üçün rəqəmsal ekosistem: sayt, tətbiq, 3D, AR, marketinq və avadanlıq bir yerdə." />
-    <meta property="og:image" content="./og.png" />
+    <meta property="og:title" content="CybCell · Rəqəmsal agentlik" />
+    <meta property="og:description" content="Biznesiniz üçün rəqəmsal ekosistem. Strategiya, brend, sayt, tətbiq, süni intellekt və marketinq bir komandada." />
+    <meta property="og:image" content="https://cybcell.com/og.jpg" />
+    <meta property="og:url" content="https://cybcell.com/" />
+    <link rel="canonical" href="https://cybcell.com/" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&family=Geist+Mono:wght@400;500&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500&family=Texturina:opsz,wght@72,600&display=swap" />
+    <link rel="preload" as="image" href="./art/bosch_l.webp" />
+    <link rel="preload" as="image" href="./art/bosch_r.webp" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "CybCell",
-        "description": "Rəqəmsal həllər və marketinq: veb saytlar, mobil tətbiqlər, 3D və AR, rəqəmsal avadanlıq, dəstək.",
+        "url": "https://cybcell.com/",
+        "logo": "https://cybcell.com/brand/cybcell-mark.png",
+        "email": "hello@cybcell.az",
+        "sameAs": ["https://www.instagram.com/cybcell.az/"],
+        "description": "Tam xidmət göstərən rəqəmsal agentlik: strategiya, brendinq, veb saytlar, mobil tətbiqlər, süni intellekt, marketinq, kontent, 3D və AR, rəqəmsal avadanlıq və dəstək.",
         "slogan": "Biznesiniz üçün rəqəmsal ekosistem."
       }
     </script>
   </head>
   <body>
     <a class="skip" href="#main" data-i18n="skip">Əsas məzmuna keç</a>
+    <canvas id="colony" class="colony" aria-hidden="true"></canvas>
+    <div class="dusk" data-dusk aria-hidden="true"></div>
 
-    <canvas id="colony" aria-hidden="true"></canvas>
-    <div class="scrim" aria-hidden="true"></div>
-
-    <header class="nav" data-nav>
-      <a class="brand" href="#top" aria-label="CybCell, başa qayıt">
-        <svg class="brand__mark" viewBox="0 0 44 26" aria-hidden="true">
-          <circle cx="13" cy="13" r="10" />
-          <circle cx="31" cy="13" r="10" />
-          <circle class="brand__nucleus" cx="13" cy="13" r="2.4" />
-          <circle class="brand__nucleus" cx="31" cy="13" r="2.4" />
-        </svg>
+    <header class="nav" data-nav data-theme="dark">
+      <a class="brand" href="#top" aria-label="CybCell, başa qayıt" data-i18n-attr="aria-label:nav.home">
+        <img class="brand__mark" src="./brand/cybcell-mark.png" width="301" height="160" alt="" />
         <span class="brand__word">CybCell</span>
       </a>
       <nav class="nav__links" aria-label="Əsas naviqasiya" data-i18n-attr="aria-label:nav.label">
-        <a href="#concept" data-i18n="nav.concept">Konsept</a>
-        <a href="#cells" data-i18n="nav.services">Həllər</a>
-        <a href="#work" data-i18n="nav.work">Layihələr</a>
-        <a href="#lifecycle" data-i18n="nav.process">Proses</a>
+        <a href="#agency" data-i18n="nav.agency">Agentlik</a>
+        <a href="#services" data-i18n="nav.services">Xidmətlər</a>
+        <a href="#process" data-i18n="nav.process">Necə işləyirik</a>
+        <a class="nav__faces" href="./uzler.html" data-i18n="nav.faces">İşlədiyimiz Üzlər</a>
       </nav>
       <div class="nav__end">
         <button class="lang" type="button" data-lang-toggle aria-label="Switch to English">
           <span data-l="az">AZ</span><span data-l="en">EN</span>
         </button>
-        <a class="btn btn--small" href="#contact" data-i18n="nav.contact">Əlaqə</a>
+        <a class="btn btn--small nav__cta" href="#contact" data-i18n="nav.contact">Əlaqə</a>
+        <button class="burger" type="button" data-menu-open aria-expanded="false" aria-controls="menu" aria-label="Menyunu aç" data-i18n-attr="aria-label:nav.menu">
+          <span></span><span></span>
+        </button>
       </div>
     </header>
 
-    <ol class="rail" aria-hidden="true">
-      <li data-rail="2"><span>01</span><em data-i18n="ch1.name">Hüceyrə</em></li>
-      <li data-rail="3"><span>02</span><em data-i18n="ch2.name">Böyümə</em></li>
-      <li data-rail="4"><span>03</span><em data-i18n="ch3.name">İnteqrasiya</em></li>
-      <li data-rail="5"><span>04</span><em data-i18n="ch4.name">3D və AR</em></li>
-      <li data-rail="6"><span>05</span><em data-i18n="ch5.name">Marketinq</em></li>
-      <li data-rail="7"><span>06</span><em data-i18n="ch6.name">Dəstək</em></li>
-      <li data-rail="8"><span>07</span><em data-i18n="ch7.name">Ekosistem</em></li>
-    </ol>
+    <div class="menu" id="menu" data-menu hidden>
+      <nav class="menu__links" aria-label="Mobil naviqasiya" data-i18n-attr="aria-label:nav.label">
+        <a href="#agency" data-i18n="nav.agency">Agentlik</a>
+        <a href="#services" data-i18n="nav.services">Xidmətlər</a>
+        <a href="#process" data-i18n="nav.process">Necə işləyirik</a>
+        <a href="./uzler.html" data-i18n="nav.faces">İşlədiyimiz Üzlər</a>
+        <a href="#contact" data-i18n="nav.contact">Əlaqə</a>
+      </nav>
+      <div class="menu__foot">
+        <a class="btn btn--block" href="#contact" data-i18n="hero.cta">Layihəni başlat</a>
+        <a class="social" href="https://www.instagram.com/cybcell.az/" target="_blank" rel="noopener">
+          <svg class="social__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5" /><circle cx="12" cy="12" r="4.3" /><circle class="social__dot" cx="17.6" cy="6.4" r="1.15" /></svg>
+          <span>@cybcell.az</span>
+        </a>
+      </div>
+    </div>
 
     <main id="main">
-      <!-- HERO -->
-      <section class="hero" id="top" data-scene="hero">
-        <div class="hero__stage">
-          <h1 class="visually-hidden">CybCell. <span data-i18n="hero.l1">Biznesiniz üçün rəqəmsal ekosistem.</span></h1>
-          <div class="wrap hero__foot">
-            <p class="hero__lede"><span data-i18n="hero.l1b">Biznesiniz üçün rəqəmsal ekosistem.</span> <span class="line--dim" data-i18n="hero.l2">Sayt, tətbiq, süni intellekt, marketinq.</span></p>
-            <p class="hero__hint" data-i18n="hero.scroll">Aşağı sürüşdürün</p>
+      <!-- The dark prologue: a closed altarpiece opens and a living cell stands where Bosch's world was. -->
+      <section class="hero" id="top" data-scene="single">
+        <div class="hero__stage" data-hero>
+          <canvas class="dust" data-dust aria-hidden="true"></canvas>
+
+          <div class="hero__copy" data-hero-copy>
+            <p class="eyebrow eyebrow--gold" data-i18n="hero.eyebrow">Rəqəmsal agentlik · Bakı</p>
+            <h1 class="hero__title">
+              <span class="wordmark">CybCell</span>
+              <span class="hero__lede" data-i18n="hero.lede">Biznesiniz üçün rəqəmsal ekosistem.</span>
+            </h1>
+            <p class="hero__sub" data-i18n="hero.sub">Strategiya, brend, sayt, tətbiq, süni intellekt və marketinq. Hamısı bir komandada.</p>
             <div class="hero__actions">
               <a class="btn" href="#contact" data-i18n="hero.cta">Layihəni başlat</a>
-              <a class="btn btn--ghost" href="#concept" data-i18n="hero.cta2">Necə işləyir</a>
+              <a class="btn btn--line" href="#services" data-i18n="hero.cta2">Nə edirik</a>
             </div>
           </div>
+
+          <div class="triptych" data-triptych>
+            <div class="triptych__doors">
+              <div class="wing wing--l" data-wing="l">
+                <div class="painting" data-painting="bosch_l" data-strength=".022" data-focus=".35" data-shade=".2" data-lateral=".2">
+                  <img src="./art/bosch_l.webp" width="847" height="1800" alt="Bosch triptixinin sol qanadı: şəffaf kürənin içində dünyanın sol yarısı." data-i18n-attr="alt:hero.alt.l" />
+                </div>
+                <span class="wing__shade" aria-hidden="true"></span>
+              </div>
+              <div class="wing wing--r" data-wing="r">
+                <div class="painting" data-painting="bosch_r" data-strength=".022" data-focus=".35" data-shade=".2" data-lateral=".2">
+                  <img src="./art/bosch_r.webp" width="850" height="1800" alt="Bosch triptixinin sağ qanadı: kürənin sağ yarısı, buludlar və quru." data-i18n-attr="alt:hero.alt.r" />
+                </div>
+                <span class="wing__shade" aria-hidden="true"></span>
+              </div>
+            </div>
+            <p class="triptych__credit" data-i18n="hero.credit">Hieronim Bosx, «Dünyanın yaradılışı», təq. 1490–1500. Prado muzeyi, Madrid.</p>
+          </div>
+
+          <div class="hero__interior" data-hero-interior>
+            <p class="incipit">In principio erat cella.</p>
+            <p class="hero__translation" data-i18n="hero.translation">Hər böyük biznes kiçik bir ideyadan başlayır.</p>
+            <p class="hero__interior-text" data-i18n="hero.interior">Biz o ideyanı işləyən, satan və böyüyən rəqəmsal biznesə çeviririk.</p>
+          </div>
+
+          <p class="hero__hint" data-hero-hint><span data-i18n="hero.hint">Qapını açmaq üçün sürüşdürün</span></p>
         </div>
       </section>
 
-      <!-- NAME -->
-      <section class="name" id="concept" data-scene="name">
+      <!-- Partners: right after the prologue, three cards that tip over to the next partner. -->
+      <section class="partners" id="partners" data-partners aria-labelledby="partners-title">
         <div class="wrap">
-          <p class="eyebrow" data-i18n="name.eyebrow">Adın mənası</p>
-          <div class="entry">
-            <h2 class="entry__word">cyb·cell</h2>
-            <p class="entry__meta"><span>/saɪb·sel/</span><span data-i18n="name.pos">isim</span></p>
+          <header class="partners__head">
+            <p class="eyebrow eyebrow--gold" data-i18n="pt.eyebrow">Tərəfdaşlarımız</p>
+            <h2 class="h2" id="partners-title" data-i18n="pt.title">Birlikdə işlədiyimiz brendlər.</h2>
+          </header>
+          <div class="pcards">
+            <div class="pcard"><div class="pcard__inner"><div class="pcard__face"></div><div class="pcard__face pcard__face--back" aria-hidden="true"></div></div></div>
+            <div class="pcard"><div class="pcard__inner"><div class="pcard__face"></div><div class="pcard__face pcard__face--back" aria-hidden="true"></div></div></div>
+            <div class="pcard"><div class="pcard__inner"><div class="pcard__face"></div><div class="pcard__face pcard__face--back" aria-hidden="true"></div></div></div>
           </div>
-          <ol class="defs">
-            <li class="defs__item">
-              <p class="defs__term">cyb-</p>
-              <p class="defs__label" data-i18n="name.cyb.label">kibernetika</p>
-              <p class="defs__text" data-i18n="name.cyb.text">Canlılarda və maşınlarda idarəetmə və əlaqə elmi. Norbert Viner, 1948. Bizdə: texnologiya.</p>
-            </li>
-            <li class="defs__item">
-              <p class="defs__term">-cell</p>
-              <p class="defs__label" data-i18n="name.cell.label">hüceyrə</p>
-              <p class="defs__text" data-i18n="name.cell.text">Həyatın ən kiçik vahidi. Tək başına işləyir, başqaları ilə birləşəndə orqanizm yaradır.</p>
-            </li>
-            <li class="defs__item">
-              <p class="defs__term">cybcell</p>
-              <p class="defs__label" data-i18n="name.result.label">rəqəmsal ekosistem</p>
-              <p class="defs__text" data-i18n="name.result.text">Biznesinizi rəqəmsallaşdıran həllər toplusu. Sayt, tətbiq, süni intellekt, 3D, AR, marketinq və avadanlıq ayrı-ayrı hüceyrələrdir, birlikdə canlı sistemdirlər.</p>
-            </li>
-          </ol>
-          <p class="name__claim" data-i18n="name.claim">Bir tərəfdaş, bütün rəqəmsal həllər. Saytdan reklam kampaniyasına, 3D təqdimatdan kassa avadanlığına qədər hər şey vahid sistem kimi işləyir.</p>
         </div>
       </section>
 
-      <!-- STORY -->
-      <section class="story" id="story" aria-label="CybCell hekayəsi" data-i18n-attr="aria-label:story.label">
-        <article class="chapter" data-scene="single">
-          <div class="wrap chapter__inner">
-            <p class="chapter__index"><span>01</span><span data-i18n="ch1.name">Hüceyrə</span></p>
-            <h2 class="chapter__title" data-i18n="ch1.title">Hər həll bir hüceyrədir.</h2>
-            <p class="chapter__body" data-i18n="ch1.body">Sayt, mobil tətbiq, süni intellekt köməkçisi, 3D təqdimat, reklam kampaniyası, ağıllı ekran. Hər biri öz işini görür və tək başına da güclüdür. Biz onları biznesinizə uyğun seçir və qururuq.</p>
-            <p class="chapter__tech" data-i18n="ch1.tech">Veb sayt · Mobil tətbiq · Süni intellekt · 3D · AR · Marketinq · Avadanlıq</p>
-          </div>
-        </article>
-        <article class="chapter chapter--long" data-scene="division">
-          <div class="wrap chapter__inner">
-            <p class="chapter__index"><span>02</span><span data-i18n="ch2.name">Böyümə</span></p>
-            <h2 class="chapter__title" data-i18n="ch2.title">Biznesiniz böyüdükcə sistem də böyüyür.</h2>
-            <p class="chapter__body" data-i18n="ch2.body">Bir filialdan on filiala, yüz müştəridən yüz minə. Qurduğumuz həllər yük artanda dayanmır, bölünüb çoxalır. Yeni filial, yeni dil, yeni kanal bir neçə günə qoşulur.</p>
-            <p class="chapter__tech" data-i18n="ch2.tech">Miqyaslanan arxitektura · Bulud · Çoxfilial idarəetmə</p>
+      <!-- Dawn: the cell multiplies, the page turns white and the agency speaks. -->
+      <section class="story light-flow" id="agency" aria-label="CybCell agentliyi" data-i18n-attr="aria-label:story.label">
+        <article class="chapter chapter--dawn" data-scene="division">
+          <div class="chapter__card" data-speed=".05">
+            <p class="eyebrow"><span class="eyebrow__no">01</span><span data-i18n="ch1.label">Agentlik</span></p>
+            <h2 class="chapter__title" data-i18n="ch1.title">Saytdan reklama qədər hər şeyi biz edirik.</h2>
+            <p class="chapter__body" data-i18n="ch1.body">CybCell tam xidmət göstərən rəqəmsal agentlikdir. Strategiya, dizayn, sayt, mobil tətbiq, süni intellekt, marketinq və avadanlıq bir komandadadır. Siz biznesinizlə məşğul olursunuz, rəqəmsal işi biz görürük.</p>
           </div>
         </article>
         <article class="chapter" data-scene="signal">
-          <div class="wrap chapter__inner">
-            <p class="chapter__index"><span>03</span><span data-i18n="ch3.name">İnteqrasiya</span></p>
-            <h2 class="chapter__title" data-i18n="ch3.title">Hər şey bir-birinə bağlıdır.</h2>
-            <p class="chapter__body" data-i18n="ch3.body">Sayt qiymətləri e-menyudan özü çəkir, süni intellekt köməkçisi müştərinin sualını cavablayıb rezervasiya yaradır, tətbiq sifarişi mətbəxə ötürür, reklamın nəticəsi satış panelinə düşür. Məlumatı bir dəfə daxil edirsiniz, hər yerdə yenilənir.</p>
-            <p class="chapter__tech" data-i18n="ch3.tech">API · Süni intellekt · CRM · POS və e-menyu inteqrasiyası</p>
+          <div class="chapter__card" data-speed=".05">
+            <p class="eyebrow"><span class="eyebrow__no">02</span><span data-i18n="ch2.label">İnteqrasiya</span></p>
+            <h2 class="chapter__title" data-i18n="ch2.title">Sayt, sosial media və satış bir sistemdə.</h2>
+            <p class="chapter__body" data-i18n="ch2.body">Saytınız, Instagram səhifəniz, tətbiqiniz, kassanız və reklamlarınız bir-birinə bağlı işləyir. Sifariş haradan gəlirsə gəlsin, hamısını bir paneldə görürsünüz.</p>
           </div>
         </article>
         <article class="chapter chapter--long" data-scene="building">
-          <div class="wrap chapter__inner">
-            <p class="chapter__index"><span>04</span><span data-i18n="ch4.name">3D və AR</span></p>
-            <h2 class="chapter__title" data-i18n="ch4.title">Bina tikilməmiş satılır.</h2>
-            <p class="chapter__body" data-i18n="ch4.body">Tikinti şirkətləri üçün 3D satış sistemi: müştəri binanı fırladır, mərtəbə və mənzil seçir, içində gəzir, günəşin hansı saatda düşdüyünü görür. Restoranlar üçün AR menyu: yemək telefonda, real ölçüdə masanın üstündə.</p>
-            <p class="chapter__tech" data-i18n="ch4.tech">3D satış sistemi · Virtual tur · Artırılmış reallıq</p>
+          <div class="chapter__card" data-speed=".05">
+            <p class="eyebrow"><span class="eyebrow__no">03</span><span data-i18n="ch3.label">Hazırlama</span></p>
+            <h2 class="chapter__title" data-i18n="ch3.title">İdeyadan hazır məhsula.</h2>
+            <p class="chapter__body" data-i18n="ch3.body">Sayt, onlayn mağaza, mobil tətbiq, platforma, interaktiv təqdimat. Planlayır, dizayn edir, proqramlaşdırır və işə salırıq. Hər mərhələdə nəticəni görürsünüz.</p>
           </div>
         </article>
         <article class="chapter chapter--long" data-scene="marketing">
-          <div class="wrap chapter__inner">
-            <p class="chapter__index"><span>05</span><span data-i18n="ch5.name">Marketinq</span></p>
-            <h2 class="chapter__title" data-i18n="ch5.title">Diqqəti satışa çeviririk.</h2>
-            <p class="chapter__body" data-i18n="ch5.body">Brend strategiyası, sosial media, performans reklamı, video və motion dizayn. Hər kampaniya ölçülür, süni intellekt analitikası büdcəni nəticə verən kanala yönəldir.</p>
-            <p class="chapter__tech" data-i18n="ch5.tech">SMM · Performans reklamı · Brendinq · Analitika</p>
+          <div class="chapter__card" data-speed=".05">
+            <p class="eyebrow"><span class="eyebrow__no">04</span><span data-i18n="ch4.label">Marketinq</span></p>
+            <h2 class="chapter__title" data-i18n="ch4.title">Reklamdan real satışa.</h2>
+            <p class="chapter__body" data-i18n="ch4.body">SMM, Google və Meta reklamı, video və kontent. Hər kampaniyanı ölçür, pulu satış gətirən kanala yönəldirik.</p>
           </div>
         </article>
         <article class="chapter chapter--long" data-scene="immune">
-          <div class="wrap chapter__inner">
-            <p class="chapter__index"><span>06</span><span data-i18n="ch6.name">Dəstək</span></p>
-            <h2 class="chapter__title" data-i18n="ch6.title">Problemi müştəriniz görməmiş həll edirik.</h2>
-            <p class="chapter__body" data-i18n="ch6.body">Saytlar, tətbiqlər, kiosklar və kassalar daim izlənir. Nasazlıq yarandığı an aşkarlanır, təcrid olunur və aradan qaldırılır. Siz işinizlə məşğul olursunuz.</p>
-            <p class="chapter__tech" data-i18n="ch6.tech">24/7 monitorinq · Texniki dəstək · Təhlükəsizlik</p>
+          <div class="chapter__card" data-speed=".05">
+            <p class="eyebrow"><span class="eyebrow__no">05</span><span data-i18n="ch5.label">Dəstək</span></p>
+            <h2 class="chapter__title" data-i18n="ch5.title">Hər şey 7/24 nəzarətimizdədir.</h2>
+            <p class="chapter__body" data-i18n="ch5.body">Saytınız, tətbiqiniz, kassa və ekranlarınız gecə-gündüz izlənir. Problem yarananda onu müştəriniz görməmiş həll edirik.</p>
           </div>
         </article>
         <article class="chapter chapter--organism" data-scene="organism">
-          <div class="wrap chapter__inner">
-            <p class="chapter__index"><span>07</span><span data-i18n="ch7.name">Ekosistem</span></p>
-            <h2 class="chapter__title" data-i18n="ch7.title">Birlikdə canlıdırlar.</h2>
-            <p class="chapter__body" data-i18n="ch7.body">Sayt, tətbiq, süni intellekt, 3D, marketinq və avadanlıq bir məqsəd ətrafında birləşəndə biznesiniz rəqəmsal orqanizmə çevrilir: öyrənir, uyğunlaşır, böyüyür. Biz buna CybCell deyirik.</p>
-            <p class="chapter__tech" data-i18n="ch7.tech">Rəqəmsal transformasiya · Süni intellekt · İnnovasiya</p>
+          <div class="chapter__card" data-speed=".05">
+            <p class="eyebrow"><span class="eyebrow__no">06</span><span>CybCell</span></p>
+            <h2 class="chapter__title" data-i18n="ch6.title">Bir tərəfdaş, bütün həllər.</h2>
+            <p class="chapter__body" data-i18n="ch6.body">Ayrı-ayrı podratçı axtarmağa ehtiyac yoxdur. Bir müqavilə, bir komanda, bir məqsəd: biznesinizin böyüməsi.</p>
           </div>
         </article>
       </section>
 
-      <!-- SERVICES -->
-      <section class="section services" id="cells" data-scene="ambient">
+      <!-- Services: everything an agency does, one row each. -->
+      <section class="services light-flow dark-flow" id="services">
         <div class="wrap">
-          <header class="section__head">
-            <p class="eyebrow" data-i18n="svc.eyebrow">Həllər</p>
-            <h2 class="section__title" data-i18n="svc.title">Ekosistemin yeddi hüceyrəsi.</h2>
-            <p class="section__intro" data-i18n="svc.intro">Hər birini ayrıca sifariş edə bilərsiniz. Birlikdə isə biznesiniz üçün tam rəqəmsal ekosistem yaradırlar.</p>
+          <header class="section-head" data-scene="ambient">
+            <p class="eyebrow" data-i18n="svc.eyebrow">Xidmətlər</p>
+            <h2 class="h2" data-i18n="svc.title">Bir agentlik, bütün rəqəmsal xidmətlər.</h2>
+            <p class="intro" data-i18n="svc.intro">Bir xidmətlə başlaya, bütün ekosistemi bizə həvalə edə bilərsiniz. Hər iş eyni standartla, bir komanda tərəfindən görülür.</p>
           </header>
 
-          <div class="services__grid">
-            <ol class="specimens" data-specimens>
-              <li class="specimen" data-active data-kind="web">
-                <span class="specimen__no">01</span>
-                <div class="specimen__main">
-                  <h3 class="specimen__title" data-i18n="svc.1.title">Veb saytlar və platformalar</h3>
-                  <p class="specimen__text" data-i18n="svc.1.text">Korporativ saytlar, onlayn mağazalar, e-menyu və idarəetmə panelləri. Sürətli, mobil uyğun və axtarışda tapılan.</p>
-                  <p class="specimen__tags">Korporativ sayt · E-commerce · Admin panel</p>
-                  <p class="specimen__type" hidden><span data-cell-name data-i18n="svc.1.cell">Sayt</span>, <span data-cell-role data-i18n="svc.1.role">bloklardan yığılır və istənilən ekrana uyğunlaşır</span></p>
-                </div>
-              </li>
-              <li class="specimen" data-kind="app">
-                <span class="specimen__no">02</span>
-                <div class="specimen__main">
-                  <h3 class="specimen__title" data-i18n="svc.2.title">Mobil tətbiqlər</h3>
-                  <p class="specimen__text" data-i18n="svc.2.text">iOS və Android tətbiqləri: sifariş, rezervasiya, loyallıq, kuryer. Müştəriniz cibində sizinlədir.</p>
-                  <p class="specimen__tags">iOS · Android · Loyallıq</p>
-                  <p class="specimen__type" hidden><span data-cell-name data-i18n="svc.2.cell">Tətbiq</span>, <span data-cell-role data-i18n="svc.2.role">sifariş, bildiriş, bir toxunuş</span></p>
-                </div>
-              </li>
-              <li class="specimen" data-kind="ai">
-                <span class="specimen__no">03</span>
-                <div class="specimen__main">
-                  <h3 class="specimen__title" data-i18n="svc.3.title">Süni intellekt inteqrasiyası</h3>
-                  <p class="specimen__text" data-i18n="svc.3.text">Saytınıza, tətbiqinizə və CRM-ə süni intellekt qoşuruq: müştəriyə 24/7 cavab verən köməkçilər, sənəd oxuyub hesabat hazırlayan agentlər, satışı proqnozlaşdıran modellər.</p>
-                  <p class="specimen__tags">AI köməkçi · Chatbot · Avtomatlaşdırma · Proqnoz</p>
-                  <p class="specimen__type" hidden><span data-cell-name data-i18n="svc.3.cell">Süni intellekt</span>, <span data-cell-role data-i18n="svc.3.role">sual daxil olur, cavab hazırdır</span></p>
-                </div>
-              </li>
-              <li class="specimen" data-kind="ar">
-                <span class="specimen__no">04</span>
-                <div class="specimen__main">
-                  <h3 class="specimen__title" data-i18n="svc.4.title">3D və AR həllər</h3>
-                  <p class="specimen__text" data-i18n="svc.4.text">Tikinti layihələri üçün 3D satış sistemi və virtual tur, restoranlar üçün AR menyu. Məhsulunuzu hələ əldə tutmadan göstərin.</p>
-                  <p class="specimen__tags">3D satış · Virtual tur · AR menyu</p>
-                  <p class="specimen__type" hidden><span data-cell-name data-i18n="svc.4.cell">3D bina</span>, <span data-cell-role data-i18n="svc.4.role">mərtəbə seçilir, mənzil açılır</span></p>
-                </div>
-              </li>
-              <li class="specimen" data-kind="funnel">
-                <span class="specimen__no">05</span>
-                <div class="specimen__main">
-                  <h3 class="specimen__title" data-i18n="svc.5.title">Marketinq və brendinq</h3>
-                  <p class="specimen__text" data-i18n="svc.5.text">Brend strategiyası, SMM, performans reklamı, video və motion dizayn. Hər kampaniya ölçülür və optimallaşdırılır.</p>
-                  <p class="specimen__tags">SMM · Reklam · Brendinq · Motion</p>
-                  <p class="specimen__type" hidden><span data-cell-name data-i18n="svc.5.cell">Satış hunisi</span>, <span data-cell-role data-i18n="svc.5.role">auditoriya müştəriyə çevrilir</span></p>
-                </div>
-              </li>
-              <li class="specimen" data-kind="kiosk">
-                <span class="specimen__no">06</span>
-                <div class="specimen__main">
-                  <h3 class="specimen__title" data-i18n="svc.6.title">Rəqəmsal avadanlıq</h3>
-                  <p class="specimen__text" data-i18n="svc.6.text">Rəqəmsal ekranlar, özünəxidmət kioskları, POS sistemləri, kameralar və sensorlar. Quraşdırırıq, qoşuruq, işlək saxlayırıq.</p>
-                  <p class="specimen__tags">Kiosk · POS · Smart ekran · IoT</p>
-                  <p class="specimen__type" hidden><span data-cell-name data-i18n="svc.6.cell">Özünəxidmət kioskı</span>, <span data-cell-role data-i18n="svc.6.role">seçim, kontaktsız ödəniş, çek</span></p>
-                </div>
-              </li>
-              <li class="specimen" data-kind="shield">
-                <span class="specimen__no">07</span>
-                <div class="specimen__main">
-                  <h3 class="specimen__title" data-i18n="svc.7.title">Dəstək və təhlükəsizlik</h3>
-                  <p class="specimen__text" data-i18n="svc.7.text">24/7 monitorinq, yenilənmələr, ehtiyat nüsxə və qorunma. Sistemləriniz işləyir, siz narahat olmursunuz.</p>
-                  <p class="specimen__tags">Monitorinq · Backup · Təhlükəsizlik</p>
-                  <p class="specimen__type" hidden><span data-cell-name data-i18n="svc.7.cell">Qoruyucu qalxan</span>, <span data-cell-role data-i18n="svc.7.role">təhdid sərhəddə dayanır</span></p>
-                </div>
-              </li>
-            </ol>
-
-            <figure class="viewer" data-no-pulse>
-              <div class="viewer__frame">
-                <canvas class="viewer__canvas" data-viewer-canvas aria-hidden="true"></canvas>
-              </div>
-              <figcaption class="viewer__caption">
-                <span class="viewer__fig" data-viewer-no>Şəkil 1</span>
-                <span data-viewer-type>Sayt, bloklardan yığılır və istənilən ekrana uyğunlaşır</span>
-              </figcaption>
-            </figure>
-          </div>
-        </div>
-      </section>
-
-      <!-- WORK -->
-      <section class="section work" id="work">
-        <div class="wrap">
-          <header class="section__head">
-            <p class="eyebrow" data-i18n="work.eyebrow">Nümunə layihələr</p>
-            <h2 class="section__title" data-i18n="work.title">Həllərimiz işdə.</h2>
-            <p class="section__intro" data-i18n="work.intro">Hazırladığımız nümunə layihələr. Hər biri eyni texnologiyanı sizin biznesinizə uyğunlaşdırmaq üçün hazırdır.</p>
-          </header>
-          <ol class="cases">
-            <li class="case">
-              <p class="case__meta"><span>01</span><span data-i18n="work.1.kind">Tikinti · 3D · Virtual tur</span></p>
-              <h3 class="case__title" data-i18n="work.1.title">Tikinti üçün 3D satış sistemi</h3>
-              <p class="case__text" data-i18n="work.1.text">Tikinti şirkəti üçün interaktiv 3D sayt. Müştəri binanı fırladır, mərtəbəyə klikləyib mənzil seçir, status, sahə və qiyməti görür, mənzilin içində virtual turla gəzir, otaqları öz zövqünə görə döşəyir. Bakı üçün günəş simulyasiyası hər mənzilə günün hansı saatında işıq düşdüyünü göstərir.</p>
-              <ul class="case__list">
-                <li data-i18n="work.1.f1">3D mənzil seçimi</li>
-                <li data-i18n="work.1.f2">Virtual tur</li>
-                <li data-i18n="work.1.f3">Dizayn studiyası</li>
-                <li data-i18n="work.1.f4">Foto-render</li>
-                <li data-i18n="work.1.f5">Günəş simulyasiyası</li>
-              </ul>
+          <ol class="offer">
+            <li class="offer__row">
+              <span class="offer__no">01</span>
+              <h3 class="offer__title" data-i18n="svc.1.title">Strategiya və brendinq</h3>
+              <p class="offer__text" data-i18n="svc.1.text">Brendin səsi, görünüşü və bazardakı yeri. Ad, loqo, korporativ üslub, brendbuk.</p>
             </li>
-            <li class="case">
-              <p class="case__meta"><span>02</span><span data-i18n="work.2.kind">Restoran · Artırılmış reallıq</span></p>
-              <h3 class="case__title" data-i18n="work.2.title">Restoran üçün AR menyu</h3>
-              <p class="case__text" data-i18n="work.2.text">Masadakı QR kodu skan edən qonaq yeməyi telefonun kamerasında real ölçüdə, masanın üstündə görür. Tətbiq yükləmək lazım deyil: Android-də WebXR, iPhone-da Quick Look, kompüterdə fırlanan 3D model.</p>
-              <ul class="case__list">
-                <li data-i18n="work.2.f1">AR menyu</li>
-                <li data-i18n="work.2.f2">QR masa kartları</li>
-                <li data-i18n="work.2.f3">3D yemək modelləri</li>
-              </ul>
+            <li class="offer__row">
+              <span class="offer__no">02</span>
+              <h3 class="offer__title" data-i18n="svc.2.title">Veb saytlar və e-ticarət</h3>
+              <p class="offer__text" data-i18n="svc.2.text">Korporativ saytlar, onlayn mağazalar, landing səhifələr və idarəetmə panelləri. Sürətli, mobil və axtarışda görünən.</p>
             </li>
-            <li class="case">
-              <p class="case__meta"><span>03</span><span data-i18n="work.3.kind">Kafe · Veb sayt · İnteqrasiya</span></p>
-              <h3 class="case__title" data-i18n="work.3.title">Canlı menyulu kafe saytı</h3>
-              <p class="case__text" data-i18n="work.3.text">Kofe məkanı üçün parallax effektli sayt. Qiymətlər əl ilə yazılmır: sayt onları elektron menyudan özü çəkir və kassa sistemində dəyişən kimi yenilənir. Admin paneldən məhsulları göstərmək, gizlətmək və sıralamaq olur.</p>
-              <ul class="case__list">
-                <li data-i18n="work.3.f1">Canlı e-menyu inteqrasiyası</li>
-                <li data-i18n="work.3.f2">Admin panel</li>
-                <li data-i18n="work.3.f3">Parallax dizayn</li>
-              </ul>
+            <li class="offer__row">
+              <span class="offer__no">03</span>
+              <h3 class="offer__title" data-i18n="svc.3.title">Mobil tətbiqlər</h3>
+              <p class="offer__text" data-i18n="svc.3.text">iOS və Android üçün sifariş, rezervasiya, loyallıq və çatdırılma tətbiqləri.</p>
+            </li>
+            <li class="offer__row">
+              <span class="offer__no">04</span>
+              <h3 class="offer__title" data-i18n="svc.4.title">Süni intellekt və avtomatlaşdırma</h3>
+              <p class="offer__text" data-i18n="svc.4.text">Müştəriyə gecə-gündüz cavab verən köməkçilər, avtomatik hesabatlar, satış proqnozu.</p>
+            </li>
+            <li class="offer__row">
+              <span class="offer__no">05</span>
+              <h3 class="offer__title" data-i18n="svc.5.title">Rəqəmsal marketinq</h3>
+              <p class="offer__text" data-i18n="svc.5.text">SMM, Google və Meta reklamı, SEO, analitika. Ölçülən, nəticəyə bağlı kampaniyalar.</p>
+            </li>
+            <li class="offer__row">
+              <span class="offer__no">06</span>
+              <h3 class="offer__title" data-i18n="svc.6.title">Kontent və prodakşn</h3>
+              <p class="offer__text" data-i18n="svc.6.text">Foto, video, motion dizayn və sosial media üçün gündəlik kontent.</p>
+            </li>
+            <li class="offer__row">
+              <span class="offer__no">07</span>
+              <h3 class="offer__title" data-i18n="svc.7.title">3D, AR və interaktiv təqdimat</h3>
+              <p class="offer__text" data-i18n="svc.7.text">Məhsulunuzu hələ əldə tutulmamış göstərən 3D modellər, virtual turlar və artırılmış reallıq.</p>
+            </li>
+            <li class="offer__row">
+              <span class="offer__no">08</span>
+              <h3 class="offer__title" data-i18n="svc.8.title">Rəqəmsal avadanlıq</h3>
+              <p class="offer__text" data-i18n="svc.8.text">Smart ekranlar, özünəxidmət kioskları, POS sistemləri, kameralar. Seçir, quraşdırır, sistemə qoşuruq.</p>
+            </li>
+            <li class="offer__row">
+              <span class="offer__no">09</span>
+              <h3 class="offer__title" data-i18n="svc.9.title">Dəstək və təhlükəsizlik</h3>
+              <p class="offer__text" data-i18n="svc.9.text">Gecə-gündüz monitorinq, yeniləmələr, ehtiyat nüsxələr və qorunma.</p>
             </li>
           </ol>
         </div>
       </section>
 
-      <!-- DIALOGUE -->
-      <section class="section dialogue" id="dialogue">
-        <div class="wrap dialogue__grid">
-          <header class="section__head">
-            <p class="eyebrow" data-i18n="dlg.eyebrow">Canlı dialoq</p>
-            <h2 class="section__title" data-i18n="dlg.title">Ekosistemin içində bu an nə baş verir.</h2>
-            <p class="section__intro" data-i18n="dlg.intro">Sayt, tətbiq, süni intellekt, e-menyu, CRM, reklam və kiosk bir-birinə xəbər ötürür: qiymət dəyişir, sifariş gəlir, müştəri maraq göstərir, nasazlıq aradan qalxır. Bu axın ekosistemin içindəki dialoqun sadələşdirilmiş nümunəsidir.</p>
+      <!-- Sectors: whoever you are -->
+      <section class="sectors light-flow dark-flow" id="sectors">
+        <div class="wrap sectors__grid">
+          <header>
+            <p class="eyebrow" data-i18n="sec.eyebrow">Sahələr</p>
+            <h2 class="h2" data-i18n="sec.title">Hər sahə ilə işləyirik.</h2>
           </header>
-          <div class="console" data-no-pulse>
-            <div class="console__bar">
-              <span class="console__path">cybcell / <span data-i18n="dlg.path">şəbəkə</span> / dialog</span>
-              <span class="console__live"><span class="live-dot"></span><span data-i18n="dlg.live">canlı</span></span>
-            </div>
-            <ol class="console__log" data-dialogue aria-live="off"></ol>
+          <div>
+            <p class="intro" data-i18n="sec.intro">Hər sahənin öz dili, öz müştərisi var. Biz onu öyrənir, rəqəmsal həlli biznesinizin ritminə uyğun qururuq.</p>
+            <ul class="tags">
+              <li data-i18n="sec.1">Restoran və kafe</li>
+              <li data-i18n="sec.2">Daşınmaz əmlak və tikinti</li>
+              <li data-i18n="sec.3">Pərakəndə və e-ticarət</li>
+              <li data-i18n="sec.4">Gözəllik və sağlamlıq</li>
+              <li data-i18n="sec.5">Tibb və klinikalar</li>
+              <li data-i18n="sec.6">Təhsil</li>
+              <li data-i18n="sec.7">Turizm və otellər</li>
+              <li data-i18n="sec.8">Avtomobil</li>
+              <li data-i18n="sec.9">Logistika</li>
+              <li data-i18n="sec.10">Korporativ şirkətlər</li>
+            </ul>
           </div>
         </div>
       </section>
 
-      <!-- STANDARDS -->
-      <section class="section vitals" id="vitals">
+      <!-- Process -->
+      <section class="process light-flow dark-flow" id="process">
         <div class="wrap">
-          <header class="section__head">
-            <p class="eyebrow" data-i18n="vit.eyebrow">Standartlar</p>
-            <h2 class="section__title" data-i18n="vit.title">Hədəf götürdüyümüz standartlar.</h2>
-            <p class="section__intro" data-i18n="vit.intro">Qurduğumuz hər həll bu göstəricilərə görə yoxlanılır.</p>
+          <header class="section-head">
+            <p class="eyebrow" data-i18n="lc.eyebrow">Necə işləyirik</p>
+            <h2 class="h2" data-i18n="lc.title">4 addımda hazır nəticə.</h2>
           </header>
-          <dl class="stats">
-            <div class="stat">
-              <dt data-i18n="vit.1.label">Dəstək</dt>
-              <dd class="stat__value">24/7</dd>
-              <dd class="stat__text" data-i18n="vit.1.text">Sistemləriniz gecə də izlənir.</dd>
-            </div>
-            <div class="stat">
-              <dt data-i18n="vit.2.label">Səhifə yüklənmə hədəfi</dt>
-              <dd class="stat__value">&lt;2<small>s</small></dd>
-              <dd class="stat__text" data-i18n="vit.2.text">Müştəri gözləmir, alış edir.</dd>
-            </div>
-            <div class="stat">
-              <dt data-i18n="vit.3.label">Əlçatanlıq hədəfi</dt>
-              <dd class="stat__value">99.9<small>%</small></dd>
-              <dd class="stat__text" data-i18n="vit.3.text">Sayt və tətbiq həmişə açıqdır.</dd>
-            </div>
-            <div class="stat">
-              <dt data-i18n="vit.4.label">Tərəfdaş</dt>
-              <dd class="stat__value">1</dd>
-              <dd class="stat__text" data-i18n="vit.4.text">Sayt, tətbiq, süni intellekt, marketinq və avadanlıq bir yerdə.</dd>
-            </div>
-          </dl>
-        </div>
-      </section>
-
-      <!-- LIFECYCLE -->
-      <section class="section lifecycle" id="lifecycle">
-        <div class="wrap">
-          <header class="section__head">
-            <p class="eyebrow" data-i18n="lc.eyebrow">Həyat dövrü</p>
-            <h2 class="section__title" data-i18n="lc.title">Necə işləyirik.</h2>
-          </header>
-          <ol class="steps">
+          <ol class="steps" data-steps>
             <li class="step">
-              <p class="step__index">01</p>
-              <h3 class="step__title" data-i18n="lc.1.title">Diaqnoz</h3>
+              <span class="step__no">01</span>
+              <h3 class="step__title" data-i18n="lc.1.title">Tanışlıq</h3>
               <p class="step__text" data-i18n="lc.1.text">Biznesinizi, müştərilərinizi və rəqiblərinizi öyrənirik. Harada vaxt və pul itirdiyinizi tapırıq.</p>
             </li>
             <li class="step">
-              <p class="step__index">02</p>
-              <h3 class="step__title" data-i18n="lc.2.title">Ekosistem xəritəsi</h3>
-              <p class="step__text" data-i18n="lc.2.text">Hansı hüceyrənin lazım olduğunu seçirik: sayt, tətbiq, süni intellekt, 3D, marketinq, avadanlıq. Onların birlikdə necə işləyəcəyini planlayırıq.</p>
+              <span class="step__no">02</span>
+              <h3 class="step__title" data-i18n="lc.2.title">Strategiya</h3>
+              <p class="step__text" data-i18n="lc.2.text">Hansı həllərin lazım olduğunu seçir, büdcəni, mərhələləri və ölçüləcək hədəfləri razılaşdırırıq.</p>
             </li>
             <li class="step">
-              <p class="step__index">03</p>
-              <h3 class="step__title" data-i18n="lc.3.title">Qurulum</h3>
-              <p class="step__text" data-i18n="lc.3.text">Dizayn edir, proqramlaşdırır, avadanlığı quraşdırırıq. Mərhələ-mərhələ işə salır, hər addımda nəticəni göstəririk.</p>
+              <span class="step__no">03</span>
+              <h3 class="step__title" data-i18n="lc.3.title">İcra</h3>
+              <p class="step__text" data-i18n="lc.3.text">Dizayn edir, proqramlaşdırır, çəkir, quraşdırırıq. Mərhələ-mərhələ işə salır, hər addımı göstəririk.</p>
             </li>
             <li class="step">
-              <p class="step__index">04</p>
+              <span class="step__no">04</span>
               <h3 class="step__title" data-i18n="lc.4.title">Böyümə</h3>
-              <p class="step__text" data-i18n="lc.4.text">Marketinq, analitika və dəstəklə sistemi böyüdürük. Rəqəmlərə baxır, işləyəni gücləndiririk.</p>
+              <p class="step__text" data-i18n="lc.4.text">Marketinq, analitika və dəstəklə sistemi böyüdür, işləyəni gücləndiririk.</p>
             </li>
           </ol>
         </div>
       </section>
 
-      <!-- CONTACT -->
-      <section class="section contact" id="contact">
+      <!-- Standards -->
+      <section class="numbers light-flow dark-flow" aria-label="Standartlarımız" data-i18n-attr="aria-label:vit.label">
+        <dl class="wrap stats">
+          <div class="stat">
+            <dt data-i18n="vit.1.label">Dəstək</dt>
+            <dd class="stat__value">24/7</dd>
+            <dd class="stat__text" data-i18n="vit.1.text">Sistemləriniz gecə də izlənir.</dd>
+          </div>
+          <div class="stat">
+            <dt data-i18n="vit.2.label">Səhifə açılma hədəfi</dt>
+            <dd class="stat__value">&lt;2<small data-i18n="vit.sec">san</small></dd>
+            <dd class="stat__text" data-i18n="vit.2.text">Müştəri gözləmir, alış edir.</dd>
+          </div>
+          <div class="stat">
+            <dt data-i18n="vit.3.label">Əlçatanlıq hədəfi</dt>
+            <dd class="stat__value">99,9<small>%</small></dd>
+            <dd class="stat__text" data-i18n="vit.3.text">Sayt və tətbiq həmişə açıqdır.</dd>
+          </div>
+          <div class="stat">
+            <dt data-i18n="vit.4.label">Tərəfdaş</dt>
+            <dd class="stat__value">1</dd>
+            <dd class="stat__text" data-i18n="vit.4.text">Bütün rəqəmsal işiniz bir yerdə.</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- Leadership -->
+      <section class="lead light-flow dark-flow" id="team" aria-labelledby="lead-name">
+        <div class="wrap lead__grid">
+          <figure class="lead__photo">
+            <img
+              src="./team/kamal-huseynzade-1000.webp"
+              srcset="./team/kamal-huseynzade-600.webp 600w, ./team/kamal-huseynzade-1000.webp 1000w, ./team/kamal-huseynzade-1254.webp 1254w"
+              sizes="(max-width: 1080px) 100vw, 56vw"
+              width="1000"
+              height="1000"
+              loading="lazy"
+              decoding="async"
+              alt="Kamal Hüseynzadə, CybCell-in CEO-su"
+              data-i18n-attr="alt:lead.alt"
+            />
+            <span class="lead__shade" aria-hidden="true"></span>
+            <span class="lead__door lead__door--l" aria-hidden="true"></span>
+            <span class="lead__door lead__door--r" aria-hidden="true"></span>
+          </figure>
+          <div class="lead__text">
+            <p class="eyebrow" data-i18n="lead.eyebrow">Rəhbərlik</p>
+            <h2 class="h2 lead__name" id="lead-name">Kamal Hüseynzadə</h2>
+            <p class="lead__role" data-i18n="lead.role">CybCell-in CEO-su</p>
+            <p class="intro" data-i18n="lead.text">CybCell-də hər layihə bir komanda tərəfindən, eyni standartla görülür: ilk görüşdən işə salınmağa və sonrakı dəstəyə qədər.</p>
+            <a class="btn btn--dark lead__cta" href="#contact" data-i18n="lead.cta">Bizimlə əlaqə saxlayın</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact -->
+      <section class="contact light-flow dark-flow" id="contact">
         <div class="wrap contact__grid">
-          <header class="section__head">
+          <header class="contact__head">
             <p class="eyebrow" data-i18n="ct.eyebrow">Əlaqə</p>
-            <h2 class="contact__title" data-i18n="ct.title">Biznesinizi canlandıraq.</h2>
-            <p class="section__intro" data-i18n="ct.intro">Biznesinizi və ehtiyacınızı bir neçə cümlə ilə yazın. Hansı hüceyrələrin lazım olduğunu birlikdə müəyyən edək.</p>
-            <div class="direct">
-              <p class="direct__label" data-i18n="ct.direct">Birbaşa yazın</p>
-              <p class="direct__row">
-                <span class="direct__mail" data-email>hello@cybcell.az</span>
-                <button class="copy" type="button" data-copy data-i18n="ct.copy">Kopyala</button>
-              </p>
-            </div>
+            <h2 class="h2" data-i18n="ct.title">Gəlin tanış olaq.</h2>
+            <p class="intro" data-i18n="ct.intro">Biznesiniz və hədəfiniz haqqında bir neçə cümlə yazın. Sizə qayıdıb ilk addımı birlikdə planlayaq.</p>
+            <ul class="channels">
+              <li>
+                <span class="channels__label" data-i18n="ct.mail">E-poçt</span>
+                <span class="channels__row">
+                  <a href="mailto:hello@cybcell.az" data-email>hello@cybcell.az</a>
+                  <button class="copy" type="button" data-copy data-i18n="ct.copy">Kopyala</button>
+                </span>
+              </li>
+              <li>
+                <span class="channels__label">Instagram</span>
+                <a class="social" href="https://www.instagram.com/cybcell.az/" target="_blank" rel="noopener">
+                  <svg class="social__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5" /><circle cx="12" cy="12" r="4.3" /><circle class="social__dot" cx="17.6" cy="6.4" r="1.15" /></svg>
+                  <span>@cybcell.az</span>
+                </a>
+              </li>
+            </ul>
           </header>
-          <form class="form" data-form novalidate data-no-pulse>
+
+          <form class="form" data-form novalidate>
             <div class="field">
               <label for="f-name" data-i18n="ct.f.name">Adınız</label>
-              <input id="f-name" name="name" type="text" autocomplete="name" required />
+              <input id="f-name" name="name" type="text" autocomplete="name" enterkeyhint="next" required />
             </div>
             <div class="field">
               <label for="f-email" data-i18n="ct.f.email">E-poçt</label>
-              <input id="f-email" name="email" type="email" autocomplete="email" required />
+              <input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" enterkeyhint="next" required />
             </div>
             <div class="field field--wide">
               <label for="f-company" data-i18n="ct.f.company">Şirkət (istəyə bağlı)</label>
-              <input id="f-company" name="company" type="text" autocomplete="organization" />
+              <input id="f-company" name="company" type="text" autocomplete="organization" enterkeyhint="next" />
             </div>
             <div class="field field--wide">
-              <label for="f-msg" data-i18n="ct.f.msg">Layihə haqqında</label>
-              <textarea id="f-msg" name="message" rows="5" required></textarea>
+              <label for="f-msg" data-i18n="ct.f.msg">Nəyə ehtiyacınız var?</label>
+              <textarea id="f-msg" name="message" rows="4" required></textarea>
             </div>
             <div class="form__foot field--wide">
-              <button class="btn" type="submit" data-i18n="ct.send">Göndər</button>
+              <button class="btn btn--dark" type="submit" data-i18n="ct.send">Göndər</button>
               <p class="form__status" role="status" data-status></p>
             </div>
           </form>
         </div>
       </section>
+
     </main>
 
-    <footer class="footer">
+    <footer class="footer light-flow dark-flow">
       <div class="wrap footer__top">
         <div class="footer__brand">
+          <img class="footer__logo" src="./brand/cybcell-mark.png" width="301" height="160" alt="CybCell" loading="lazy" />
           <p class="footer__tag" data-i18n="ft.tag">Biznesiniz üçün rəqəmsal ekosistem.</p>
+          <a class="social social--big" href="https://www.instagram.com/cybcell.az/" target="_blank" rel="noopener" aria-label="CybCell Instagram">
+            <svg class="social__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5" /><circle cx="12" cy="12" r="4.3" /><circle class="social__dot" cx="17.6" cy="6.4" r="1.15" /></svg>
+            <span>@cybcell.az</span>
+          </a>
         </div>
         <nav class="footer__col" aria-label="Şirkət" data-i18n-attr="aria-label:ft.company">
           <p class="footer__head" data-i18n="ft.company">Şirkət</p>
-          <a href="#concept" data-i18n="nav.concept">Konsept</a>
-          <a href="#work" data-i18n="nav.work">Layihələr</a>
-          <a href="#lifecycle" data-i18n="nav.process">Proses</a>
+          <a href="#agency" data-i18n="nav.agency">Agentlik</a>
+          <a href="#process" data-i18n="nav.process">Necə işləyirik</a>
+          <a href="./uzler.html" data-i18n="nav.faces">İşlədiyimiz Üzlər</a>
+          <a href="#contact" data-i18n="nav.contact">Əlaqə</a>
         </nav>
-        <nav class="footer__col" aria-label="Həllər" data-i18n-attr="aria-label:nav.services">
-          <p class="footer__head" data-i18n="nav.services">Həllər</p>
-          <a href="#cells" data-i18n="svc.1.title">Veb saytlar və platformalar</a>
-          <a href="#cells" data-i18n="svc.2.title">Mobil tətbiqlər</a>
-          <a href="#cells" data-i18n="svc.3.title">Süni intellekt inteqrasiyası</a>
-          <a href="#cells" data-i18n="svc.4.title">3D və AR həllər</a>
-          <a href="#cells" data-i18n="svc.5.title">Marketinq və brendinq</a>
-          <a href="#cells" data-i18n="svc.6.title">Rəqəmsal avadanlıq</a>
+        <nav class="footer__col" aria-label="Xidmətlər" data-i18n-attr="aria-label:nav.services">
+          <p class="footer__head" data-i18n="nav.services">Xidmətlər</p>
+          <a href="#services" data-i18n="svc.1.title">Strategiya və brendinq</a>
+          <a href="#services" data-i18n="svc.2.title">Veb saytlar və e-ticarət</a>
+          <a href="#services" data-i18n="svc.3.title">Mobil tətbiqlər</a>
+          <a href="#services" data-i18n="svc.4.title">Süni intellekt və avtomatlaşdırma</a>
+          <a href="#services" data-i18n="svc.5.title">Rəqəmsal marketinq</a>
         </nav>
         <div class="footer__col">
-          <p class="footer__head" data-i18n="nav.contact">Əlaqə</p>
-          <a href="#contact" data-i18n="ft.write">Bizə yazın</a>
-          <span class="footer__mail">hello@cybcell.az</span>
+          <p class="footer__head" data-i18n="ft.write">Bizə yazın</p>
+          <a href="mailto:hello@cybcell.az">hello@cybcell.az</a>
+          <a href="https://www.instagram.com/cybcell.az/" target="_blank" rel="noopener">Instagram</a>
         </div>
       </div>
-      <div class="wrap footer__bottom">
-        <p class="footer__legal">© <span data-year>2026</span> CybCell. <span data-i18n="ft.rights">Bütün hüquqlar qorunur.</span></p>
-      </div>
       <p class="footer__mark" aria-hidden="true">CybCell</p>
+      <div class="wrap footer__bottom">
+        <p>© <span data-year>2026</span> CybCell. <span data-i18n="ft.rights">Bütün hüquqlar qorunur.</span></p>
+        <a href="#top" data-i18n="ft.top">Yuxarı qayıt</a>
+      </div>
     </footer>
 
     <script type="module" src="/src/main.ts"></script>

@@ -1,0 +1,85 @@
+{
+  "_note": "Hər üz: name, category, handle, instagram (tam link, boş ola bilər), photo (public/ qovluğuna nisbətən yol). Admin paneldən bu fayl yenilənəcək.",
+  "faces": [
+    {
+      "name": "Demo üz 01",
+      "category": "Lifestyle",
+      "handle": "@demo01",
+      "instagram": "",
+      "photo": "faces/demo-01.svg",
+      "demo": true
+    },
+    {
+      "name": "Demo üz 02",
+      "category": "Moda",
+      "handle": "@demo02",
+      "instagram": "",
+      "photo": "faces/demo-02.svg",
+      "demo": true
+    },
+    {
+      "name": "Demo üz 03",
+      "category": "Gözəllik",
+      "handle": "@demo03",
+      "instagram": "",
+      "photo": "faces/demo-03.svg",
+      "demo": true
+    },
+    {
+      "name": "Demo üz 04",
+      "category": "Qida",
+      "handle": "@demo04",
+      "instagram": "",
+      "photo": "faces/demo-04.svg",
+      "demo": true
+    },
+    {
+      "name": "Demo üz 05",
+      "category": "Səyahət",
+      "handle": "@demo05",
+      "instagram": "",
+      "photo": "faces/demo-05.svg",
+      "demo": true
+    },
+    {
+      "name": "Demo üz 06",
+      "category": "İdman",
+      "handle": "@demo06",
+      "instagram": "",
+      "photo": "faces/demo-06.svg",
+      "demo": true
+    },
+    {
+      "name": "Demo üz 07",
+      "category": "Texnologiya",
+      "handle": "@demo07",
+      "instagram": "",
+      "photo": "faces/demo-07.svg",
+      "demo": true
+    },
+    {
+      "name": "Demo üz 08",
+      "category": "Avtomobil",
+      "handle": "@demo08",
+      "instagram": "",
+      "photo": "faces/demo-08.svg",
+      "demo": true
+    },
+    {
+      "name": "Demo üz 09",
+      "category": "Musiqi",
+      "handle": "@demo09",
+      "instagram": "",
+      "photo": "faces/demo-09.svg",
+      "demo": true
+    },
+    {
+      "name": "Demo üz 10",
+      "category": "Biznes",
+      "handle": "@demo10",
+      "instagram": "",
+      "photo": "faces/demo-10.svg",
+      "demo": true
+    }
+  ]
+}
